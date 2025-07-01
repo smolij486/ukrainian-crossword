@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Вгадай Хто? Гра з українського фольклору</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Earthy & Vibrant (Stone, Amber, Emerald, with a touch of Blue for interactive elements) -->
+    <!-- Application Structure Plan: Single-page game with a linear flow: Intro screen -> Question display (one by one) -> Feedback -> Next question -> Final results screen. This structure is designed for simplicity and engagement, focusing the user's attention on each question and immediate feedback, mimicking a casual quiz game. -->
+    <!-- Visualization & Content Choices:
+    - Game Intro/Outro: Styled text blocks for welcoming/concluding messages. Goal: Set mood and provide clear start/end points.
+    - Questions: Text-based questions and multiple-choice buttons for answers. Goal: Test knowledge of folklore characters/concepts. Interaction: Click to select answer. Justification: Simple, direct interaction suitable for a quiz.
+    - Feedback: Dynamic text messages (Correct/Incorrect) after each answer. Goal: Provide immediate reinforcement.
+    - Score & Progress: Numerical score counter and a progress bar. Goal: Gamification and user motivation. Interaction: Automatic update.
+    - Icons/Visuals: Unicode emojis and simple shapes for visual flair, no raster images or SVGs to maintain lightness and adhere to constraints.
+    - Library/Method: Vanilla JavaScript for all game logic and DOM manipulation. Tailwind CSS for responsive and aesthetic styling. No external charting libraries needed for a simple quiz.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #FDFBF8; /* Light neutral background */
+            color: #4B4B4B; /* Dark grey text */
+        }
+        .game-card {
+            background-color: white;
+            border-radius: 1.5rem; /* More rounded for playful feel */
+            box-shadow: 0 15px 25px -5px rgba(0, 0, 0, 0.08), 0 5px 10px -5px rgba(0, 0, 0, 0.03);
+            transition: all 0.4s ease-in-out;
+            border: 1px solid #E5E7EB; /* Light border */
+        }
+        .btn-primary {
+            background-color: #F59E0B; /* Amber */
+            color: white;
+            font-weight: 600;
+            padding: 0.75rem 2rem;
+            border-radius: 0.75rem;
+            transition: background-color 0.3s ease-in-out, transform 0.2s ease-in-out;
+        }
+        .btn-primary:hover {
+            background-color: #D97706; /* Darker amber */
+            transform: translateY(-2px);
+        }
+        .answer-option {
+            background-color: #F3F4F6; /* Light grey */
+            color: #374151; /* Darker grey text */
+            padding: 1rem 1.5rem;
+            border-radius: 0.75rem;
+            text-align: left;
+            transition: background-color 0.2s ease-in-out, transform 0.2s ease-in-out, border-color 0.2s ease-in-out;
+            border: 2px solid transparent;
+            cursor: pointer;
+        }
+        .answer-option:hover {
+            background-color: #E5E7EB;
+            transform: translateY(-1px);
+        }
+        .answer-option.selected {
+            border-color: #FBBF24; /* Amber ring */
+            background-color: #FFFBEB; /* Light yellow background */
+        }
+        .answer-option.correct {
+            background-color: #D1FAE5; /* Light green */
+            border-color: #10B981; /* Green */
+            color: #065F46; /* Dark green text */
+        }
+        .answer-option.incorrect {
+            background-color: #FEE2E2; /* Light red */
+            border-color: #EF4444; /* Red */
+            color: #991B1B; /* Dark red text */
+        }
+        .progress-bar-fill {
+            transition: width 0.5s ease-in-out;
+        }
+        .message-box {
+            background-color: #E0F2FE; /* Light blue */
+            border: 1px solid #90CDF4; /* Blue border */
+            color: #2B6CB0; /* Dark blue text */
+            padding: 1rem;
+            border-radius: 0.75rem;
+            margin-top: 1.5rem;
+            text-align: center;
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center min-h-screen p-4 sm:p-6 lg:p-8">
+
+    <div id="game-app" class="w-full max-w-2xl mx-auto">
+        <header class="text-center mb-10">
+            <h1 class="text-4xl sm:text-5xl font-bold text-amber-900 leading-tight">Вгадай Хто? 🤔</h1>
+            <p class="text-lg text-stone-600 mt-2">Гра за мотивами українського фольклору</p>
+        </header>
+
+        <main id="game-content">
+            <section id="intro-screen" class="game-card p-8 sm:p-10 text-center">
+                <h2 class="text-2xl sm:text-3xl font-bold text-stone-800 mb-6">Привіт, майбутній Фольклорний Експерте!</h2>
+                <p class="text-stone-700 mb-8 leading-relaxed">
+                    Готовий перевірити свої знання з українських міфів, легенд та переказів? Я приготувала для тебе цікаві запитання про наших давніх "супергероїв", чудернацьких істот та мудрі народні символи. Пам'ятай, мама знала краще за Google, але чи знаєш ти? 😉
+                </p>
+                <button id="start-game-btn" class="btn-primary">Почати гру!</button>
+            </section>
+
+            <section id="quiz-screen" class="hidden">
+                <div class="flex justify-between items-center mb-4">
+                    <p id="question-count" class="text-stone-600 font-medium">Питання 1/5</p>
+                    <p id="score-display" class="text-emerald-600 font-bold text-xl">🏆 0</p>
+                </div>
+                <div class="w-full bg-stone-200 rounded-full h-2.5 mb-6">
+                    <div id="progress-bar-fill" class="bg-amber-600 h-2.5 rounded-full progress-bar-fill" style="width: 0%"></div>
+                </div>
+
+                <div class="game-card p-6 sm:p-8">
+                    <h3 id="question-text" class="text-xl sm:text-2xl font-bold text-stone-800 text-center mb-8 leading-normal">
+                        Хто метає блискавки, керує громом і є верховним богом? Наш слов'янський Зевс!
+                    </h3>
+                    <div id="answers-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Answer buttons will be injected here by JS -->
+                    </div>
+                </div>
+                
+                <div id="feedback-message" class="message-box hidden"></div>
+                <button id="next-question-btn" class="btn-primary w-full mt-8 hidden">Наступне питання &rarr;</button>
+            </section>
+
+            <section id="results-screen" class="hidden game-card p-8 sm:p-10 text-center">
+                <h2 class="text-3xl sm:text-4xl font-bold text-amber-900 mb-4">Твої результати! 🎉</h2>
+                <p id="final-score" class="text-5xl font-extrabold text-emerald-600 my-8"></p>
+                <p id="result-message" class="text-lg text-stone-700 mb-8 leading-relaxed">
+                    Дякую за гру! Сподіваюся, ти дізнався багато нового про багатство українського фольклору!
+                </p>
+                <button id="restart-game-btn" class="btn-primary">Спробувати ще раз?</button>
+            </section>
+        </main>
+
+        <footer class="text-center mt-12 text-stone-500 text-sm">
+            <p>&copy; 2025 Ваш блог "Слово на долоні". Натхнено мудрістю українського фольклору.</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const questions = [
+                {
+                    question: "Він метає блискавки, керує громом і є верховним богом. Хто це, наш слов'янський Зевс?",
+                    answers: ["Велес", "Перун", "Сварог", "Дажбог"],
+                    correct: "Перун"
+                },
+                {
+                    question: "Цей силач народився з горошини, перемагає зміїв і рятує сестер. Справжній супергерой нашого фольклору. Хто він?",
+                    answers: ["Іван-Царевич", "Кирило Кожум'яка", "Котигорошко", "Ох"],
+                    correct: "Котигорошко"
+                },
+                {
+                    question: "Він високий, волохатий, любить танцювати з мавками до знемоги, захищаючи людей від лісових духів, хоч і трохи незграбний. Хто цей лісовий джентльмен?",
+                    answers: ["Лісовик", "Водяник", "Чугайстер", "Мавка"],
+                    correct: "Чугайстер"
+                },
+                {
+                    question: "Ці дві рослини є національними символами України, що уособлюють дівочу красу, кохання та чоловічу силу і міць. Про які символи йдеться?",
+                    answers: ["Береза і Верба", "Калина і Дуб", "Соняшник і Мак", "Вишня і Яблуня"],
+                    correct: "Калина і Дуб"
+                },
+                {
+                    question: "Як називається народна мудрість, що передається з уст в уста, як секретний рецепт вареників від прабабусі, до того, як були книги чи Google?",
+                    answers: ["Історія", "Наука", "Філософія", "Фольклор"],
+                    correct: "Фольклор"
+                }
+            ];
+
+            const introScreen = document.getElementById('intro-screen');
+            const quizScreen = document.getElementById('quiz-screen');
+            const resultsScreen = document.getElementById('results-screen');
+            
+            const startGameBtn = document.getElementById('start-game-btn');
+            const restartGameBtn = document.getElementById('restart-game-btn');
+            const nextQuestionBtn = document.getElementById('next-question-btn');
+            
+            const questionCountDisplay = document.getElementById('question-count');
+            const scoreDisplay = document.getElementById('score-display');
+            const progressBarFill = document.getElementById('progress-bar-fill');
+            const questionText = document.getElementById('question-text');
+            const answersContainer = document.getElementById('answers-container');
+            const feedbackMessage = document.getElementById('feedback-message');
+            const finalScoreDisplay = document.getElementById('final-score');
+            const resultMessage = document.getElementById('result-message');
+
+            let currentQuestionIndex = 0;
+            let score = 0;
+            let answeredCorrectly = false; // To track if current question was answered correctly
+
+            // Event Listeners
+            startGameBtn.addEventListener('click', startGame);
+            nextQuestionBtn.addEventListener('click', showNextQuestion);
+            restartGameBtn.addEventListener('click', startGame);
+
+            function startGame() {
+                introScreen.classList.add('hidden');
+                resultsScreen.classList.add('hidden');
+                quizScreen.classList.remove('hidden');
+
+                currentQuestionIndex = 0;
+                score = 0;
+                answeredCorrectly = false;
+                updateScoreDisplay();
+                loadQuestion();
+            }
+
+            function loadQuestion() {
+                resetQuestionState();
+                const q = questions[currentQuestionIndex];
+                questionText.textContent = q.question;
+                answersContainer.innerHTML = ''; // Clear previous answers
+
+                q.answers.forEach(answer => {
+                    const button = document.createElement('button');
+                    button.textContent = answer;
+                    button.classList.add('answer-option', 'w-full', 'block');
+                    button.dataset.answer = answer; // Store answer text
+
+                    button.addEventListener('click', () => handleAnswerClick(button, q.correct));
+                    answersContainer.appendChild(button);
+                });
+
+                updateProgress();
+            }
+
+            function handleAnswerClick(selectedButton, correctAnswer) {
+                // Disable all answer buttons after selection
+                Array.from(answersContainer.children).forEach(btn => btn.disabled = true);
+                
+                const selectedAnswer = selectedButton.dataset.answer;
+                answeredCorrectly = (selectedAnswer === correctAnswer);
+
+                if (answeredCorrectly) {
+                    selectedButton.classList.add('correct');
+                    feedbackMessage.textContent = 'Правильно! ✅ Ти справжній знавець!';
+                    score++;
+                } else {
+                    selectedButton.classList.add('incorrect');
+                    feedbackMessage.textContent = `Неправильно ❌. Правильна відповідь: "${correctAnswer}".`;
+                    // Highlight correct answer if user was wrong
+                    Array.from(answersContainer.children).forEach(btn => {
+                        if (btn.dataset.answer === correctAnswer) {
+                            btn.classList.add('correct');
+                        }
+                    });
+                }
+                feedbackMessage.classList.remove('hidden');
+                nextQuestionBtn.classList.remove('hidden');
+                updateScoreDisplay();
+            }
+
+            function showNextQuestion() {
+                currentQuestionIndex++;
+                if (currentQuestionIndex < questions.length) {
+                    loadQuestion();
+                } else {
+                    showResults();
+                }
+            }
+
+            function resetQuestionState() {
+                feedbackMessage.classList.add('hidden');
+                feedbackMessage.textContent = '';
+                nextQuestionBtn.classList.add('hidden');
+            }
+
+            function updateScoreDisplay() {
+                scoreDisplay.textContent = `🏆 ${score}`;
+            }
+
+            function updateProgress() {
+                questionCountDisplay.textContent = `Питання ${currentQuestionIndex + 1}/${questions.length}`;
+                const progressPercentage = (currentQuestionIndex / questions.length) * 100;
+                progressBarFill.style.width = `${progressPercentage}%`;
+            }
+
+            function showResults() {
+                quizScreen.classList.add('hidden');
+                resultsScreen.classList.remove('hidden');
+                progressBarFill.style.width = '100%'; // Ensure progress bar is full
+                
+                finalScoreDisplay.textContent = `${score}/${questions.length}`;
+
+                let message = '';
+                const percentage = (score / questions.length) * 100;
+                if (percentage === 100) {
+                    message = "Неймовірно! Ти справжній Майстер Фольклору! 🤩";
+                    finalScoreDisplay.classList.add('text-emerald-600');
+                    finalScoreDisplay.classList.remove('text-amber-600', 'text-red-500');
+                } else if (percentage >= 60) {
+                    message = "Молодець! Ти чудово знаєш український фольклор. Продовжуй у тому ж дусі! 👍";
+                    finalScoreDisplay.classList.add('text-amber-600');
+                    finalScoreDisplay.classList.remove('text-emerald-600', 'text-red-500');
+                } else {
+                    message = "Не засмучуйся! Фольклор – це цілий світ, і його варто досліджувати далі. Спробуй ще раз, і все вийде! 💪";
+                    finalScoreDisplay.classList.add('text-red-500');
+                    finalScoreDisplay.classList.remove('text-emerald-600', 'text-amber-600');
+                }
+                resultMessage.textContent = message;
+            }
+        });
+    </script>
+</body>
+</html>

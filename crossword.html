@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Інтерактивний кросворд: Чарівний світ українських казок</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #FDFBF8; /* Light neutral background */
+            color: #4B4B4B; /* Dark grey text */
+        }
+        .crossword-container {
+            background-color: white;
+            border-radius: 1.5rem;
+            box-shadow: 0 15px 25px -5px rgba(0, 0, 0, 0.08), 0 5px 10px -5px rgba(0, 0, 0, 0.03);
+            padding: 2rem;
+            max-width: 900px;
+            margin: 2rem auto;
+        }
+        .clues-section {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        .clues-column {
+            flex: 1 1 45%; /* Allows columns to wrap on smaller screens */
+            min-width: 280px; /* Minimum width before wrapping */
+        }
+        .crossword-grid {
+            display: grid;
+            gap: 1px;
+            background-color: #E5E7EB; /* Grid lines color */
+            border: 1px solid #E5E7EB;
+            margin-top: 2rem;
+            justify-content: center; /* Center the grid */
+            overflow-x: auto; /* Allow horizontal scrolling on small screens */
+            padding: 1px; /* Small padding to ensure borders are visible */
+        }
+        .grid-cell {
+            width: 38px; /* Slightly larger cells for input */
+            height: 38px;
+            background-color: #F9FAFB; /* Empty cell background */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem; /* Smaller font for numbers */
+            font-weight: bold;
+            color: #6B7280;
+            border: 1px solid #D1D5DB; /* Cell borders */
+            position: relative;
+        }
+        .grid-cell.black {
+            background-color: #374151; /* Black cells for empty spots */
+            border: 1px solid #374151;
+        }
+        .grid-cell input {
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            font-size: 1.2rem; /* Larger font for input letters */
+            text-transform: uppercase;
+            border: none;
+            background-color: transparent;
+            outline: none;
+            color: #1F2937;
+            padding: 0;
+            margin: 0;
+        }
+        .grid-cell.number span {
+            position: absolute;
+            top: 1px;
+            left: 2px;
+            font-size: 0.6rem;
+            color: #374151;
+        }
+        .grid-cell.active {
+            background-color: #FEF3C7; /* Light amber for active cell */
+            border-color: #F59E0B; /* Amber border for active cell */
+        }
+        .grid-cell.highlight {
+            background-color: #FFFBEB; /* Lighter amber for highlighted word */
+        }
+        .grid-cell.correct {
+            background-color: #D1FAE5; /* Light green for correct */
+            border-color: #10B981; /* Green border */
+            color: #065F46; /* Dark green text */
+        }
+        .grid-cell.incorrect {
+            background-color: #FEE2E2; /* Light red for incorrect */
+            border-color: #EF4444; /* Red border */
+            color: #991B1B; /* Dark red text */
+        }
+        .btn-action {
+            background-color: #F59E0B; /* Amber */
+            color: white;
+            font-weight: 600;
+            padding: 0.75rem 2rem;
+            border-radius: 0.75rem;
+            transition: background-color 0.3s ease-in-out, transform 0.2s ease-in-out;
+            cursor: pointer;
+            margin: 0.5rem;
+        }
+        .btn-action:hover {
+            background-color: #D97706; /* Darker amber */
+            transform: translateY(-2px);
+        }
+        .btn-check {
+            background-color: #10B981; /* Green */
+        }
+        .btn-check:hover {
+            background-color: #059669; /* Darker green */
+        }
+        .btn-reveal {
+            background-color: #6366F1; /* Indigo */
+        }
+        .btn-reveal:hover {
+            background-color: #4F46E5; /* Darker indigo */
+        }
+        .btn-clear {
+            background-color: #EF4444; /* Red */
+        }
+        .btn-clear:hover {
+            background-color: #DC2626; /* Darker red */
+        }
+        .feedback-message {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            border-radius: 0.75rem;
+            text-align: center;
+            font-weight: bold;
+        }
+        .feedback-correct {
+            background-color: #D1FAE5;
+            color: #065F46;
+            border: 1px solid #10B981;
+        }
+        .feedback-incorrect {
+            background-color: #FEE2E2;
+            color: #991B1B;
+            border: 1px solid #EF4444;
+        }
+        .active-clue-highlight {
+            font-weight: bold;
+            color: #F59E0B; /* Amber for active clue */
+        }
+    </style>
+</head>
+<body class="p-4 sm:p-6 lg:p-8">
+
+    <div class="crossword-container">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl sm:text-4xl font-bold text-amber-900 leading-tight">
+                Кросворд: Чарівний світ українських казок ✨
+            </h1>
+            <p class="text-lg text-stone-600 mt-2">
+                Перевір свої знання про улюблених героїв та міфічних істот! Вводь літери в клітинки.
+            </p>
+        </header>
+
+        <div class="clues-section">
+            <div class="clues-column">
+                <h2 class="text-xl sm:text-2xl font-semibold text-stone-800 mb-4">По горизонталі:</h2>
+                <ol id="across-clues" class="list-decimal list-inside space-y-2 text-stone-700">
+                    <!-- Clues will be populated by JS -->
+                </ol>
+            </div>
+
+            <div class="clues-column">
+                <h2 class="text-xl sm:text-2xl font-semibold text-stone-800 mb-4">По вертикалі:</h2>
+                <ol id="down-clues" class="list-decimal list-inside space-y-2 text-stone-700">
+                    <!-- Clues will be populated by JS -->
+                </ol>
+            </div>
+        </div>
+
+        <h2 class="text-xl sm:text-2xl font-semibold text-stone-800 mb-4 text-center">Сітка кросворду:</h2>
+        <div id="crossword-grid" class="crossword-grid">
+            <!-- Grid cells will be generated by JS -->
+        </div>
+
+        <div class="text-center mt-8 flex flex-wrap justify-center">
+            <button id="check-answers-btn" class="btn-action btn-check">Перевірити відповіді</button>
+            <button id="reveal-answers-btn" class="btn-action btn-reveal">Показати відповіді</button>
+            <button id="clear-grid-btn" class="btn-action btn-clear">Очистити сітку</button>
+        </div>
+
+        <div id="feedback-message" class="feedback-message hidden"></div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Виправлені дані кросворду для коректних перетинів
+            const crosswordData = [
+                // По горизонталі (Across)
+                { id: 1, clue: "Казковий герой, що народився з горошини і перемагає змія.", answer: "КОТИГОРОШКО", direction: "across", start_row: 0, start_col: 0 },
+                { id: 2, clue: "Лісова красуня, дух лісу, що може звабити хлопця.", answer: "МАВКА", direction: "across", start_row: 2, start_col: 4 },
+                { id: 3, clue: "Дерево, що разом з калиною є символом України, уособлює силу та довголіття.", answer: "ДУБ", direction: "across", start_row: 4, start_col: 0 },
+                { id: 4, clue: "Звірок, який у казках часто буває хитрим і обманює інших.", answer: "ЛИС", direction: "across", start_row: 6, start_col: 2 },
+                { id: 5, clue: "Істота, що живе у воді і може затягнути на дно необережних.", answer: "ВОДЯНИК", direction: "across", start_row: 8, start_col: 5 }, // Перетинається з ЗОЛОТАРИБКА 'О' на (8,6)
+
+                // По вертикалі (Down)
+                { id: 6, clue: "Злий казковий персонаж, який викрадає людей або тварин, і якого перемагає Котигорошко.", answer: "ЗМІЙ", direction: "down", start_row: 0, start_col: 12 }, // Розміщено окремо
+                { id: 7, clue: "Старий чоловік, який у казці має добру дочку і злу пасербицю.", answer: "ДІД", direction: "down", start_row: 2, start_col: 14 }, // Розміщено окремо
+                { id: 8, clue: "Птах, що у багатьох казках є вісником або помічником героя.", answer: "ПІВЕНЬ", direction: "down", start_row: 0, start_col: 16 }, // Розміщено окремо
+                { id: 9, clue: "Персонаж, який втік від баби та діда, а потім його з'їв хитрий звір.", answer: "КОЛОБОК", direction: "down", start_row: 10, start_col: 0 }, // Розміщено окремо
+                { id: 10, clue: "Чарівний помічник, що з'являється з води і може виконувати бажання.", answer: "ЗОЛОТАРИБКА", direction: "down", start_row: 7, start_col: 6 } // Перетинається з ВОДЯНИК 'О' на (8,6)
+            ];
+
+            const gridElement = document.getElementById('crossword-grid');
+            const acrossCluesElement = document.getElementById('across-clues');
+            const downCluesElement = document.getElementById('down-clues');
+            const checkAnswersBtn = document.getElementById('check-answers-btn');
+            const revealAnswersBtn = document.getElementById('reveal-answers-btn');
+            const clearGridBtn = document.getElementById('clear-grid-btn');
+            const feedbackMessageElement = document.getElementById('feedback-message');
+
+            let maxRows = 0;
+            let maxCols = 0;
+            let grid = []; // 2D array to store cell data (e.g., { across: { id: 1, index: 0 }, down: null })
+            let activeCell = null; // { row, col }
+            let activeDirection = 'across'; // 'across' or 'down'
+
+            // --- Initialization ---
+            function initializeCrossword() {
+                calculateGridDimensions();
+                createEmptyGridData();
+                populateGridData();
+                renderCrosswordGrid();
+                renderClues();
+                setupEventListeners();
+            }
+
+            // Calculate max rows and columns needed for the grid
+            function calculateGridDimensions() {
+                crosswordData.forEach(word => {
+                    if (word.direction === 'across') {
+                        maxRows = Math.max(maxRows, word.start_row + 1);
+                        maxCols = Math.max(maxCols, word.start_col + word.answer.length);
+                    } else { // 'down'
+                        maxRows = Math.max(maxRows, word.start_row + word.answer.length);
+                        maxCols = Math.max(maxCols, word.start_col + 1);
+                    }
+                });
+                // Add some padding to the grid for better visual spacing
+                maxRows += 2; // Add 2 rows for padding
+                maxCols += 2; // Add 2 columns for padding
+                gridElement.style.gridTemplateColumns = `repeat(${maxCols}, 38px)`;
+                gridElement.style.gridTemplateRows = `repeat(${maxRows}, 38px)`;
+            }
+
+            // Create an empty grid with null values
+            function createEmptyGridData() {
+                for (let r = 0; r < maxRows; r++) {
+                    grid[r] = [];
+                    for (let c = 0; c < maxCols; c++) {
+                        grid[r][c] = { input: null, clues: { across: null, down: null }, number: null };
+                    }
+                }
+            }
+
+            // Populate the grid data with word information
+            function populateGridData() {
+                crosswordData.forEach(word => {
+                    let currentRow = word.start_row;
+                    let currentCol = word.start_col;
+                    const clueNumber = word.id;
+
+                    for (let i = 0; i < word.answer.length; i++) {
+                        // Ensure the cell exists within the grid boundaries
+                        if (currentRow >= maxRows || currentCol >= maxCols || currentRow < 0 || currentCol < 0) {
+                            console.warn(`Word '${word.answer}' goes out of bounds at (${currentRow}, ${currentCol}). Skipping remaining letters.`);
+                            break;
+                        }
+                        const cell = grid[currentRow][currentCol];
+                        
+                        if (word.direction === 'across') {
+                            cell.clues.across = { id: word.id, index: i, answer: word.answer };
+                        } else { // 'down'
+                            cell.clues.down = { id: word.id, index: i, answer: word.answer };
+                        }
+
+                        // Add clue number to the first letter cell
+                        if (i === 0) {
+                            if (!cell.number) { // Only add if not already numbered by another word
+                                cell.number = clueNumber;
+                            }
+                        }
+
+                        if (word.direction === 'across') {
+                            currentCol++;
+                        } else {
+                            currentRow++;
+                        }
+                    }
+                });
+            }
+
+            // Render the HTML grid based on the populated grid data
+            function renderCrosswordGrid() {
+                gridElement.innerHTML = ''; // Clear existing grid
+                for (let r = 0; r < maxRows; r++) {
+                    for (let c = 0; c < maxCols; c++) {
+                        const cellData = grid[r][c];
+                        const cellDiv = document.createElement('div');
+                        cellDiv.classList.add('grid-cell');
+                        cellDiv.dataset.row = r;
+                        cellDiv.dataset.col = c;
+
+                        if (cellData.clues.across || cellData.clues.down) {
+                            // This cell is part of a word
+                            cellDiv.classList.add('filled');
+                            const input = document.createElement('input');
+                            input.type = 'text';
+                            input.maxLength = 1;
+                            input.dataset.row = r;
+                            input.dataset.col = c;
+                            input.addEventListener('focus', handleCellFocus);
+                            input.addEventListener('input', handleCellInput);
+                            input.addEventListener('keydown', handleCellKeydown);
+                            cellDiv.appendChild(input);
+                            cellData.input = input; // Store reference to the input element
+
+                            if (cellData.number) {
+                                const numberSpan = document.createElement('span');
+                                numberSpan.textContent = cellData.number;
+                                cellDiv.classList.add('number');
+                                cellDiv.appendChild(numberSpan);
+                            }
+                        } else {
+                            // This cell is not part of any word (black cell)
+                            cellDiv.classList.add('black');
+                        }
+                        gridElement.appendChild(cellDiv);
+                    }
+                }
+            }
+
+            // Render the clues in their respective lists
+            function renderClues() {
+                acrossCluesElement.innerHTML = '';
+                downCluesElement.innerHTML = '';
+
+                // Sort clues by ID for consistent numbering
+                const sortedClues = [...crosswordData].sort((a, b) => a.id - b.id);
+
+                sortedClues.forEach(word => {
+                    const li = document.createElement('li');
+                    li.textContent = `${word.id}. ${word.clue}`;
+                    li.dataset.clueId = word.id;
+                    li.dataset.direction = word.direction;
+                    li.addEventListener('click', () => {
+                        // When a clue is clicked, focus the first cell of that word
+                        focusCell(word.start_row, word.start_col, word.direction);
+                    });
+
+                    // Ensure unique IDs for clues in their respective lists
+                    if (word.direction === 'across') {
+                        // Check if a clue with this ID already exists (e.g., if a word is used for both across/down)
+                        if (!acrossCluesElement.querySelector(`[data-clue-id="${word.id}"][data-direction="across"]`)) {
+                             acrossCluesElement.appendChild(li);
+                        }
+                    } else {
+                        if (!downCluesElement.querySelector(`[data-clue-id="${word.id}"][data-direction="down"]`)) {
+                            downCluesElement.appendChild(li);
+                        }
+                    }
+                });
+            }
+
+            // --- Event Handlers ---
+            function setupEventListeners() {
+                checkAnswersBtn.addEventListener('click', checkAnswers);
+                revealAnswersBtn.addEventListener('click', revealAnswers);
+                clearGridBtn.addEventListener('click', clearGrid);
+            }
+
+            function handleCellFocus(event) {
+                const input = event.target;
+                const row = parseInt(input.dataset.row);
+                const col = parseInt(input.dataset.col);
+                
+                // Clear previous highlighting
+                clearHighlighting();
+
+                // Determine initial active direction based on available words in cell
+                const cellData = grid[row][col];
+                if (cellData.clues.across && cellData.clues.down) {
+                    // If both across and down words intersect, toggle direction if clicking same cell
+                    if (activeCell && activeCell.row === row && activeCell.col === col) {
+                        activeDirection = (activeDirection === 'across' && cellData.clues.down) ? 'down' : 'across';
+                    } else {
+                        // Default to across if not already active or if only one direction
+                        activeDirection = cellData.clues.across ? 'across' : 'down';
+                    }
+                } else if (cellData.clues.across) {
+                    activeDirection = 'across';
+                } else if (cellData.clues.down) {
+                    activeDirection = 'down';
+                }
+                activeCell = { row, col }; // Set activeCell after determining direction
+
+                highlightWord(row, col, activeDirection);
+            }
+
+            function handleCellInput(event) {
+                const input = event.target;
+                input.value = input.value.toUpperCase(); // Convert to uppercase
+                const row = parseInt(input.dataset.row);
+                const col = parseInt(input.dataset.col);
+
+                // Move to next cell automatically
+                if (input.value.length === 1) {
+                    let nextRow = row;
+                    let nextCol = col;
+
+                    if (activeDirection === 'across') {
+                        nextCol++;
+                    } else { // 'down'
+                        nextRow++;
+                    }
+                    
+                    // Find the next valid input cell
+                    let nextInput = null;
+                    while (nextRow < maxRows && nextCol < maxCols && nextRow >= 0 && nextCol >= 0) {
+                        const nextCellData = grid[nextRow]?.[nextCol];
+                        if (nextCellData && nextCellData.input) { // Check if it's an input cell
+                            nextInput = nextCellData.input;
+                            break;
+                        }
+                        if (activeDirection === 'across') {
+                            nextCol++;
+                        } else {
+                            nextRow++;
+                        }
+                    }
+                    
+                    if (nextInput) {
+                        nextInput.focus();
+                    } else {
+                        // If no next input in current direction, try to find the next word's first cell
+                        // Or simply blur if at end of word/grid
+                        input.blur();
+                    }
+                }
+            }
+
+            function handleCellKeydown(event) {
+                const input = event.target;
+                let row = parseInt(input.dataset.row);
+                let col = parseInt(input.dataset.col);
+
+                // Handle backspace/delete
+                if (event.key === 'Backspace' || event.key === 'Delete') {
+                    if (input.value === '') { // If cell is empty, move back
+                        let prevRow = row;
+                        let prevCol = col;
+                        if (activeDirection === 'across') {
+                            prevCol--;
+                        } else {
+                            prevRow--;
+                        }
+                        const prevInput = grid[prevRow]?.[prevCol]?.input;
+                        if (prevInput) {
+                            prevInput.focus();
+                            prevInput.value = ''; // Clear previous cell
+                        }
+                    }
+                    // Allow default backspace/delete behavior for non-empty cells
+                    return;
+                }
+
+                // Handle arrow keys for navigation
+                let nextRow = row;
+                let nextCol = col;
+                let newDirection = activeDirection;
+
+                switch (event.key) {
+                    case 'ArrowUp':
+                        nextRow--;
+                        newDirection = 'down';
+                        break;
+                    case 'ArrowDown':
+                        nextRow++;
+                        newDirection = 'down';
+                        break;
+                    case 'ArrowLeft':
+                        nextCol--;
+                        newDirection = 'across';
+                        break;
+                    case 'ArrowRight':
+                        nextCol++;
+                        newDirection = 'across';
+                        break;
+                    default:
+                        // If it's a letter, allow default input behavior
+                        if (event.key.match(/^[a-zA-Zа-яА-Я]$/)) {
+                            // If user types a letter, switch to that direction if possible
+                            const cellData = grid[row][col];
+                            if (cellData.clues[newDirection]) {
+                                // Already in the correct direction, do nothing
+                            } else if (newDirection === 'across' && cellData.clues.down) {
+                                // User tried to move across but only down word exists, switch to down
+                                newDirection = 'down';
+                            } else if (newDirection === 'down' && cellData.clues.across) {
+                                // User tried to move down but only across word exists, switch to across
+                                newDirection = 'across';
+                            }
+                            activeDirection = newDirection; // Update active direction
+                            return;
+                        }
+                        return; // Do not prevent default for other keys
+                }
+
+                // Prevent default arrow key behavior (scrolling)
+                event.preventDefault();
+
+                // Focus the new cell if it's valid
+                focusCell(nextRow, nextCol, newDirection);
+            }
+
+            // Focus a specific cell and highlight its word
+            function focusCell(row, col, direction = activeDirection) {
+                const targetCellData = grid[row]?.[col];
+                if (targetCellData && targetCellData.input) {
+                    targetCellData.input.focus();
+                    activeCell = { row, col };
+                    activeDirection = direction; // Update active direction
+                    clearHighlighting();
+                    highlightWord(row, col, activeDirection);
+                } else if (targetCellData && (targetCellData.clues.across || targetCellData.clues.down)) {
+                    // If the target cell is part of a word but has no input (e.g., black cell in visual grid),
+                    // try to find the next valid input cell in the active direction
+                    let currentR = row;
+                    let currentC = col;
+                    let foundInput = false;
+
+                    while (currentR < maxRows && currentC < maxCols && currentR >= 0 && currentC >= 0) {
+                        const cell = grid[currentR]?.[currentC];
+                        if (cell && cell.input) {
+                            cell.input.focus();
+                            activeCell = { row: currentR, col: currentC };
+                            activeDirection = direction;
+                            clearHighlighting();
+                            highlightWord(currentR, currentC, activeDirection);
+                            foundInput = true;
+                            break;
+                        }
+                        if (activeDirection === 'across') currentC++;
+                        else currentR++;
+                    }
+                    if (!foundInput) {
+                        // If no input found in this direction, try the other direction from original cell
+                        if (direction === 'across' && targetCellData.clues.down) {
+                            focusCell(row, col, 'down');
+                        } else if (direction === 'down' && targetCellData.clues.across) {
+                            focusCell(row, col, 'across');
+                        }
+                    }
+                }
+            }
+
+            // Highlight the active word based on current cell and direction
+            function highlightWord(row, col, direction) {
+                const cellData = grid[row][col];
+                const wordId = cellData.clues[direction]?.id;
+
+                if (!wordId) {
+                    // If no word in this direction for the cell, try the other direction
+                    const otherDirection = direction === 'across' ? 'down' : 'across';
+                    if (cellData.clues[otherDirection]?.id) {
+                        activeDirection = otherDirection;
+                        highlightWord(row, col, otherDirection);
+                        return;
+                    }
+                    return; // No word to highlight
+                }
+
+                // Highlight cells in the grid
+                crosswordData.forEach(word => {
+                    if (word.id === wordId && word.direction === direction) {
+                        let r = word.start_row;
+                        let c = word.start_col;
+                        for (let i = 0; i < word.answer.length; i++) {
+                            const inputElement = grid[r][c].input;
+                            if (inputElement) {
+                                inputElement.parentElement.classList.add('highlight');
+                            }
+                            if (direction === 'across') c++;
+                            else r++;
+                        }
+                    }
+                });
+
+                // Highlight the active clue
+                document.querySelectorAll('.clues-column ol li').forEach(li => {
+                    if (parseInt(li.dataset.clueId) === wordId && li.dataset.direction === direction) {
+                        li.classList.add('active-clue-highlight');
+                    } else {
+                        li.classList.remove('active-clue-highlight');
+                    }
+                });
+
+                // Highlight the active cell itself
+                const activeInput = grid[row][col].input;
+                if (activeInput) {
+                    activeInput.parentElement.classList.add('active');
+                }
+            }
+
+            // Clear all highlighting from grid cells and clues
+            function clearHighlighting() {
+                document.querySelectorAll('.grid-cell').forEach(cell => {
+                    cell.classList.remove('active', 'highlight', 'correct', 'incorrect');
+                });
+                document.querySelectorAll('.clues-column ol li').forEach(li => {
+                    li.classList.remove('active-clue-highlight');
+                });
+            }
+
+            // --- Game Logic ---
+            function checkAnswers() {
+                clearHighlighting(); // Clear any previous highlighting
+                feedbackMessageElement.classList.add('hidden');
+                feedbackMessageElement.textContent = '';
+
+                let allCorrect = true;
+                crosswordData.forEach(word => {
+                    let enteredWord = '';
+                    let currentRow = word.start_row;
+                    let currentCol = word.start_col;
+                    let wordCells = [];
+
+                    for (let i = 0; i < word.answer.length; i++) {
+                        const cell = grid[currentRow]?.[currentCol]; // Use optional chaining
+                        if (cell && cell.input) { // Ensure cell and input exist
+                            enteredWord += cell.input.value.toUpperCase();
+                            wordCells.push(cell.input.parentElement); // Store the parent div for styling
+                        } else {
+                            // If cell or input doesn't exist, it means the word goes out of bounds
+                            // or there's a problem in grid generation. Mark as incorrect.
+                            allCorrect = false;
+                            break; // Stop checking this word
+                        }
+                        if (word.direction === 'across') {
+                            currentCol++;
+                        } else {
+                            currentRow++;
+                        }
+                    }
+
+                    if (enteredWord === word.answer) {
+                        wordCells.forEach(cellDiv => cellDiv.classList.add('correct'));
+                    } else {
+                        wordCells.forEach(cellDiv => cellDiv.classList.add('incorrect'));
+                        allCorrect = false;
+                    }
+                });
+
+                if (allCorrect) {
+                    feedbackMessageElement.textContent = "Вітаємо! Усі відповіді правильні! 🎉";
+                    feedbackMessageElement.className = 'feedback-message feedback-correct';
+                    feedbackMessageElement.classList.remove('hidden');
+                } else {
+                    feedbackMessageElement.textContent = "Є помилки. Перевірте виділені червоним слова. 🤔";
+                    feedbackMessageElement.className = 'feedback-message feedback-incorrect';
+                    feedbackMessageElement.classList.remove('hidden');
+                }
+            }
+
+            function revealAnswers() {
+                clearHighlighting();
+                feedbackMessageElement.classList.add('hidden');
+                feedbackMessageElement.textContent = '';
+
+                crosswordData.forEach(word => {
+                    let currentRow = word.start_row;
+                    let currentCol = word.start_col;
+                    for (let i = 0; i < word.answer.length; i++) {
+                        const cell = grid[currentRow]?.[currentCol]; // Use optional chaining
+                        if (cell && cell.input) { // Ensure cell and input exist
+                            cell.input.value = word.answer[i];
+                            cell.input.parentElement.classList.add('correct'); // Highlight revealed words as correct
+                        }
+                        if (word.direction === 'across') {
+                            currentCol++;
+                        } else {
+                            currentRow++;
+                        }
+                    }
+                });
+            }
+
+            function clearGrid() {
+                clearHighlighting();
+                feedbackMessageElement.classList.add('hidden');
+                feedbackMessageElement.textContent = '';
+                document.querySelectorAll('.grid-cell input').forEach(input => {
+                    input.value = '';
+                });
+            }
+
+            // Start the crossword
+            initializeCrossword();
+        });
+    </script>
+</body>
+</html>

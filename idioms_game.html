@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Розгадай Фразеологізм: Інтерактивна гра</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #FDFBF8; /* Light neutral background */
+            color: #4B4B4B; /* Dark grey text */
+        }
+        .game-card {
+            background-color: white;
+            border-radius: 1.5rem; /* More rounded for playful feel */
+            box-shadow: 0 15px 25px -5px rgba(0, 0, 0, 0.08), 0 5px 10px -5px rgba(0, 0, 0, 0.03);
+            transition: all 0.4s ease-in-out;
+            border: 1px solid #E5E7EB; /* Light border */
+        }
+        .btn-primary {
+            background-color: #F59E0B; /* Amber */
+            color: white;
+            font-weight: 600;
+            padding: 0.75rem 2rem;
+            border-radius: 0.75rem;
+            transition: background-color 0.3s ease-in-out, transform 0.2s ease-in-out;
+            cursor: pointer;
+        }
+        .btn-primary:hover {
+            background-color: #D97706; /* Darker amber */
+            transform: translateY(-2px);
+        }
+        .answer-option {
+            background-color: #F3F4F6; /* Light grey */
+            color: #374151; /* Darker grey text */
+            padding: 1rem 1.5rem;
+            border-radius: 0.75rem;
+            text-align: left;
+            transition: background-color 0.2s ease-in-out, transform 0.2s ease-in-out, border-color 0.2s ease-in-out;
+            border: 2px solid transparent;
+            cursor: pointer;
+        }
+        .answer-option:hover {
+            background-color: #E5E7EB;
+            transform: translateY(-1px);
+        }
+        .answer-option.selected {
+            border-color: #FBBF24; /* Amber ring */
+            background-color: #FFFBEB; /* Light yellow background */
+        }
+        .answer-option.correct {
+            background-color: #D1FAE5; /* Light green */
+            border-color: #10B981; /* Green */
+            color: #065F46; /* Dark green text */
+        }
+        .answer-option.incorrect {
+            background-color: #FEE2E2; /* Light red */
+            border-color: #EF4444; /* Red */
+            color: #991B1B; /* Dark red text */
+        }
+        .progress-bar-fill {
+            transition: width 0.5s ease-in-out;
+        }
+        .message-box {
+            background-color: #E0F2FE; /* Light blue */
+            border: 1px solid #90CDF4; /* Blue border */
+            color: #2B6CB0; /* Dark blue text */
+            padding: 1rem;
+            border-radius: 0.75rem;
+            margin-top: 1.5rem;
+            text-align: center;
+        }
+        .llm-explanation-box {
+            background-color: #ECFDF5; /* Light emerald for explanation */
+            border: 1px solid #A7F3D0; /* Emerald border */
+            color: #065F46; /* Dark emerald text */
+            padding: 1rem;
+            border-radius: 0.75rem;
+            margin-top: 1.5rem;
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center min-h-screen p-4 sm:p-6 lg:p-8">
+
+    <div id="game-app" class="w-full max-w-2xl mx-auto">
+        <header class="text-center mb-10">
+            <h1 class="text-4xl sm:text-5xl font-bold text-amber-900 leading-tight">розгадай фразеологізм! 🤔</h1>
+            <p class="text-lg text-stone-600 mt-2">Перевір свої знання крилатих висловів</p>
+        </header>
+
+        <main id="game-content">
+            <section id="intro-screen" class="game-card p-8 sm:p-10 text-center">
+                <h2 class="text-2xl sm:text-3xl font-bold text-stone-800 mb-6">Привіт, майбутній Фразеологічний Детективе!</h2>
+                <p class="text-stone-700 mb-8 leading-relaxed">
+                    Готовий зануритися у світ народної мудрості та розгадати таємниці крилатих висловів? Я приготувала для тебе цікаві фразеологізми. Спробуй вгадати їхнє справжнє значення!
+                </p>
+                <button id="start-game-btn" class="btn-primary">Почати гру!</button>
+            </section>
+
+            <section id="quiz-screen" class="hidden">
+                <div class="flex justify-between items-center mb-4">
+                    <p id="question-count" class="text-stone-600 font-medium">Питання 1/9</p>
+                    <p id="score-display" class="text-emerald-600 font-bold text-xl">🏆 0</p>
+                </div>
+                <div class="w-full bg-stone-200 rounded-full h-2.5 mb-6">
+                    <div id="progress-bar-fill" class="bg-amber-600 h-2.5 rounded-full progress-bar-fill" style="width: 0%"></div>
+                </div>
+
+                <div class="game-card p-6 sm:p-8">
+                    <h3 id="question-text" class="text-xl sm:text-2xl font-bold text-stone-800 text-center mb-8 leading-normal">
+                        Що означає фразеологізм "Бити байдики"?
+                    </h3>
+                    <div id="answers-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Answer buttons will be injected here by JS -->
+                    </div>
+                </div>
+                
+                <div id="feedback-message" class="message-box hidden"></div>
+                <div id="llm-explanation" class="llm-explanation-box hidden"></div>
+                <button id="next-question-btn" class="btn-primary w-full mt-8 hidden">Наступне питання &rarr;</button>
+            </section>
+
+            <section id="results-screen" class="hidden game-card p-8 sm:p-10 text-center">
+                <h2 class="text-3xl sm:text-4xl font-bold text-amber-900 mb-4">Твої результати! 🎉</h2>
+                <p id="final-score" class="text-5xl font-extrabold text-emerald-600 my-8"></p>
+                <p id="result-message" class="text-lg text-stone-700 mb-8 leading-relaxed">
+                    Дякую за гру! Сподіваюся, ти дізнався багато нового про багатство української мови!
+                </p>
+                <button id="restart-game-btn" class="btn-primary">Спробувати ще раз?</button>
+            </section>
+        </main>
+
+        <footer class="text-center mt-12 text-stone-500 text-sm">
+            <p>&copy; 2025 Ваш блог "Слово на долоні". Натхнено мудрістю українського народу.</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const questions = [
+                {
+                    phraseologism: "Бити байдики",
+                    answers: ["Сильно бити когось", "Лінуватися, нічого не робити", "Грати на музичному інструменті", "Швидко працювати"],
+                    correct: "Лінуватися, нічого не робити",
+                    topic: "значення фразеологізму 'Бити байдики'"
+                },
+                {
+                    phraseologism: "Пекти раків",
+                    answers: ["Готувати раків", "Червоніти від сорому", "Грітися на сонці", "Швидко бігти"],
+                    correct: "Червоніти від сорому",
+                    topic: "значення фразеологізму 'Пекти раків'"
+                },
+                {
+                    phraseologism: "Водити за ніс",
+                    answers: ["Вести когось за руку", "Обманювати, дурити когось", "Показувати дорогу", "Триматися за ніс"],
+                    correct: "Обманювати, дурити когось",
+                    topic: "значення фразеологізму 'Водити за ніс'"
+                },
+                {
+                    phraseologism: "Накивати п'ятами",
+                    answers: ["Танцювати", "Швидко втекти, піти", "Голосно кричати", "Показувати п'яти"],
+                    correct: "Швидко втекти, піти",
+                    topic: "значення фразеологізму 'Накивати п'ятами'"
+                },
+                {
+                    phraseologism: "Кусати лікті",
+                    answers: ["Їсти", "Жаліти про щось, шкодувати", "Займатися спортом", "Битися"],
+                    correct: "Жаліти про щось, шкодувати",
+                    topic: "значення фразеологізму 'Кусати лікті'"
+                },
+                {
+                    phraseologism: "На вербі груші",
+                    answers: ["Збирати врожай", "Нісенітниця, щось неможливе", "Високо стрибати", "Робити щось дуже повільно"],
+                    correct: "Нісенітниця, щось неможливе",
+                    topic: "значення фразеологізму 'На вербі груші'"
+                },
+                {
+                    phraseologism: "Сім п'ятниць на тиждень",
+                    answers: ["Мати багато вихідних", "Бути дуже зайнятим", "Бути непостійною, мінливою людиною", "Завжди виконувати обіцянки"],
+                    correct: "Бути непостійною, мінливою людиною",
+                    topic: "значення фразеологізму 'Сім п'ятниць на тиждень'"
+                },
+                {
+                    phraseologism: "Хоч до рани прикладай",
+                    answers: ["Бути лікарем", "Дуже добра, лагідна, чуйна людина", "Відчувати сильний біль", "Бути дуже обережним"],
+                    correct: "Дуже добра, лагідна, чуйна людина",
+                    topic: "значення фразеологізму 'Хоч до рани прикладай'"
+                },
+                {
+                    phraseologism: "Ні риба ні м'ясо",
+                    answers: ["Бути вегетаріанцем", "Невиразна, безхарактерна людина", "Дуже смачна страва", "Бути дуже сильним"],
+                    correct: "Невиразна, безхарактерна людина",
+                    topic: "значення фразеологізму 'Ні риба ні м'ясо'"
+                }
+            ];
+
+            const introScreen = document.getElementById('intro-screen');
+            const quizScreen = document.getElementById('quiz-screen');
+            const resultsScreen = document.getElementById('results-screen');
+            
+            const startGameBtn = document.getElementById('start-game-btn');
+            const restartGameBtn = document.getElementById('restart-game-btn');
+            const nextQuestionBtn = document.getElementById('next-question-btn');
+            
+            const questionCountDisplay = document.getElementById('question-count');
+            const scoreDisplay = document.getElementById('score-display');
+            const progressBarFill = document.getElementById('progress-bar-fill');
+            const questionText = document.getElementById('question-text');
+            const answersContainer = document.getElementById('answers-container');
+            const feedbackMessage = document.getElementById('feedback-message');
+            const llmExplanationDiv = document.getElementById('llm-explanation');
+            const finalScoreDisplay = document.getElementById('final-score');
+            const resultMessage = document.getElementById('result-message');
+
+            let currentQuestionIndex = 0;
+            let score = 0;
+
+            // Event Listeners
+            startGameBtn.addEventListener('click', startGame);
+            nextQuestionBtn.addEventListener('click', showNextQuestion);
+            restartGameBtn.addEventListener('click', startGame);
+
+            function startGame() {
+                introScreen.classList.add('hidden');
+                resultsScreen.classList.add('hidden');
+                quizScreen.classList.remove('hidden');
+
+                currentQuestionIndex = 0;
+                score = 0;
+                updateScoreDisplay();
+                loadQuestion();
+            }
+
+            function loadQuestion() {
+                resetQuestionState();
+                const q = questions[currentQuestionIndex];
+                questionText.textContent = `Що означає фразеологізм "${q.phraseologism}"?`;
+                answersContainer.innerHTML = ''; // Clear previous answers
+
+                // Shuffle answers to make it less predictable
+                const shuffledAnswers = [...q.answers].sort(() => Math.random() - 0.5);
+
+                shuffledAnswers.forEach(answer => {
+                    const button = document.createElement('button');
+                    button.textContent = answer;
+                    button.classList.add('answer-option', 'w-full', 'block');
+                    button.dataset.answer = answer; // Store answer text
+
+                    button.addEventListener('click', () => handleAnswerClick(button, q.correct, q.topic));
+                    answersContainer.appendChild(button);
+                });
+
+                updateProgress();
+            }
+
+            function handleAnswerClick(selectedButton, correctAnswer, topic) {
+                // Disable all answer buttons after selection
+                Array.from(answersContainer.children).forEach(btn => btn.disabled = true);
+                
+                const selectedAnswer = selectedButton.dataset.answer;
+                const isCorrect = (selectedAnswer === correctAnswer);
+
+                if (isCorrect) {
+                    selectedButton.classList.add('correct');
+                    feedbackMessage.textContent = 'Правильно! ✅ Ти справжній знавець!';
+                    score++;
+                    generateLlmExplanation(topic, "correct", selectedAnswer, correctAnswer);
+                } else {
+                    selectedButton.classList.add('incorrect');
+                    feedbackMessage.textContent = `Неправильно ❌. Правильна відповідь: "${correctAnswer}".`;
+                    // Highlight correct answer if user was wrong
+                    Array.from(answersContainer.children).forEach(btn => {
+                        if (btn.dataset.answer === correctAnswer) {
+                            btn.classList.add('correct');
+                        }
+                    });
+                    generateLlmExplanation(topic, "incorrect", selectedAnswer, correctAnswer);
+                }
+                feedbackMessage.classList.remove('hidden');
+                nextQuestionBtn.classList.remove('hidden');
+                updateScoreDisplay();
+            }
+
+            function showNextQuestion() {
+                currentQuestionIndex++;
+                if (currentQuestionIndex < questions.length) {
+                    loadQuestion();
+                } else {
+                    showResults();
+                }
+            }
+
+            function resetQuestionState() {
+                feedbackMessage.classList.add('hidden');
+                feedbackMessage.textContent = '';
+                nextQuestionBtn.classList.add('hidden');
+                llmExplanationDiv.classList.add('hidden');
+                llmExplanationDiv.innerHTML = '';
+            }
+
+            function updateScoreDisplay() {
+                scoreDisplay.textContent = `🏆 ${score}`;
+            }
+
+            function updateProgress() {
+                questionCountDisplay.textContent = `Питання ${currentQuestionIndex + 1}/${questions.length}`;
+                const progressPercentage = (currentQuestionIndex / questions.length) * 100;
+                progressBarFill.style.width = `${progressPercentage}%`;
+            }
+
+            function showResults() {
+                quizScreen.classList.add('hidden');
+                resultsScreen.classList.remove('hidden');
+                progressBarFill.style.width = '100%'; // Ensure progress bar is full
+                
+                finalScoreDisplay.textContent = `${score}/${questions.length}`;
+
+                let message = '';
+                const percentage = (score / questions.length) * 100;
+                if (percentage === 100) {
+                    message = "Неймовірно! Ти справжній Майстер Фразеологізмів! 🤩";
+                    finalScoreDisplay.classList.add('text-emerald-600');
+                    finalScoreDisplay.classList.remove('text-amber-600', 'text-red-500');
+                } else if (percentage >= 60) {
+                    message = "Молодець! Ти чудово знаєш українські крилаті вислови. Продовжуй у тому ж дусі! 👍";
+                    finalScoreDisplay.classList.add('text-amber-600');
+                    finalScoreDisplay.classList.remove('text-emerald-600', 'text-red-500');
+                } else {
+                    message = "Не засмучуйся! Фразеологізми – це цілий світ, і його варто досліджувати далі. Спробуй ще раз, і все вийде! 💪";
+                    finalScoreDisplay.classList.add('text-red-500');
+                    finalScoreDisplay.classList.remove('text-emerald-600', 'text-amber-600');
+                }
+                resultMessage.textContent = message;
+            }
+
+            async function generateLlmExplanation(topic, userAnswerStatus, userAnswerText, correctAnswerText) {
+                llmExplanationDiv.innerHTML = '<p class="text-center text-stone-500">Завантаження пояснення від ШІ...</p>';
+                llmExplanationDiv.classList.remove('hidden');
+
+                let prompt = `Поясни простою і доступною мовою значення фразеологізму, який стосується теми "${topic}". `;
+                if (userAnswerStatus === "correct") {
+                    prompt += `Користувач відповів правильно, обравши "${userAnswerText}". Поясни, чому це правильно, і додай трохи цікавої інформації про цей фразеологізм або про його походження.`;
+                } else {
+                    prompt += `Користувач відповів неправильно, обравши "${userAnswerText}". Правильна відповідь: "${correctAnswerText}". Поясни, чому правильна відповідь є такою, і розкрий значення фразеологізму, щоб допомогти зрозуміти його краще.`;
+                }
+
+                try {
+                    const payload = { contents: [{ role: "user", parts: [{ text: prompt }] }] };
+                    const apiKey = ""; // Canvas will automatically provide the API key
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    const result = await response.json();
+                    if (result.candidates && result.candidates.length > 0 && result.candidates[0].content && result.candidates[0].content.parts && result.candidates[0].content.parts.length > 0) {
+                        const text = result.candidates[0].content.parts[0].text;
+                        llmExplanationDiv.innerHTML = `<h4 class="font-semibold text-emerald-800 mb-2">✨ Пояснення від ШІ:</h4><p class="text-emerald-700">${text}</p>`;
+                    } else {
+                        llmExplanationDiv.innerHTML = '<p class="text-red-500">Не вдалося отримати пояснення від ШІ. Спробуйте ще раз.</p>';
+                    }
+                } catch (error) {
+                    console.error("Error calling Gemini API:", error);
+                    llmExplanationDiv.innerHTML = '<p class="text-red-500">Помилка під час завантаження пояснення. Перевірте підключення до інтернету.</p>';
+                }
+            }
+        });
+    </script>
+</body>
+</html>

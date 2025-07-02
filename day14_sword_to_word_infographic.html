@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Інфографіка: Від Меча до Слова: Еволюція Впливу</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Energetic & Playful (Tomato, Lime Green, with warm neutrals) -->
+    <style>
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: #FFF8E1; /* Warm cream background */
+            color: #4B4B4B; /* Dark grey text */
+        }
+        h1, h2, h3 {
+            font-family: 'Merriweather', serif;
+        }
+        .card {
+            background-color: white;
+            border-radius: 1rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            padding: 1.5rem;
+            transition: transform 0.3s ease-in-out;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 350px; /* Base height for chart */
+            max-height: 450px; /* Max height to prevent excessive stretching */
+            margin-left: auto;
+            margin-right: auto;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px; /* Adjust height for larger screens */
+            }
+        }
+    </style>
+</head>
+<body class="p-4 sm:p-8">
+    <div class="max-w-6xl mx-auto">
+        <header class="text-center mb-12">
+            <h1 class="text-4xl md:text-5xl font-bold text-red-500">Від Меча до Слова: Еволюція Впливу ⚔️➡️📜</h1>
+            <p class="text-xl text-stone-600 mt-2">Як Європа та Україна шукали себе у великій трансформації</p>
+        </header>
+
+        <main class="space-y-12">
+
+            <section>
+                <h2 class="text-3xl font-bold text-red-500 mb-6 text-center">Велика Трансформація: Зміна Епох</h2>
+                <p class="text-lg text-stone-700 mb-8 text-center max-w-3xl mx-auto">
+                    Цього тижня ми занурилися у дивовижні сторінки історії, що охоплюють період Відродження та Бароко. Це був час, коли людство поступово відходило від середньовічних уявлень, де домінувала фізична сила, і починало усвідомлювати потужність думки, знань та творчості.
+                </p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div class="card text-center border-t-4 border-red-500">
+                        <span class="text-5xl mb-4">⚔️</span>
+                        <h3 class="text-2xl font-bold text-red-600 mb-2">Епоха "Меча"</h3>
+                        <p class="text-stone-600">
+                            Середньовіччя: влада, сила, війни, феодальні розбрати. Вирішення конфліктів фізичною силою.
+                        </p>
+                    </div>
+                    <div class="card text-center border-t-4 border-yellow-500">
+                        <span class="text-5xl mb-4">💡</span>
+                        <h3 class="text-2xl font-bold text-yellow-600 mb-2">Період Переходу</h3>
+                        <p class="text-stone-600">
+                            Відкриття, Гуманізм, Винахід друкарства. Початок віри у розум та творчість людини.
+                        </p>
+                    </div>
+                    <div class="card text-center border-t-4 border-green-500">
+                        <span class="text-5xl mb-4">📜</span>
+                        <h3 class="text-2xl font-bold text-green-600 mb-2">Епоха "Слова"</h3>
+                        <p class="text-stone-600">
+                            Відродження та Бароко: знання, культура, філософія. Слово як інструмент впливу та прогресу.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <section>
+                <h2 class="text-3xl font-bold text-red-500 mb-6 text-center">Вплив "Слова" та "Меча" крізь століття</h2>
+                <p class="text-lg text-stone-700 mb-8 text-center max-w-3xl mx-auto">
+                    Ця діаграма ілюструє концептуальний перехід від домінування фізичної сили до зростання впливу знань та ідей у Європі та Україні.
+                </p>
+                <div class="card p-6">
+                    <div class="chart-container">
+                        <canvas id="influenceEvolutionChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <section class="text-center">
+                <h2 class="text-3xl font-bold text-red-500 mb-6">Висновок</h2>
+                <p class="text-lg text-stone-700 max-w-3xl mx-auto">
+                    Перехід "Від Меча до Слова" був фундаментальним для розвитку людства. Він показав, що справжня сила полягає не лише у фізичній могутності, а й у здатності мислити, творити та поширювати знання. Ця еволюція продовжується й сьогодні, де "слово" (інформація, знання, дипломатія) має величезну силу, хоча "меч" (конфлікти) на жаль, досі присутній.
+                </p>
+            </section>
+
+        </main>
+
+        <footer class="text-center mt-12 text-stone-500 text-sm">
+            <p>&copy; 2025 Ваш блог "Слово на долоні". Історія надихає.</p>
+        </footer>
+    </div>
+
+    <script>
+        function wrapLabel(label, maxCharsPerLine) {
+            if (label.length <= maxCharsPerLine) {
+                return label;
+            }
+            const words = label.split(' ');
+            let lines = [];
+            let currentLine = '';
+
+            for (let i = 0; i < words.length; i++) {
+                const word = words[i];
+                if (currentLine.length + word.length + (currentLine ? 1 : 0) <= maxCharsPerLine) {
+                    lines.push(currentLine);
+                    currentLine = word;
+                } else {
+                    currentLine += (currentLine ? ' ' : '') + word;
+                }
+            }
+            if (currentLine) {
+                lines.push(currentLine);
+            }
+            return lines;
+        }
+
+        const ctx = document.getElementById('influenceEvolutionChart').getContext('2d');
+        const influenceEvolutionChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Середньовіччя', 'Раннє Відродження', 'Високе Відродження', 'Пізнє Відродження / Раннє Бароко', 'Бароко'],
+                datasets: [
+                    {
+                        label: 'Вплив "Меча" (Сила, Конфлікти)',
+                        data: [90, 70, 50, 30, 20],
+                        borderColor: '#FF6347', /* Tomato */
+                        backgroundColor: 'rgba(255, 99, 71, 0.2)',
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: '#FF6347',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: '#FF6347'
+                    },
+                    {
+                        label: 'Вплив "Слова" (Знання, Культура, Філософія)',
+                        data: [10, 30, 50, 70, 80],
+                        borderColor: '#32CD32', /* Lime Green */
+                        backgroundColor: 'rgba(50, 205, 50, 0.2)',
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: '#32CD32',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: '#32CD32'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        title: {
+                            display: true,
+                            text: 'Рівень Впливу (%)',
+                            color: '#4B4B4B'
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return value + '%';
+                            },
+                            color: '#4B4B4B'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Історичний Період',
+                            color: '#4B4B4B'
+                        },
+                        ticks: {
+                            color: '#4B4B4B'
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            color: '#4B4B4B'
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            title: function(tooltipItems) {
+                                const item = tooltipItems[0];
+                                let label = item.chart.data.labels[item.dataIndex];
+                                if (Array.isArray(label)) {
+                                  return label.join(' ');
+                                } else {
+                                  return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

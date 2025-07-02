@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Сприйняття Дон Кіхота: Вгадай Ілюзію!</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #FDFBF8; /* Light neutral background */
+            color: #4B4B4B; /* Dark grey text */
+        }
+        .game-card {
+            background-color: white;
+            border-radius: 1.5rem;
+            box-shadow: 0 15px 25px -5px rgba(0, 0, 0, 0.08), 0 5px 10px -5px rgba(0, 0, 0, 0.03);
+            transition: all 0.4s ease-in-out;
+            border: 1px solid #E5E7EB;
+            overflow: hidden;
+        }
+        .card-image-container {
+            width: 100%;
+            height: 200px; /* Fixed height for image consistency */
+            overflow: hidden;
+            border-top-left-radius: 1.5rem;
+            border-top-right-radius: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #F3F4F6; /* Placeholder background */
+        }
+        .card-image-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* Cover the area, crop if necessary */
+        }
+        .card-content {
+            padding: 1.5rem;
+            text-align: center;
+        }
+        .btn-toggle {
+            background-color: #6366F1; /* Indigo */
+            color: white;
+            font-weight: 600;
+            padding: 0.75rem 2rem;
+            border-radius: 0.75rem;
+            transition: background-color 0.3s ease-in-out, transform 0.2s ease-in-out;
+            cursor: pointer;
+            margin-top: 1rem;
+        }
+        .btn-toggle:hover {
+            background-color: #4F46E5; /* Darker indigo */
+            transform: translateY(-2px);
+        }
+        .explanation-box {
+            background-color: #EEF2FF; /* Light indigo */
+            border: 1px solid #C7D2FE; /* Indigo border */
+            color: #4338CA; /* Darker indigo text */
+            padding: 1rem;
+            border-radius: 0.75rem;
+            margin-top: 1.5rem;
+            text-align: left;
+        }
+        .explanation-box p {
+            margin-bottom: 0.5rem;
+        }
+        .explanation-box p:last-child {
+            margin-bottom: 0;
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center min-h-screen p-4 sm:p-6 lg:p-8">
+
+    <div class="w-full max-w-4xl mx-auto">
+        <header class="text-center mb-10">
+            <h1 class="text-4xl sm:text-5xl font-bold text-indigo-800 leading-tight">
+                Сприйняття Дон Кіхота: Вгадай Ілюзію! 🧐
+            </h1>
+            <p class="text-lg text-stone-600 mt-2">
+                Як би великий лицар Дон Кіхот сприйняв сучасні речі? Натисніть, щоб дізнатися!
+            </p>
+        </header>
+
+        <main id="perception-board-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Cards will be dynamically inserted here -->
+        </main>
+
+        <footer class="text-center mt-12 text-stone-500 text-sm">
+            <p>&copy; 2025 Ваш блог "Слово на долоні". Натхнено вічним ідеалістом.</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const perceptionData = [
+                {
+                    image_url: "https://placehold.co/400x200/A0A0A0/FFFFFF?text=Вітряна+турбіна",
+                    alt_text: "Сучасна вітряна турбіна",
+                    real_object: "Вітряна турбіна",
+                    quixote_perception: "Зловісний велетень, що загрожує мирним мешканцям!",
+                    explanation: "Для Дон Кіхота вітряки були не просто машинами, а гігантськими велетнями, з якими потрібно було битися, щоб захистити слабких. Сучасна турбіна, безсумнівно, викликала б у нього ще більший лицарський гнів!"
+                },
+                {
+                    image_url: "https://placehold.co/400x200/A0A0A0/FFFFFF?text=Сучасний+трактор",
+                    alt_text: "Сучасний трактор на полі",
+                    real_object: "Сучасний трактор",
+                    quixote_perception: "Могутній бойовий кінь, що везе лицаря на турнір!",
+                    explanation: "Дон Кіхот часто плутав прості речі з елементами лицарського життя. Трактор, з його розмірами та потужністю, легко міг би стати для нього бойовим конем або навіть чудовиськом, що тягне за собою плуг."
+                },
+                {
+                    image_url: "https://placehold.co/400x200/A0A0A0/FFFFFF?text=Телефон+з+камерою",
+                    alt_text: "Смартфон з камерою",
+                    real_object: "Смартфон з камерою",
+                    quixote_perception: "Чарівне дзеркало, що показує світ, або магічний артефакт для зв'язку з феями!",
+                    explanation: "У світі, де магія була частиною лицарських романів, смартфон з його екраном та можливістю показувати зображення та голоси, був би сприйнятий як потужний чарівний предмет. Можливо, він би намагався викликати Дульсінею через FaceTime!"
+                },
+                {
+                    image_url: "https://placehold.co/400x200/A0A0A0/FFFFFF?text=Потяг+або+метро",
+                    alt_text: "Потяг або вагон метро",
+                    real_object: "Потяг або вагон метро",
+                    quixote_perception: "Дракон, що дихає димом, або величезний залізний звір, що перевозить полонених!",
+                    explanation: "Рухомий, гучний і дихаючий 'димом' потяг або метро, безсумнівно, був би сприйнятий Дон Кіхотом як гігантський дракон або інше міфічне чудовисько, яке потрібно перемогти, щоб звільнити 'полонених'."
+                },
+                {
+                    image_url: "https://placehold.co/400x200/A0A0A0/FFFFFF?text=Рекламний+білборд",
+                    alt_text: "Рекламний білборд",
+                    real_object: "Рекламний білборд",
+                    quixote_perception: "Чарівний щит з посланнями від принцес або заклинаннями ворогів!",
+                    explanation: "Білборд, що світиться або змінює зображення, був би для Дон Кіхота не просто рекламою, а магічним артефактом. Він би намагався розшифрувати 'таємні послання' від своєї дами серця або викрити 'підступні заклинання' ворогів."
+                },
+                {
+                    image_url: "https://placehold.co/400x200/A0A0A0/FFFFFF?text=Кавоварка",
+                    alt_text: "Сучасна кавоварка",
+                    real_object: "Сучасна кавоварка",
+                    quixote_perception: "Алхімічний апарат, що створює чарівне зілля для бадьорості!",
+                    explanation: "Для людини, яка не знайома з сучасною технікою, кавоварка, що шумить, парує і 'чаклує' над зернами, видаючи ароматний напій, була б сприйнята як складний алхімічний пристрій, що створює магічне зілля для надання сил лицарю перед подвигами."
+                }
+            ];
+
+            const container = document.getElementById('perception-board-container');
+
+            perceptionData.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'game-card relative';
+                
+                const imageContainer = document.createElement('div');
+                imageContainer.className = 'card-image-container';
+                const img = document.createElement('img');
+                img.src = item.image_url;
+                img.alt = item.alt_text;
+                imageContainer.appendChild(img);
+                card.appendChild(imageContainer);
+
+                const cardContent = document.createElement('div');
+                cardContent.className = 'card-content';
+                
+                const realObjectText = document.createElement('h3');
+                realObjectText.className = 'text-xl font-semibold text-stone-800 mb-2';
+                realObjectText.textContent = item.real_object;
+                cardContent.appendChild(realObjectText);
+
+                const quixotePerceptionText = document.createElement('p');
+                quixotePerceptionText.className = 'text-lg text-indigo-700 font-medium mb-4 hidden';
+                quixotePerceptionText.textContent = `Дон Кіхот побачив би: "${item.quixote_perception}"`;
+                cardContent.appendChild(quixotePerceptionText);
+
+                const explanationBox = document.createElement('div');
+                explanationBox.className = 'explanation-box hidden';
+                explanationBox.innerHTML = `<h4 class="font-semibold text-indigo-800 mb-1">Чому так?</h4><p>${item.explanation}</p>`;
+                cardContent.appendChild(explanationBox);
+
+                const toggleBtn = document.createElement('button');
+                toggleBtn.className = 'btn-toggle';
+                toggleBtn.textContent = 'Як побачив би Дон Кіхот?';
+                cardContent.appendChild(toggleBtn);
+
+                toggleBtn.addEventListener('click', () => {
+                    if (quixotePerceptionText.classList.contains('hidden')) {
+                        quixotePerceptionText.classList.remove('hidden');
+                        explanationBox.classList.remove('hidden');
+                        toggleBtn.textContent = 'Приховати пояснення';
+                    } else {
+                        quixotePerceptionText.classList.add('hidden');
+                        explanationBox.classList.add('hidden');
+                        toggleBtn.textContent = 'Як побачив би Дон Кіхот?';
+                    }
+                });
+
+                card.appendChild(cardContent);
+                container.appendChild(card);
+            });
+        });
+    </script>
+</body>
+</html>

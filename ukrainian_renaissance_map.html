@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Інтерактивна карта: Українське Відродження</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #FDFBF8; /* Light neutral background */
+            color: #4B4B4B; /* Dark grey text */
+        }
+        .map-container {
+            position: relative;
+            width: 100%;
+            padding-bottom: 75%; /* Aspect ratio 4:3 for the map area */
+            background-color: #E6FFFA; /* Light teal for map background */
+            border-radius: 1.5rem;
+            box-shadow: 0 15px 25px -5px rgba(0, 0, 0, 0.08), 0 5px 10px -5px rgba(0, 0, 0, 0.03);
+            overflow: hidden;
+            border: 1px solid #B2F5EA; /* Lighter teal border */
+        }
+        .map-container img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain; /* Ensures the image fits within the container without cropping */
+            z-index: 1; /* Place image below markers */
+        }
+        .map-marker {
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            background-color: #F56565; /* Red marker */
+            border-radius: 50%;
+            border: 3px solid #E53E3E; /* Darker red border */
+            cursor: pointer;
+            transform: translate(-50%, -50%); /* Center the marker on its coordinates */
+            transition: all 0.2s ease-in-out;
+            z-index: 10;
+        }
+        .map-marker:hover {
+            transform: translate(-50%, -50%) scale(1.2);
+            box-shadow: 0 0 0 6px rgba(245, 101, 101, 0.4); /* Pulse effect on hover */
+        }
+        .marker-label {
+            position: absolute;
+            top: -25px; /* Position above marker */
+            left: 50%;
+            transform: translateX(-50%);
+            white-space: nowrap;
+            background-color: #374151; /* Dark grey background for label */
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.5rem;
+            font-size: 0.8rem;
+            font-weight: 500;
+            pointer-events: none; /* Do not block clicks */
+            opacity: 0;
+            transition: opacity 0.2s ease-in-out;
+        }
+        .map-marker:hover .marker-label {
+            opacity: 1;
+        }
+        .popup {
+            position: absolute;
+            background-color: white;
+            border-radius: 1rem;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+            padding: 1.5rem;
+            max-width: 300px;
+            z-index: 20;
+            transform: translate(-50%, -50%); /* Centered by JS */
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+        }
+        .popup.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        .popup-close-btn {
+            position: absolute;
+            top: 0.75rem;
+            right: 0.75rem;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #9CA3AF;
+        }
+        .popup-close-btn:hover {
+            color: #EF4444;
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center min-h-screen p-4 sm:p-6 lg:p-8">
+
+    <div class="w-full max-w-4xl mx-auto">
+        <header class="text-center mb-10">
+            <h1 class="text-4xl sm:text-5xl font-bold text-amber-900 leading-tight">
+                Карта Українського Відродження 🗺️
+            </h1>
+            <p class="text-lg text-stone-600 mt-2">
+                Дослідіть ключові центри культури та освіти XVI-XVII століть!
+            </p>
+        </header>
+
+        <main class="map-container relative">
+            <!-- Placeholder for Ukraine's geographical outlines -->
+            <img src="https://placehold.co/800x600/E6FFFA/38B2AC?text=КАРТА+УКРАЇНИ" alt="Схематична карта України з позначками міст">
+
+            <!-- Markers will be dynamically added by JavaScript -->
+        </main>
+
+        <footer class="text-center mt-12 text-stone-500 text-sm">
+            <p>&copy; 2025 Ваш блог "Слово на долоні". Історія на карті.</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const mapContainer = document.querySelector('.map-container');
+            const mapData = [
+                {
+                    name: "Острог",
+                    coords: { top: '40%', left: '40%' }, /* Adjusted for a more central-west position on a generic map */
+                    info: "Острог – один із найважливіших центрів Українського Відродження. Тут була заснована Острозька академія (1576) – перший вищий навчальний заклад Східної Європи, та видана Острозька Біблія (1581) – перша повна Біблія церковнослов'янською мовою."
+                },
+                {
+                    name: "Київ",
+                    coords: { top: '50%', left: '70%' }, /* Adjusted for a more central-east position on a generic map */
+                    info: "Київ – духовний та культурний центр. Тут діяло Київське Богоявленське братство, а пізніше – Києво-Могилянська колегія (заснована Петром Могилою), що стала одним із найвпливовіших освітніх закладів регіону."
+                },
+                {
+                    name: "Львів",
+                    coords: { top: '55%', left: '20%' }, /* Adjusted for a more western position on a generic map */
+                    info: "Львів – важливий центр друкарства та братського руху. Тут активно діяло Львівське Успенське братство, що засновувало школи та друкарні, сприяючи розвитку української культури."
+                }
+            ];
+
+            let activePopup = null;
+
+            mapData.forEach(city => {
+                const marker = document.createElement('div');
+                marker.className = 'map-marker';
+                marker.style.top = city.coords.top;
+                marker.style.left = city.coords.left;
+                marker.dataset.name = city.name;
+                marker.dataset.info = city.info;
+
+                const label = document.createElement('span');
+                label.className = 'marker-label';
+                label.textContent = city.name;
+                marker.appendChild(label);
+
+                marker.addEventListener('click', (event) => {
+                    event.stopPropagation(); // Prevent clicks on map container from closing immediately
+                    openPopup(city, marker);
+                });
+                mapContainer.appendChild(marker);
+            });
+
+            function openPopup(city, marker) {
+                // Close any existing popup
+                if (activePopup) {
+                    activePopup.classList.remove('active');
+                    activePopup.remove(); // Remove from DOM
+                    activePopup = null;
+                }
+
+                const popup = document.createElement('div');
+                popup.className = 'popup active';
+                popup.innerHTML = `
+                    <button class="popup-close-btn">&times;</button>
+                    <h3 class="text-xl font-bold text-amber-800 mb-2">${city.name}</h3>
+                    <p class="text-stone-700 text-sm">${city.info}</p>
+                `;
+
+                // Position the popup near the marker
+                const markerRect = marker.getBoundingClientRect();
+                const mapRect = mapContainer.getBoundingClientRect();
+
+                // Calculate relative position within the map container
+                const relativeTop = (markerRect.top - mapRect.top + markerRect.height / 2) / mapRect.height * 100;
+                const relativeLeft = (markerRect.left - mapRect.left + markerRect.width / 2) / mapRect.width * 100;
+
+                popup.style.top = `${relativeTop}%`;
+                popup.style.left = `${relativeLeft}%`;
+
+                // Adjust position to prevent going off-screen (simple check)
+                // This is a basic adjustment, more complex logic might be needed for perfect placement
+                if (relativeLeft > 70) { // If too far right, shift left
+                    popup.style.left = `${relativeLeft - 10}%`;
+                }
+                if (relativeTop < 30) { // If too far up, shift down
+                    popup.style.top = `${relativeTop + 10}%`;
+                }
+
+                mapContainer.appendChild(popup);
+                activePopup = popup;
+
+                popup.querySelector('.popup-close-btn').addEventListener('click', closePopup);
+            }
+
+            function closePopup() {
+                if (activePopup) {
+                    activePopup.classList.remove('active');
+                    // Give it a moment for transition before removing
+                    setTimeout(() => {
+                        if (activePopup && activePopup.parentNode) { // Check if it's still in DOM
+                            activePopup.remove();
+                        }
+                        activePopup = null;
+                    }, 300); 
+                }
+            }
+
+            // Close popup when clicking outside it on the map container
+            mapContainer.addEventListener('click', (event) => {
+                if (activePopup && !activePopup.contains(event.target) && !event.target.classList.contains('map-marker')) {
+                    closePopup();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

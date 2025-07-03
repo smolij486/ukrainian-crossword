@@ -6,21 +6,25 @@ const Card = ({ content, isFlipped, isMatched, onClick }) => {
         <div
             className={`
                 relative w-full h-32 sm:h-40 md:h-48 rounded-lg shadow-md
-                flex items-center justify-center cursor-pointer transition-all duration-300 transform
-                ${isMatched ? 'opacity-0 scale-90' : 'opacity-100 scale-100'}
-                ${isFlipped ? 'rotate-y-180' : ''} /* Цей клас керує перевертанням усієї картки */
+                flex items-center justify-center cursor-pointer
+                ${isMatched ? 'opacity-0 scale-90 transition-all duration-300' : 'opacity-100 scale-100'}
             `}
             onClick={onClick}
-            style={{ perspective: '1000px' }} /* Перспектива для 3D-ефекту перевертання */
+            style={{ perspective: '1000px' }} // Перспектива для 3D-ефекту перевертання на батьківському елементі
         >
-            {/* Лицьова сторона картки (сорочка) */}
-            <div className="absolute w-full h-full backface-hidden bg-amber-200 rounded-lg flex items-center justify-center text-2xl font-bold text-amber-900 p-4">
-                <span className="text-5xl">🏛️</span>
-            </div>
-            {/* Зворотна сторона картки (зміст) */}
-            <div className="absolute w-full h-full backface-hidden bg-white rounded-lg flex items-center justify-center text-center p-4 transform rotate-y-180">
-                {/* Клас 'rotate-y-180' тут робить зворотну сторону спочатку прихованою, а 'backface-hidden' приховує її, коли вона повернута спиною до глядача */}
-                <p className="text-sm sm:text-base md:text-lg font-semibold text-stone-700">{content}</p>
+            <div className={`
+                relative w-full h-full transition-transform duration-500 transform-style-preserve-3d
+                ${isFlipped ? 'rotate-y-180' : ''} /* Цей клас керує перевертанням внутрішнього контейнера */
+            `}>
+                {/* Лицьова сторона картки (сорочка) */}
+                <div className="absolute w-full h-full backface-hidden bg-amber-200 rounded-lg flex items-center justify-center text-2xl font-bold text-amber-900 p-4">
+                    <span className="text-5xl">🏛️</span>
+                </div>
+                {/* Зворотна сторона картки (зміст) */}
+                <div className="absolute w-full h-full backface-hidden bg-white rounded-lg flex items-center justify-center text-center p-4 transform rotate-y-180">
+                    {/* Клас 'rotate-y-180' тут робить зворотну сторону спочатку прихованою, а 'backface-hidden' приховує її, коли вона повернута спиною до глядача */}
+                    <p className="text-sm sm:text-base md:text-lg font-semibold text-stone-700">{content}</p>
+                </div>
             </div>
         </div>
     );

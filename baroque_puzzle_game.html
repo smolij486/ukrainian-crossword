@@ -1,0 +1,201 @@
+import React, { useState, useEffect } from 'react';
+
+// Компонент однієї картки
+const Card = ({ content, isFlipped, isMatched, onClick }) => {
+    return (
+        <div
+            className={`
+                relative w-full h-32 sm:h-40 md:h-48 rounded-lg shadow-md
+                flex items-center justify-center cursor-pointer transition-all duration-300 transform
+                ${isMatched ? 'opacity-0 scale-90' : 'opacity-100 scale-100'}
+                ${isFlipped ? 'rotate-y-180' : ''} /* Цей клас керує перевертанням усієї картки */
+            `}
+            onClick={onClick}
+            style={{ perspective: '1000px' }} /* Перспектива для 3D-ефекту перевертання */
+        >
+            {/* Лицьова сторона картки (сорочка) */}
+            <div className="absolute w-full h-full backface-hidden bg-amber-200 rounded-lg flex items-center justify-center text-2xl font-bold text-amber-900 p-4">
+                <span className="text-5xl">🏛️</span>
+            </div>
+            {/* Зворотна сторона картки (зміст) */}
+            <div className="absolute w-full h-full backface-hidden bg-white rounded-lg flex items-center justify-center text-center p-4 transform rotate-y-180">
+                {/* Клас 'rotate-y-180' тут робить зворотну сторону спочатку прихованою, а 'backface-hidden' приховує її, коли вона повернута спиною до глядача */}
+                <p className="text-sm sm:text-base md:text-lg font-semibold text-stone-700">{content}</p>
+            </div>
+        </div>
+    );
+};
+
+// Головний компонент гри
+const App = () => {
+    const [cards, setCards] = useState([]);
+    const [flippedCards, setFlippedCards] = useState([]);
+    const [matchedPairs, setMatchedPairs] = useState(0);
+    const [moves, setMoves] = useState(0);
+    const [gameStarted, setGameStarted] = useState(false);
+    const [gameWon, setGameWon] = useState(false);
+
+    // Дані для пазлу (пари "термін" - "опис")
+    const initialPairs = [
+        { id: 1, term: "Бароко", description: "Стиль XVII-XVIII ст., 'перлина неправильної форми'" },
+        { id: 2, term: "Педро Кальдерон", description: "Автор п'єси 'Життя є сон'" },
+        { id: 3, term: "Григорій Сковорода", description: "Український філософ, автор 'Саду божественних пісень'" },
+        { id: 4, term: "Життя є сон", description: "П'єса про ілюзорність життя" },
+        { id: 5, term: "Сродна праця", description: "Ідея Сковороди: займатися тим, до чого є схильність" },
+        { id: 6, term: "Контрасти", description: "Протиставлення світла/тіні, життя/смерті" },
+    ];
+
+    // Функція для ініціалізації та перемішування карток
+    const initializeGame = () => {
+        const gameCards = [];
+        initialPairs.forEach(pair => {
+            // Додаємо картку з терміном
+            gameCards.push({
+                id: `${pair.id}-term`,
+                pairId: pair.id,
+                content: pair.term,
+                isFlipped: false,
+                isMatched: false,
+            });
+            // Додаємо картку з описом
+            gameCards.push({
+                id: `${pair.id}-desc`,
+                pairId: pair.id,
+                content: pair.description,
+                isFlipped: false,
+                isMatched: false,
+            });
+        });
+
+        // Перемішуємо картки
+        const shuffledCards = gameCards.sort(() => Math.random() - 0.5);
+        setCards(shuffledCards);
+        setFlippedCards([]);
+        setMatchedPairs(0);
+        setMoves(0);
+        setGameWon(false);
+        setGameStarted(true);
+    };
+
+    // Обробник кліку по картці
+    const handleCardClick = (clickedCard) => {
+        if (!gameStarted || clickedCard.isFlipped || clickedCard.isMatched || flippedCards.length === 2) {
+            return; // Ігноруємо кліки, якщо гра не почалася, картка вже перевернута/знайдена, або вже дві картки перевернуті
+        }
+
+        // Перевертаємо картку
+        const newCards = cards.map(card =>
+            card.id === clickedCard.id ? { ...card, isFlipped: true } : card
+        );
+        setCards(newCards);
+        setFlippedCards(prev => [...prev, clickedCard]);
+    };
+
+    // Ефект для перевірки збігів, коли перевернуто дві картки
+    useEffect(() => {
+        if (flippedCards.length === 2) {
+            setMoves(prev => prev + 1); // Збільшуємо кількість ходів
+            const [card1, card2] = flippedCards;
+
+            if (card1.pairId === card2.pairId) {
+                // Збіг! Позначаємо як знайдені
+                const newCards = cards.map(card =>
+                    card.pairId === card1.pairId ? { ...card, isMatched: true } : card
+                );
+                setCards(newCards);
+                setMatchedPairs(prev => prev + 1);
+                setFlippedCards([]); // Очищаємо перевернуті картки
+            } else {
+                // Не збіг. Перевертаємо назад через деякий час
+                setTimeout(() => {
+                    const newCards = cards.map(card =>
+                        card.id === card1.id || card.id === card2.id ? { ...card, isFlipped: false } : card
+                    );
+                    setCards(newCards);
+                    setFlippedCards([]);
+                }, 1000);
+            }
+        }
+    }, [flippedCards, cards]);
+
+    // Ефект для перевірки перемоги
+    useEffect(() => {
+        if (matchedPairs === initialPairs.length && gameStarted) {
+            setGameWon(true);
+            setGameStarted(false); // Завершуємо гру
+        }
+    }, [matchedPairs, initialPairs.length, gameStarted]);
+
+    return (
+        <div className="flex flex-col items-center min-h-screen p-4 sm:p-6 lg:p-8 bg-amber-50">
+            <div className="w-full max-w-4xl mx-auto">
+                <header className="text-center mb-10">
+                    <h1 className="text-4xl sm:text-5xl font-bold text-amber-800 leading-tight">
+                        Пазл Бароко: Знайди Пару! 🧩
+                    </h1>
+                    <p className="text-lg text-stone-600 mt-2">
+                        Перевір свої знання про Європейське Бароко! Знайди всі пари!
+                    </p>
+                </header>
+
+                <main className="game-container bg-white rounded-xl shadow-lg p-6 sm:p-8">
+                    {!gameStarted && !gameWon && (
+                        <div className="text-center">
+                            <h2 className="text-2xl font-bold text-stone-800 mb-4">Ласкаво просимо до гри!</h2>
+                            <p className="text-stone-700 mb-6">
+                                Натисніть "Почати гру", щоб знайти пари термінів та їхніх описів, пов'язаних з епохою Бароко.
+                            </p>
+                            <button
+                                onClick={initializeGame}
+                                className="bg-emerald-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-emerald-700 transition-colors duration-300 shadow-md"
+                            >
+                                Почати гру!
+                            </button>
+                        </div>
+                    )}
+
+                    {gameStarted && !gameWon && (
+                        <>
+                            <div className="flex justify-between items-center mb-6 text-xl font-semibold text-stone-700">
+                                <span>Ходів: {moves}</span>
+                                <span>Знайдено пар: {matchedPairs} / {initialPairs.length}</span>
+                            </div>
+                            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-4 lg:grid-cols-4 gap-4 sm:gap-6">
+                                {cards.map(card => (
+                                    <Card
+                                        key={card.id}
+                                        content={card.content}
+                                        isFlipped={card.isFlipped}
+                                        isMatched={card.isMatched}
+                                        onClick={() => handleCardClick(card)}
+                                    />
+                                ))}
+                            </div>
+                        </>
+                    )}
+
+                    {gameWon && (
+                        <div className="text-center">
+                            <h2 className="text-3xl sm:text-4xl font-bold text-emerald-600 mb-4">Вітаємо! Ти переміг! 🎉</h2>
+                            <p className="text-xl text-stone-700 mb-6">
+                                Ти знайшов усі {initialPairs.length} пари за {moves} ходів!
+                            </p>
+                            <button
+                                onClick={initializeGame}
+                                className="bg-amber-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-amber-700 transition-colors duration-300 shadow-md"
+                            >
+                                Зіграти ще раз!
+                            </button>
+                        </div>
+                    )}
+                </main>
+
+                <footer className="text-center mt-12 text-stone-500 text-sm">
+                    <p>&copy; 2025 Ваш блог "Слово на долоні". Натхнено величчю Бароко.</p>
+                </footer>
+            </div>
+        </div>
+    );
+};
+
+export default App;

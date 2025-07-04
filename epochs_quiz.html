@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Порівняй-ка: Бароко vs. Просвітництво!</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #FDFBF8; /* Light neutral background */
+            color: #4B4B4B; /* Dark grey text */
+        }
+        .game-card {
+            background-color: white;
+            border-radius: 1.5rem;
+            box-shadow: 0 15px 25px -5px rgba(0, 0, 0, 0.08), 0 5px 10px -5px rgba(0, 0, 0, 0.03);
+            transition: all 0.4s ease-in-out;
+            border: 1px solid #E5E7EB;
+        }
+        .btn-primary {
+            background-color: #F59E0B; /* Amber */
+            color: white;
+            font-weight: 600;
+            padding: 0.75rem 2rem;
+            border-radius: 0.75rem;
+            transition: background-color 0.3s ease-in-out, transform 0.2s ease-in-out;
+            cursor: pointer;
+        }
+        .btn-primary:hover {
+            background-color: #D97706; /* Darker amber */
+            transform: translateY(-2px);
+        }
+        .item-card {
+            background-color: #FEF3C7; /* Light amber */
+            border: 2px solid #FCD34D; /* Amber border */
+            color: #78350F; /* Dark amber text */
+            padding: 0.75rem 1.25rem;
+            border-radius: 0.75rem;
+            text-align: center;
+            font-weight: 500;
+            cursor: grab;
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .item-card:hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .drop-zone {
+            min-height: 200px;
+            background-color: #F3F4F6; /* Light grey */
+            border: 2px dashed #D1D5DB; /* Dashed grey border */
+            border-radius: 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+        }
+        .drop-zone.drag-over {
+            background-color: #E0F2FE; /* Light blue on drag over */
+            border-color: #60A5FA; /* Blue border on drag over */
+        }
+        .drop-zone.correct-zone {
+            background-color: #D1FAE5; /* Light green for correct zone */
+            border-color: #10B981; /* Green border */
+        }
+        .drop-zone.incorrect-zone {
+            background-color: #FEE2E2; /* Light red for incorrect zone */
+            border-color: #EF4444; /* Red border */
+        }
+        .feedback-message {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            border-radius: 0.75rem;
+            text-align: center;
+            font-weight: bold;
+        }
+        .feedback-correct {
+            background-color: #D1FAE5;
+            color: #065F46;
+            border: 1px solid #10B981;
+        }
+        .feedback-incorrect {
+            background-color: #FEE2E2;
+            color: #991B1B;
+            border: 1px solid #EF4444;
+        }
+        .item-card.placed {
+            cursor: default;
+            box-shadow: none;
+            transform: none;
+        }
+        .item-card.correctly-placed {
+            background-color: #D1FAE5; /* Light green for correctly placed items */
+            border-color: #10B981;
+            color: #065F46;
+        }
+        .item-card.incorrectly-placed {
+            background-color: #FEE2E2; /* Light red for incorrectly placed items */
+            border-color: #EF4444;
+            color: #991B1B;
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center min-h-screen p-4 sm:p-6 lg:p-8">
+
+    <div id="game-app" class="w-full max-w-4xl mx-auto">
+        <header class="text-center mb-10">
+            <h1 class="text-4xl sm:text-5xl font-bold text-amber-900 leading-tight">
+                "Порівняй-ка": Бароко vs. Просвітництво! 💡🎭
+            </h1>
+            <p class="text-lg text-stone-600 mt-2">
+                Розсортуй ідеї та характеристики за відповідними літературними епохами!
+            </p>
+        </header>
+
+        <main id="game-content">
+            <section id="intro-screen" class="game-card p-8 sm:p-10 text-center">
+                <h2 class="text-2xl sm:text-3xl font-bold text-stone-800 mb-6">
+                    Привіт, літературознавче!
+                </h2>
+                <p class="text-stone-700 mb-8 leading-relaxed">
+                    Ми вже багато дізналися про Бароко та Просвітництво. Тепер час перевірити, наскільки добре ти розрізняєш ці епохи! Перетягуй картки з характеристиками та іменами у відповідні зони.
+                </p>
+                <button id="start-game-btn" class="btn-primary">Почати гру!</button>
+            </section>
+
+            <section id="quiz-screen" class="hidden">
+                <div class="flex justify-between items-center mb-6 text-xl font-semibold text-stone-700">
+                    <span>Залишилось: <span id="items-left-count"></span></span>
+                    <span>Правильно: <span id="correct-count">0</span></span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div id="baroque-zone" class="drop-zone border-purple-500 bg-purple-50">
+                        <h3 class="text-2xl font-bold text-purple-700 mb-4">Бароко 🎭</h3>
+                        <p class="text-stone-600 text-sm mb-4 placeholder-text">Перетягни сюди характеристики Бароко</p>
+                    </div>
+                    <div id="enlightenment-zone" class="drop-zone border-blue-500 bg-blue-50">
+                        <h3 class="text-2xl font-bold text-blue-700 mb-4">Просвітництво 💡</h3>
+                        <p class="text-stone-600 text-sm mb-4 placeholder-text">Перетягни сюди характеристики Просвітництва</p>
+                    </div>
+                </div>
+
+                <div id="items-container" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                    <!-- Draggable items will be injected here -->
+                </div>
+
+                <div id="feedback-message" class="feedback-message hidden"></div>
+                <button id="check-answers-btn" class="btn-primary w-full mt-8 hidden">Перевірити всі відповіді</button>
+                <div id="llm-explanation" class="mt-8"></div> <!-- Added LLM explanation div -->
+            </section>
+
+            <section id="results-screen" class="hidden game-card p-8 sm:p-10 text-center">
+                <h2 class="text-3xl sm:text-4xl font-bold text-amber-900 mb-4">Твої результати! 🎉</h2>
+                <p id="final-score" class="text-5xl font-extrabold text-emerald-600 my-8"></p>
+                <p id="result-message" class="text-lg text-stone-700 mb-8 leading-relaxed">
+                    Чудова робота! Ти добре розрізняєш Бароко та Просвітництво!
+                </p>
+                <button id="restart-game-btn" class="btn-primary">Спробувати ще раз!</button>
+            </section>
+        </main>
+
+        <footer class="text-center mt-12 text-stone-500 text-sm">
+            <p>&copy; 2025 Ваш блог "Слово на долоні". Натхнено літературними епохами.</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const gameData = [
+                { id: '1', text: 'Пишність та емоційність', category: 'baroque' },
+                { id: '2', text: 'Культ розуму та логіки', category: 'enlightenment' },
+                { id: '3', text: 'Використання контрастів', category: 'baroque' },
+                { id: '4', text: 'Критика суспільства', category: 'enlightenment' },
+                { id: '5', text: 'Метафоричність та алегорії', category: 'baroque' },
+                { id: '6', text: 'Ясність та простота', category: 'enlightenment' },
+                { id: '7', text: 'Педро Кальдерон', category: 'baroque' },
+                { id: '8', text: 'Григорій Сковорода', category: 'baroque' },
+                { id: '9', text: 'Вольтер', category: 'enlightenment' },
+                { id: '10', text: 'Дені Дідро', category: 'enlightenment' },
+                { id: '11', text: 'Драматизм та пафос', category: 'baroque' },
+                { id: '12', text: 'Енциклопедисти', category: 'enlightenment' },
+            ];
+
+            const introScreen = document.getElementById('intro-screen');
+            const quizScreen = document.getElementById('quiz-screen');
+            const resultsScreen = document.getElementById('results-screen');
+            const startGameBtn = document.getElementById('start-game-btn');
+            const restartGameBtn = document.getElementById('restart-game-btn');
+            const checkAnswersBtn = document.getElementById('check-answers-btn');
+
+            const itemsContainer = document.getElementById('items-container');
+            const baroqueZone = document.getElementById('baroque-zone');
+            const enlightenmentZone = document.getElementById('enlightenment-zone');
+            const itemsLeftCount = document.getElementById('items-left-count');
+            const correctCountDisplay = document.getElementById('correct-count');
+            const finalScoreDisplay = document.getElementById('final-score');
+            const resultMessage = document.getElementById('result-message');
+            const feedbackMessage = document.getElementById('feedback-message');
+            const llmExplanationDiv = document.getElementById('llm-explanation');
+
+            let currentItems = [];
+            let placedItems = {}; // { itemId: 'zoneId' }
+            let correctPlacedCount = 0;
+
+            // --- Helper Functions ---
+
+            function shuffleArray(array) {
+                for (let i = array.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [array[i], array[j]] = [array[j], array[i]]; // Swap elements
+                }
+            }
+
+            function updateCounts() {
+                let itemsCurrentlyPlacedInZones = 0;
+                gameData.forEach(item => {
+                    if (placedItems[item.id]) {
+                        itemsCurrentlyPlacedInZones++;
+                    }
+                });
+
+                itemsLeftCount.textContent = gameData.length - itemsCurrentlyPlacedInZones;
+                
+                if (itemsCurrentlyPlacedInZones === gameData.length) {
+                    checkAnswersBtn.classList.remove('hidden');
+                } else {
+                    checkAnswersBtn.classList.add('hidden');
+                }
+            }
+
+            function handleDragStart(e) {
+                e.dataTransfer.setData('text/plain', e.target.dataset.itemId);
+                e.dataTransfer.effectAllowed = 'move';
+            }
+
+            function handleDragOver(e) {
+                e.preventDefault();
+                e.target.closest('.drop-zone')?.classList.add('drag-over');
+            }
+
+            function handleDragLeave(e) {
+                e.target.closest('.drop-zone')?.classList.remove('drag-over');
+            }
+
+            function handleDrop(e) {
+                e.preventDefault();
+                const dropZone = e.target.closest('.drop-zone');
+                if (!dropZone) {
+                    // If dropped outside any drop zone, return to original container
+                    const itemId = e.dataTransfer.getData('text/plain');
+                    const draggedItem = document.querySelector(`[data-item-id="${itemId}"]`);
+                    if (draggedItem && placedItems[itemId]) { // If it was previously placed
+                        itemsContainer.appendChild(draggedItem);
+                        draggedItem.classList.remove('placed');
+                        delete placedItems[itemId];
+                        updateCounts();
+                        // Clear any previous correctness styling
+                        draggedItem.classList.remove('correctly-placed', 'incorrectly-placed');
+                        feedbackMessage.classList.add('hidden');
+                        feedbackMessage.textContent = '';
+                        llmExplanationDiv.classList.add('hidden');
+                        llmExplanationDiv.innerHTML = '';
+                    }
+                    return;
+                }
+
+                dropZone.classList.remove('drag-over');
+                const itemId = e.dataTransfer.getData('text/plain');
+                const draggedItem = document.querySelector(`[data-item-id="${itemId}"]`);
+
+                if (draggedItem) {
+                    // If the item was previously placed in a zone, remove its entry
+                    if (placedItems[itemId]) {
+                        delete placedItems[itemId];
+                    }
+
+                    // Remove placeholder text if present in the target zone
+                    dropZone.querySelectorAll('.placeholder-text').forEach(p => {
+                        p.classList.add('hidden');
+                    });
+
+                    dropZone.appendChild(draggedItem);
+                    draggedItem.classList.add('placed');
+                    placedItems[itemId] = dropZone.id; // Store where it was placed
+
+                    // Clear any previous correctness styling
+                    draggedItem.classList.remove('correctly-placed', 'incorrectly-placed');
+                    feedbackMessage.classList.add('hidden');
+                    feedbackMessage.textContent = ''; // Clear feedback message
+                    llmExplanationDiv.classList.add('hidden');
+                    llmExplanationDiv.innerHTML = ''; // Clear LLM explanation
+
+                    updateCounts(); // Update counts after every drop
+                }
+            }
+
+            function renderItems() {
+                itemsContainer.innerHTML = '';
+                currentItems.forEach(item => {
+                    const itemCard = document.createElement('div');
+                    itemCard.className = 'item-card';
+                    itemCard.textContent = item.text;
+                    itemCard.draggable = true;
+                    itemCard.dataset.itemId = item.id;
+                    itemCard.dataset.category = item.category;
+
+                    itemCard.addEventListener('dragstart', handleDragStart);
+                    itemsContainer.appendChild(itemCard);
+                });
+            }
+
+            function setupDropZones() {
+                [baroqueZone, enlightenmentZone].forEach(zone => {
+                    zone.addEventListener('dragover', handleDragOver);
+                    zone.addEventListener('dragleave', handleDragLeave);
+                    zone.addEventListener('drop', handleDrop);
+                    // Ensure placeholder text is visible if zone is empty
+                    const placeholder = zone.querySelector('.placeholder-text');
+                    if (placeholder) {
+                        placeholder.classList.remove('hidden');
+                    }
+                    // Clear existing items in zones
+                    Array.from(zone.children).forEach(child => {
+                        if (child.classList.contains('item-card')) {
+                            itemsContainer.appendChild(child);
+                        }
+                    });
+                });
+            }
+
+            function checkAllAnswers() {
+                let allCorrect = true;
+                let currentCorrect = 0;
+
+                // Clear previous feedback styles from all items
+                document.querySelectorAll('.item-card.placed').forEach(card => {
+                    card.classList.remove('correctly-placed', 'incorrectly-placed');
+                });
+
+                // Clear previous feedback styles from zones
+                baroqueZone.classList.remove('correct-zone', 'incorrect-zone');
+                enlightenmentZone.classList.remove('correct-zone', 'incorrect-zone');
+
+                let baroqueZoneCorrect = true;
+                let enlightenmentZoneCorrect = true;
+
+                // Clear previous LLM explanations
+                llmExplanationDiv.innerHTML = '';
+                llmExplanationDiv.classList.add('hidden');
+
+                gameData.forEach(item => {
+                    const placedZoneId = placedItems[item.id];
+                    const itemCard = document.querySelector(`[data-item-id="${item.id}"]`);
+                    const correctCategory = item.category;
+                    let chosenCategory = null;
+
+                    if (placedZoneId === 'baroque-zone') {
+                        chosenCategory = 'baroque';
+                    } else if (placedZoneId === 'enlightenment-zone') {
+                        chosenCategory = 'enlightenment';
+                    }
+
+                    if (!placedZoneId) { // Item was not placed in any zone
+                        allCorrect = false;
+                        if (itemCard) itemCard.classList.add('incorrectly-placed'); // Mark as incorrect if not placed
+                        generateLlmExplanation(item.text, "unplaced", correctCategory, "Не розміщено");
+                        return; // Continue to next item
+                    }
+
+                    const isCorrect = 
+                        (correctCategory === 'baroque' && placedZoneId === 'baroque-zone') ||
+                        (correctCategory === 'enlightenment' && placedZoneId === 'enlightenment-zone');
+                    
+                    if (isCorrect) {
+                        if (itemCard) itemCard.classList.add('correctly-placed');
+                        currentCorrect++;
+                        // generateLlmExplanation(item.text, "correct", correctCategory, chosenCategory); // Optionally generate for correct
+                    } else {
+                        if (itemCard) itemCard.classList.add('incorrectly-placed');
+                        allCorrect = false;
+                        if (placedZoneId === 'baroque-zone') {
+                            baroqueZoneCorrect = false;
+                        } else if (placedZoneId === 'enlightenment-zone') {
+                            enlightenmentZoneCorrect = false;
+                        }
+                        generateLlmExplanation(item.text, "incorrect", correctCategory, chosenCategory);
+                    }
+                });
+
+                correctPlacedCount = currentCorrect; // Update the global correct count
+                correctCountDisplay.textContent = correctPlacedCount; // Update display immediately
+
+                // Apply zone feedback
+                if (baroqueZoneCorrect && baroqueZone.querySelectorAll('.item-card').length > 0) { // Only green if items are placed and all are correct
+                    baroqueZone.classList.add('correct-zone');
+                } else if (baroqueZone.querySelectorAll('.item-card').length > 0) { // If items are placed but some are incorrect
+                    baroqueZone.classList.add('incorrect-zone');
+                }
+                
+                if (enlightenmentZoneCorrect && enlightenmentZone.querySelectorAll('.item-card').length > 0) {
+                    enlightenmentZone.classList.add('correct-zone');
+                } else if (enlightenmentZone.querySelectorAll('.item-card').length > 0) {
+                    enlightenmentZone.classList.add('incorrect-zone');
+                }
+
+
+                feedbackMessage.classList.remove('hidden');
+                if (allCorrect && Object.keys(placedItems).length === gameData.length) {
+                    feedbackMessage.textContent = "Вітаємо! Усі відповіді правильні! 🎉";
+                    feedbackMessage.className = 'feedback-message feedback-correct';
+                    showResults(true);
+                } else {
+                    feedbackMessage.textContent = "Є помилки. Спробуй ще раз! 🤔";
+                    feedbackMessage.className = 'feedback-message feedback-incorrect';
+                    showResults(false); // Show results even if incorrect, but with different message
+                }
+            }
+
+            function showResults(isPerfect) {
+                quizScreen.classList.add('hidden');
+                resultsScreen.classList.remove('hidden');
+                
+                finalScoreDisplay.textContent = `${correctPlacedCount} / ${gameData.length}`;
+                
+                if (isPerfect) {
+                    resultMessage.textContent = "Неймовірно! Ти справжній експерт з Бароко та Просвітництва!";
+                    finalScoreDisplay.classList.add('text-emerald-600');
+                    finalScoreDisplay.classList.remove('text-amber-600', 'text-red-500');
+                } else if (correctPlacedCount >= gameData.length / 2) {
+                    resultMessage.textContent = "Добре! Ти вже багато знаєш, але є над чим попрацювати. Спробуй ще раз!";
+                    finalScoreDisplay.classList.add('text-amber-600');
+                    finalScoreDisplay.classList.remove('text-emerald-600', 'text-red-500');
+                } else {
+                    resultMessage.textContent = "Не засмучуйся! Це чудова нагода повторити матеріал. Ти обов'язково впораєшся наступного разу!";
+                    finalScoreDisplay.classList.add('text-red-500');
+                    finalScoreDisplay.classList.remove('text-emerald-600', 'text-amber-600');
+                }
+            }
+
+            async function generateLlmExplanation(itemText, status, correctEra, chosenEra) {
+                llmExplanationDiv.classList.remove('hidden');
+                llmExplanationDiv.innerHTML += '<p class="text-center text-stone-500">Завантаження пояснення від ШІ...</p>';
+
+
+                let prompt = `Поясни простою і доступною мовою характеристику "${itemText}" у контексті європейських культурних епох. `;
+                if (status === "correct") {
+                    prompt += `Користувач правильно відніс її до "${correctEra}". Поясни, чому ця характеристика належить саме до "${correctEra}", і додай трохи цікавої інформації про це.`;
+                } else if (status === "incorrect") {
+                    prompt += `Користувач помилково відніс "${itemText}" до "${chosenEra}". Правильна епоха: "${correctEra}". Поясни, чому "${itemText}" не підходить до "${chosenEra}", і розкрий справжній зв'язок "${itemText}" з "${correctEra}", щоб допомогти зрозуміти концепцію краще.`;
+                } else if (status === "unplaced") {
+                    prompt += `Користувач не розмістив "${itemText}" у жодній зоні. Правильна епоха: "${correctEra}". Поясни, чому "${itemText}" належить до "${correctEra}".`;
+                }
+
+                try {
+                    const payload = { contents: [{ role: "user", parts: [{ text: prompt }] }] };
+                    const apiKey = ""; 
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        console.error("Gemini API returned an error:", response.status, errorText);
+                        llmExplanationDiv.innerHTML += `<div class="p-4 bg-red-50 border border-red-200 rounded-lg mt-4"><h4 class="font-semibold text-red-800 mb-2">Помилка для '${itemText}':</h4><p class="text-red-700">Не вдалося отримати пояснення. Статус: ${response.status}. Деталі: ${errorText.substring(0, 100)}...</p></div>`;
+                        return;
+                    }
+
+                    const result = await response.json();
+                    if (result.candidates && result.candidates.length > 0 && result.candidates[0].content && result.candidates[0].content.parts && result.candidates[0].content.parts.length > 0) {
+                        const text = result.candidates[0].content.parts[0].text;
+                        // Append new explanation, don't overwrite if multiple explanations are generated
+                        llmExplanationDiv.innerHTML += `<div class="p-4 bg-emerald-50 border border-emerald-200 rounded-lg mt-4"><h4 class="font-semibold text-emerald-800 mb-2">✨ Пояснення для '${itemText}':</h4><p class="text-emerald-700">${text}</p></div>`;
+                    } else {
+                        llmExplanationDiv.innerHTML += `<div class="p-4 bg-red-50 border border-red-200 rounded-lg mt-4"><h4 class="font-semibold text-red-800 mb-2">Помилка для '${itemText}':</h4><p class="text-red-700">Не вдалося отримати пояснення від ШІ. Неочікувана структура відповіді.</p></div>`;
+                    }
+                } catch (error) {
+                    console.error("Error calling Gemini API:", error);
+                    llmExplanationDiv.innerHTML = '<p class="text-red-500">Помилка під час завантаження пояснення. Перевірте підключення до інтернету або спробуйте ще раз.</p>';
+                }
+            }
+
+            function startGame() {
+                introScreen.classList.add('hidden');
+                resultsScreen.classList.add('hidden');
+                quizScreen.classList.remove('hidden');
+
+                // Reset game state
+                placedItems = {};
+                correctPlacedCount = 0;
+                correctCountDisplay.textContent = '0';
+                feedbackMessage.classList.add('hidden');
+                feedbackMessage.textContent = '';
+                llmExplanationDiv.innerHTML = '';
+                llmExplanationDiv.classList.add('hidden');
+                checkAnswersBtn.classList.add('hidden');
+
+                // Reset drop zones
+                baroqueZone.classList.remove('correct-zone', 'incorrect-zone');
+                enlightenmentZone.classList.remove('correct-zone', 'incorrect-zone');
+                
+                // Move all items back to the itemsContainer and remove 'placed' class
+                document.querySelectorAll('.item-card.placed').forEach(card => {
+                    itemsContainer.appendChild(card);
+                    card.classList.remove('placed', 'correctly-placed', 'incorrectly-placed');
+                });
+
+                // Ensure placeholder text is visible in empty drop zones
+                baroqueZone.querySelector('.placeholder-text').classList.remove('hidden');
+                enlightenmentZone.querySelector('.placeholder-text').classList.remove('hidden');
+
+                // Shuffle items for a new game
+                currentItems = [...gameData]; // Create a shallow copy
+                shuffleArray(currentItems);
+                renderItems();
+                updateCounts();
+                setupDropZones(); // Re-attach drop zone listeners and ensure placeholders
+            }
+
+            // --- Game Logic Initialization ---
+            startGameBtn.addEventListener('click', startGame);
+            restartGameBtn.addEventListener('click', startGame);
+            checkAnswersBtn.addEventListener('click', checkAllAnswers);
+
+            // Initial setup for drag and drop listeners on items container
+            itemsContainer.addEventListener('dragover', handleDragOver);
+            itemsContainer.addEventListener('dragleave', handleDragLeave);
+            itemsContainer.addEventListener('drop', handleDrop); // Allow dropping back to source
+
+            // Initial call to startGame to set up the intro screen and prepare for the first game
+            startGame(); 
+        });
+    </script>
+</body>
+</html>

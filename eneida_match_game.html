@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Енеїда: Знайди Свого Козака!</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #FDFBF8; /* Light neutral background */
+            color: #4B4B4B; /* Dark grey text */
+        }
+        .game-card {
+            background-color: white;
+            border-radius: 1.5rem;
+            box-shadow: 0 15px 25px -5px rgba(0, 0, 0, 0.08), 0 5px 10px -5px rgba(0, 0, 0, 0.03);
+            padding: 2rem;
+            text-align: center;
+        }
+        .btn-primary {
+            background-color: #F97316; /* Orange */
+            color: white;
+            font-weight: 600;
+            padding: 0.75rem 2rem;
+            border-radius: 0.75rem;
+            transition: background-color 0.3s ease-in-out, transform 0.2s ease-in-out;
+            cursor: pointer;
+        }
+        .btn-primary:hover {
+            background-color: #EA580C; /* Darker orange */
+            transform: translateY(-2px);
+        }
+        .draggable-item {
+            background-color: #FEF3C7; /* Light amber */
+            border: 2px solid #FCD34D; /* Amber border */
+            color: #78350F; /* Dark amber text */
+            padding: 0.75rem 1.25rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            cursor: grab;
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            min-width: 120px; /* Ensure items have enough width */
+            text-align: center;
+        }
+        .draggable-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .draggable-item.dragging {
+            opacity: 0.7;
+            transform: scale(1.05);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+        }
+        .drop-target {
+            background-color: #F3F4F6; /* Light grey */
+            border: 2px dashed #D1D5DB; /* Dashed grey border */
+            border-radius: 0.75rem;
+            padding: 1rem;
+            min-height: 8rem; /* Ensure enough height for content */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            font-size: 0.95rem;
+            color: #4B5563; /* Darker grey text */
+            transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+        }
+        .drop-target.hovered {
+            background-color: #E5E7EB; /* Slightly darker on hover */
+            border-color: #9CA3AF; /* Darker dashed border */
+        }
+        .drop-target.correct {
+            background-color: #D1FAE5; /* Light green */
+            border-color: #10B981; /* Green */
+            color: #065F46; /* Dark green text */
+        }
+        .drop-target.incorrect {
+            background-color: #FEE2E2; /* Light red */
+            border-color: #EF4444; /* Red */
+            color: #991B1B; /* Dark red text */
+        }
+        .drop-target.correct .draggable-item {
+            background-color: #A7F3D0; /* Lighter green for item inside correct target */
+            border-color: #065F46;
+            color: #064E40;
+            cursor: default;
+        }
+        .drop-target.incorrect .draggable-item {
+            background-color: #FECACA; /* Lighter red for item inside incorrect target */
+            border-color: #991B1B;
+            color: #7F1D1D;
+            cursor: default;
+        }
+        .message-box {
+            background-color: #ECFDF5; /* Light emerald for explanation */
+            border: 1px solid #A7F3D0; /* Emerald border */
+            color: #065F46; /* Dark emerald text */
+            padding: 1rem;
+            border-radius: 0.75rem;
+            margin-top: 1.5rem;
+            text-align: left;
+        }
+        .progress-bar-fill {
+            transition: width 0.5s ease-in-out;
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center min-h-screen p-4 sm:p-6 lg:p-8">
+
+    <div id="game-app" class="w-full max-w-3xl mx-auto">
+        <header class="text-center mb-10">
+            <h1 class="text-4xl sm:text-5xl font-bold text-orange-700 leading-tight">Енеїда: Знайди Свого Козака! 🤠</h1>
+            <p class="text-lg text-stone-600 mt-2">Перетягни персонажів та елементи до їхніх описів!</p>
+        </header>
+
+        <main id="game-content">
+            <section id="intro-screen" class="game-card p-8 sm:p-10">
+                <h2 class="text-2xl sm:text-3xl font-bold text-stone-800 mb-6">Привіт, майбутній Знавцю "Енеїди"!</h2>
+                <p class="text-stone-700 mb-8 leading-relaxed">
+                    Готовий зануритися у світ, де античні герої стали козаками, а боги п'ють горілку? Перетягни картки з іменами або елементами "Енеїди" до їхніх відповідних описів. Покажи, хто тут справжній знавець Котляревського!
+                </p>
+                <button id="start-game-btn" class="btn-primary w-full">Почати гру!</button>
+            </section>
+
+            <section id="quiz-screen" class="hidden">
+                <div class="flex justify-between items-center mb-4">
+                    <p id="matched-count" class="text-stone-600 font-medium">Зіставлено: 0/12</p>
+                    <p id="score-display" class="text-emerald-600 font-bold text-xl">✨ 0</p>
+                </div>
+                <div class="w-full bg-stone-200 rounded-full h-2.5 mb-6">
+                    <div id="progress-bar-fill" class="bg-orange-500 h-2.5 rounded-full progress-bar-fill" style="width: 0%"></div>
+                </div>
+
+                <div class="game-card p-6 sm:p-8 mb-6">
+                    <h3 class="text-xl sm:text-2xl font-bold text-stone-800 text-center mb-6">Персонажі та Елементи:</h3>
+                    <div id="draggable-items-container" class="flex flex-wrap justify-center gap-4 mb-8">
+                        <!-- Draggable items will be injected here -->
+                    </div>
+                    
+                    <h3 class="text-xl sm:text-2xl font-bold text-stone-800 text-center mb-6">Описи:</h3>
+                    <div id="drop-targets-container" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Drop targets will be injected here -->
+                    </div>
+                </div>
+                
+                <div id="feedback-message" class="message-box hidden"></div>
+                <div id="llm-explanation" class="llm-explanation-box hidden"></div>
+                <button id="check-answers-btn" class="btn-primary w-full mt-8 hidden">Перевірити відповіді</button>
+            </section>
+
+            <section id="results-screen" class="hidden game-card p-8 sm:p-10">
+                <h2 class="text-3xl sm:text-4xl font-bold text-orange-700 mb-4">Твої результати! 🎉</h2>
+                <p id="final-score" class="text-5xl font-extrabold text-emerald-600 my-8"></p>
+                <p id="result-message" class="text-lg text-stone-700 mb-8 leading-relaxed">
+                    Дякую за гру! Сподіваюся, ти поглибив свої знання про "Енеїду" Котляревського!
+                </p>
+                <button id="restart-game-btn" class="btn-primary">Спробувати ще раз!</button>
+            </section>
+        </main>
+
+        <footer class="text-center mt-12 text-stone-500 text-sm">
+            <p>&copy; 2025 Ваш блог "Слово на долоні". Натхнено генієм Котляревського.</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const gameData = [
+                {
+                    item: "Еней",
+                    description: "Головний герой, що після падіння Трої шукає нову батьківщину, перетворившись на завзятого козака.",
+                    category: "Персонаж"
+                },
+                {
+                    item: "Дідона",
+                    description: "Цариця Карфагена, яка закохалася в Енея, але була ним покинута, і з горя спалила себе.",
+                    category: "Персонаж"
+                },
+                {
+                    item: "Зевс (Юпітер)",
+                    description: "Верховний бог, який у поемі Котляревського часто зображений як ледачий і гультящий дідуган.",
+                    category: "Персонаж"
+                },
+                {
+                    item: "Венера",
+                    description: "Богиня кохання, мати Енея, яка допомагає йому в пригодах.",
+                    category: "Персонаж"
+                },
+                {
+                    item: "Вареники",
+                    description: "Улюблена їжа козаків-троянців, що часто згадується в поемі як символ українського побуту.",
+                    category: "Елемент побуту"
+                },
+                {
+                    item: "Низ та Евріал",
+                    description: "Два вірні друзі-воїни, які загинули, намагаючись пробратися до ворожого табору за допомогою Енея.",
+                    category: "Персонаж"
+                },
+                {
+                    item: "Латин",
+                    description: "Цар Латинської землі, що гостинно приймає Енея, а його дочка Лавінія має стати дружиною троянця.",
+                    category: "Персонаж"
+                },
+                {
+                    item: "Турн",
+                    description: "Цар рутульців, головний ворог Енея в Латинській землі, який бореться за руку Лавінії.",
+                    category: "Персонаж"
+                },
+                {
+                    item: "Де згода в сімействі, де мир і тишина, Щасливі там люди, блаженна сторона.",
+                    description: "Цитата з поеми, що підкреслює важливість гармонії та злагоди в родині.",
+                    category: "Цитата"
+                },
+                {
+                    item: "Була це дівка молода, Іще була нічого собі, Хоть і не пишна, не вродлива, Зате проворна і метка.",
+                    description: "Опис Лавінії, що показує її характер, а не лише зовнішність.",
+                    category: "Цитата"
+                },
+                {
+                    item: "Коли Еней був на Олімпі, Тоді і Зевс був на бенкеті, І пив горілку, як і всі, І їв вареники, як свині.",
+                    description: "Гумористичний опис богів, що показує їхні 'людські' риси та український колорит.",
+                    category: "Цитата"
+                },
+                {
+                    item: "Горілка",
+                    description: "Напій, що часто згадується в поемі, підкреслюючи народний побут та гумор Котляревського.",
+                    category: "Елемент побуту"
+                }
+            ];
+
+            const introScreen = document.getElementById('intro-screen');
+            const quizScreen = document.getElementById('quiz-screen');
+            const resultsScreen = document.getElementById('results-screen');
+            
+            const startGameBtn = document.getElementById('start-game-btn');
+            const restartGameBtn = document.getElementById('restart-game-btn');
+            const checkAnswersBtn = document.getElementById('check-answers-btn');
+            
+            const draggableItemsContainer = document.getElementById('draggable-items-container');
+            const dropTargetsContainer = document.getElementById('drop-targets-container');
+            const matchedCountDisplay = document.getElementById('matched-count');
+            const scoreDisplay = document.getElementById('score-display');
+            const progressBarFill = document.getElementById('progress-bar-fill');
+            const feedbackMessage = document.getElementById('feedback-message');
+            const llmExplanationDiv = document.getElementById('llm-explanation');
+            const finalScoreDisplay = document.getElementById('final-score');
+            const resultMessage = document.getElementById('result-message');
+
+            const totalItems = gameData.length; // Total number of items
+            let currentDraggedItem = null;
+            let matchedPairs = 0; // Number of currently correctly matched pairs
+            let score = 0; // Total score (can be same as matchedPairs for this game)
+            let allTargetsFilled = false; // Tracks if all drop targets have an item
+
+            // --- Helper Functions (Moved to top for definition before use) ---
+
+            function updateDisplays() {
+                matchedCountDisplay.textContent = `Зіставлено: ${matchedPairs}/${totalItems}`;
+                scoreDisplay.textContent = `✨ ${score}`;
+                // Progress bar shows percentage of *correctly* matched items
+                progressBarFill.style.width = `${(matchedPairs / totalItems) * 100}%`;
+
+                // Show check answers button only when all targets have an item (regardless of correctness)
+                if (allTargetsFilled) {
+                    checkAnswersBtn.classList.remove('hidden');
+                } else {
+                    checkAnswersBtn.classList.add('hidden');
+                }
+            }
+
+            function updateOverallScoreAndProgress() {
+                let currentMatchedPairs = 0;
+                let currentScore = 0;
+                let filledTargetsCount = 0; // Count how many targets have an item
+
+                dropTargetsContainer.querySelectorAll('.drop-target').forEach(target => {
+                    const itemInTarget = target.querySelector('.draggable-item');
+                    if (itemInTarget) {
+                        filledTargetsCount++; // An item is present in this target
+                        const droppedItemName = itemInTarget.dataset.itemName;
+                        const correctItemName = target.dataset.correctItem;
+                        if (droppedItemName === correctItemName) {
+                            currentMatchedPairs++;
+                            currentScore++;
+                        }
+                    }
+                });
+
+                matchedPairs = currentMatchedPairs;
+                score = currentScore;
+                allTargetsFilled = (filledTargetsCount === totalItems);
+
+                updateDisplays(); // Call updateDisplays after updating counts
+            }
+
+            function handleDragStart(event) {
+                currentDraggedItem = event.target;
+                event.dataTransfer.setData('text/plain', event.target.dataset.itemName);
+                event.target.classList.add('dragging');
+            }
+
+            function handleDragOver(event) {
+                event.preventDefault(); // Allow drop
+                event.target.classList.add('hovered');
+            }
+
+            function handleDragLeave(event) {
+                event.target.classList.remove('hovered');
+            }
+
+            function handleDrop(event) {
+                event.preventDefault();
+                event.target.classList.remove('hovered');
+
+                // Get the target element where the item is dropped
+                const dropTarget = event.target.closest('.drop-target');
+
+                // If there's already an item in the target, return it to the draggable container
+                const previousItemInTarget = dropTarget.querySelector('.draggable-item');
+                if (previousItemInTarget) {
+                    draggableItemsContainer.appendChild(previousItemInTarget);
+                    // Clear its previous visual state
+                    previousItemInTarget.classList.remove('correct', 'incorrect');
+                }
+
+                // Append the dragged item to the drop target
+                dropTarget.appendChild(currentDraggedItem);
+                currentDraggedItem.classList.remove('dragging');
+                
+                // Clear visual feedback on drop (will be re-evaluated on check)
+                dropTarget.classList.remove('correct', 'incorrect');
+                currentDraggedItem.classList.remove('correct', 'incorrect');
+
+                // Hide feedback and LLM explanation until check answers is clicked
+                feedbackMessage.classList.add('hidden');
+                llmExplanationDiv.classList.add('hidden');
+                llmExplanationDiv.innerHTML = '';
+
+                // Update overall score and progress based on current state of all drops
+                updateOverallScoreAndProgress();
+            }
+
+            async function generateLlmExplanation(item, status, userAnswerText, correctAnswerText, description) {
+                // The loading message is already set in checkAllAnswers, no need to set it here again.
+                // We will append explanations.
+
+                let prompt = `Поясни простою і доступною мовою роль або значення "${item}" у поемі Івана Котляревського "Енеїда" у контексті опису: "${description}". `;
+                if (status === "correct") {
+                    // This branch might not be hit if LLM is only for incorrect, but keep for robustness
+                    prompt += `Користувач правильно зіставив цей елемент. Додай трохи цікавої інформації про те, як Котляревський його зобразив.`;
+                } else {
+                    prompt += `Користувач помилково зіставив "${item}" з описом: "${description}". Правильним для цього опису був би "${correctAnswerText}". Поясни, чому "${item}" не підходить до цього опису, і розкрий справжню роль "${item}" у поемі, а також поясни, чому "${correctAnswerText}" є правильною відповіддю для опису "${description}", щоб допомогти зрозуміти концепцію краще.`;
+                }
+
+                try {
+                    const payload = { contents: [{ role: "user", parts: [{ text: prompt }] }] };
+                    const apiKey = ""; 
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        console.error("Gemini API returned an error:", response.status, errorText);
+                        llmExplanationDiv.innerHTML += `<div class="p-4 bg-red-50 border border-red-200 rounded-lg mt-4"><h4 class="font-semibold text-red-800 mb-2">Помилка для '${item}':</h4><p class="text-red-700">Не вдалося отримати пояснення. Статус: ${response.status}. Деталі: ${errorText.substring(0, 100)}...</p></div>`;
+                        return;
+                    }
+
+                    const result = await response.json();
+                    if (result.candidates && result.candidates.length > 0 && result.candidates[0].content && result.candidates[0].content.parts && result.candidates[0].content.parts.length > 0) {
+                        const text = result.candidates[0].content.parts[0].text;
+                        // Remove loading message if it's still there
+                        if (llmExplanationDiv.innerHTML.includes('Завантаження пояснень')) {
+                            llmExplanationDiv.innerHTML = ''; 
+                        }
+                        llmExplanationDiv.innerHTML += `<div class="p-4 bg-emerald-50 border border-emerald-200 rounded-lg mt-4"><h4 class="font-semibold text-emerald-800 mb-2">✨ Пояснення для '${item}':</h4><p class="text-emerald-700">${text}</p></div>`;
+                    } else {
+                        llmExplanationDiv.innerHTML += `<div class="p-4 bg-red-50 border border-red-200 rounded-lg mt-4"><h4 class="font-semibold text-red-800 mb-2">Помилка для '${item}':</h4><p class="text-red-700">Не вдалося отримати пояснення від ШІ. Неочікувана структура відповіді.</p></div>`;
+                    }
+                } catch (error) {
+                    console.error("Error calling Gemini API:", error);
+                    llmExplanationDiv.innerHTML += `<div class="p-4 bg-red-50 border border-red-200 rounded-lg mt-4"><h4 class="font-semibold text-red-800 mb-2">Помилка для '${item}':</h4><p class="text-red-700">Помилка під час завантаження пояснення. Перевірте підключення до інтернету або спробуйте ще раз.</p></div>`;
+                }
+            }
+
+            function checkAllAnswers() {
+                // Clear all previous visual feedback before re-evaluating
+                dropTargetsContainer.querySelectorAll('.drop-target').forEach(target => {
+                    target.classList.remove('correct', 'incorrect');
+                    const itemInTarget = target.querySelector('.draggable-item');
+                    if (itemInTarget) {
+                        itemInTarget.classList.remove('correct', 'incorrect');
+                    }
+                });
+                draggableItemsContainer.querySelectorAll('.draggable-item').forEach(item => {
+                    item.classList.remove('correct', 'incorrect');
+                });
+
+                feedbackMessage.classList.add('hidden');
+                feedbackMessage.textContent = '';
+                llmExplanationDiv.classList.add('hidden');
+                llmExplanationDiv.innerHTML = ''; // Clear previous LLM explanations
+
+                let allCorrect = true;
+                let incorrectItemsInfo = []; // To store info for LLM explanations
+
+                dropTargetsContainer.querySelectorAll('.drop-target').forEach(target => {
+                    const itemInTarget = target.querySelector('.draggable-item');
+                    
+                    // If any target is empty, it's not all correct
+                    if (!itemInTarget) {
+                        allCorrect = false; 
+                        return; // Skip to next target
+                    }
+
+                    const droppedItemName = itemInTarget.dataset.itemName;
+                    const correctItemName = target.dataset.correctItem;
+
+                    if (droppedItemName === correctItemName) {
+                        target.classList.add('correct');
+                        itemInTarget.classList.add('correct');
+                    } else {
+                        target.classList.add('incorrect');
+                        itemInTarget.classList.add('incorrect');
+                        allCorrect = false;
+                        incorrectItemsInfo.push({
+                            item: droppedItemName,
+                            correct: correctItemName,
+                            description: target.textContent // Pass the description for context in LLM
+                        });
+                    }
+                });
+
+                if (allCorrect) {
+                    feedbackMessage.textContent = "Вітаємо! Усі пари зіставлені правильно! 🎉";
+                    feedbackMessage.className = 'message-box bg-emerald-50 border-emerald-200 text-emerald-700';
+                    feedbackMessage.classList.remove('hidden');
+                } else {
+                    feedbackMessage.textContent = "Є помилки. Перевірте виділені червоним слова. 🤔";
+                    feedbackMessage.className = 'message-box bg-red-50 border-red-200 text-red-700';
+                    feedbackMessage.classList.remove('hidden');
+
+                    // Generate LLM explanations for incorrect items
+                    llmExplanationDiv.innerHTML = '<p class="text-center text-stone-500">Завантаження пояснень від ШІ...</p>';
+                    llmExplanationDiv.classList.remove('hidden');
+                    incorrectItemsInfo.forEach(info => {
+                        generateLlmExplanation(info.item, "incorrect", info.item, info.correct, info.description);
+                    });
+                }
+                // Update score display one last time after final check
+                updateOverallScoreAndProgress();
+                // Show results screen after checking answers
+                showResults();
+            }
+
+            function showResults() {
+                quizScreen.classList.add('hidden');
+                resultsScreen.classList.remove('hidden');
+                progressBarFill.style.width = '100%'; 
+                
+                finalScoreDisplay.textContent = `${score}/${totalItems}`;
+
+                let message = '';
+                const percentage = (score / totalItems) * 100;
+                if (percentage === 100) {
+                    message = "Неймовірно! Ти справжній Майстер 'Енеїди'! 🤩";
+                    finalScoreDisplay.classList.add('text-emerald-600');
+                    finalScoreDisplay.classList.remove('text-amber-600', 'text-red-500');
+                } else if (percentage >= 60) {
+                    message = "Молодець! Ти чудово знаєш персонажів 'Енеїди'. Продовжуй у тому ж дусі! 👍";
+                    finalScoreDisplay.classList.add('text-amber-600');
+                    finalScoreDisplay.classList.remove('text-emerald-600', 'text-red-500');
+                } else {
+                    message = "Не засмучуйся! 'Енеїда' – це цілий світ, і його варто досліджувати далі. Спробуй ще раз, і все вийде! 💪";
+                    finalScoreDisplay.classList.add('text-red-500');
+                    finalScoreDisplay.classList.remove('text-emerald-600', 'text-amber-600');
+                }
+                resultMessage.textContent = message;
+            }
+
+            // --- Game Logic ---
+
+            startGameBtn.addEventListener('click', startGame);
+            restartGameBtn.addEventListener('click', startGame);
+            checkAnswersBtn.addEventListener('click', checkAllAnswers);
+
+            function startGame() {
+                introScreen.classList.add('hidden');
+                resultsScreen.classList.add('hidden');
+                quizScreen.classList.remove('hidden');
+
+                matchedPairs = 0;
+                score = 0;
+                allTargetsFilled = false;
+                updateDisplays(); // Initialize displays
+                renderGame();
+            }
+
+            function renderGame() {
+                draggableItemsContainer.innerHTML = '';
+                dropTargetsContainer.innerHTML = '';
+                feedbackMessage.classList.add('hidden');
+                llmExplanationDiv.classList.add('hidden');
+                llmExplanationDiv.innerHTML = '';
+
+                // Shuffle gameData for random order of descriptions
+                const shuffledDescriptions = [...gameData].sort(() => Math.random() - 0.5);
+                const shuffledItems = [...gameData].sort(() => Math.random() - 0.5); // Shuffle items too
+
+                shuffledItems.forEach(data => {
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'draggable-item';
+                    itemDiv.textContent = data.item;
+                    itemDiv.draggable = true;
+                    itemDiv.dataset.itemName = data.item; // Store original item name
+                    itemDiv.addEventListener('dragstart', handleDragStart);
+                    draggableItemsContainer.appendChild(itemDiv);
+                });
+
+                shuffledDescriptions.forEach(data => {
+                    const targetDiv = document.createElement('div');
+                    targetDiv.className = 'drop-target';
+                    targetDiv.textContent = data.description;
+                    targetDiv.dataset.correctItem = data.item; // Store the correct item for this description
+                    targetDiv.addEventListener('dragover', handleDragOver);
+                    targetDiv.addEventListener('dragleave', handleDragLeave);
+                    targetDiv.addEventListener('drop', handleDrop);
+                    dropTargetsContainer.appendChild(targetDiv);
+                });
+
+                checkAnswersBtn.classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html>

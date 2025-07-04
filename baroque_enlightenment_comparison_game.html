@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Порівняй-ка: Бароко vs. Просвітництво</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #FDFBF8; /* Light neutral background */
+            color: #4B4B4B; /* Dark grey text */
+        }
+        .game-card {
+            background-color: white;
+            border-radius: 1.5rem;
+            box-shadow: 0 15px 25px -5px rgba(0, 0, 0, 0.08), 0 5px 10px -5px rgba(0, 0, 0, 0.03);
+            padding: 2rem;
+            text-align: center;
+        }
+        .btn-primary {
+            background-color: #F97316; /* Orange */
+            color: white;
+            font-weight: 600;
+            padding: 0.75rem 2rem;
+            border-radius: 0.75rem;
+            transition: background-color 0.3s ease-in-out, transform 0.2s ease-in-out;
+            cursor: pointer;
+        }
+        .btn-primary:hover {
+            background-color: #EA580C; /* Darker orange */
+            transform: translateY(-2px);
+        }
+        .draggable-item {
+            background-color: #FEF3C7; /* Light amber */
+            border: 2px solid #FCD34D; /* Amber border */
+            color: #78350F; /* Dark amber text */
+            padding: 0.75rem 1.25rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            cursor: grab;
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            min-width: 120px; /* Ensure items have enough width */
+            text-align: center;
+        }
+        .draggable-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .draggable-item.dragging {
+            opacity: 0.7;
+            transform: scale(1.05);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+        }
+        .drop-target {
+            background-color: #F3F4F6; /* Light grey */
+            border: 2px dashed #D1D5DB; /* Dashed grey border */
+            border-radius: 0.75rem;
+            padding: 1rem;
+            min-height: 10rem; /* Ensure enough height for content */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            font-size: 0.95rem;
+            color: #4B5563; /* Darker grey text */
+            transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+        }
+        .drop-target.hovered {
+            background-color: #E5E7EB; /* Slightly darker on hover */
+            border-color: #9CA3AF; /* Darker dashed border */
+        }
+        .drop-target.correct {
+            background-color: #D1FAE5; /* Light green */
+            border-color: #10B981; /* Green */
+            color: #065F46; /* Dark green text */
+        }
+        .drop-target.incorrect {
+            background-color: #FEE2E2; /* Light red */
+            border-color: #EF4444; /* Red */
+            color: #991B1B; /* Dark red text */
+        }
+        .drop-target.correct .draggable-item {
+            background-color: #A7F3D0; /* Lighter green for item inside correct target */
+            border-color: #065F46;
+            color: #064E40;
+            cursor: default;
+        }
+        .drop-target.incorrect .draggable-item {
+            background-color: #FECACA; /* Lighter red for item inside incorrect target */
+            border-color: #991B1B;
+            color: #7F1D1D;
+            cursor: default;
+        }
+        .message-box {
+            background-color: #ECFDF5; /* Light emerald for explanation */
+            border: 1px solid #A7F3D0; /* Emerald border */
+            color: #065F46; /* Dark emerald text */
+            padding: 1rem;
+            border-radius: 0.75rem;
+            margin-top: 1.5rem;
+            text-align: left;
+        }
+        .progress-bar-fill {
+            transition: width 0.5s ease-in-out;
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center min-h-screen p-4 sm:p-6 lg:p-8">
+
+    <div id="game-app" class="w-full max-w-3xl mx-auto">
+        <header class="text-center mb-10">
+            <h1 class="text-4xl sm:text-5xl font-bold text-orange-700 leading-tight">Порівняй-ка: Бароко vs. Просвітництво! 💡</h1>
+            <p class="text-lg text-stone-600 mt-2">Розподіли характеристики між двома великими епохами!</p>
+        </header>
+
+        <main id="game-content">
+            <section id="intro-screen" class="game-card p-8 sm:p-10">
+                <h2 class="text-2xl sm:text-3xl font-bold text-stone-800 mb-6">Привіт, знавцю епох!</h2>
+                <p class="text-stone-700 mb-8 leading-relaxed">
+                    Готовий перевірити, наскільки добре ти розрізняєш Бароко з його пишністю та Просвітництво з його розумом? Перетягни картки з характеристиками до відповідних епох. Покажи, хто тут справжній експерт з історії культури!
+                </p>
+                <button id="start-game-btn" class="btn-primary w-full">Почати гру!</button>
+            </section>
+
+            <section id="quiz-screen" class="hidden">
+                <div class="flex justify-between items-center mb-4">
+                    <p id="matched-count" class="text-stone-600 font-medium">Зіставлено: 0/12</p>
+                    <p id="score-display" class="text-emerald-600 font-bold text-xl">✨ 0</p>
+                </div>
+                <div class="w-full bg-stone-200 rounded-full h-2.5 mb-6">
+                    <div class="bg-orange-500 h-2.5 rounded-full progress-bar-fill" id="progress-bar-fill" style="width: 0%"></div>
+                </div>
+
+                <div class="game-card p-6 sm:p-8 mb-6">
+                    <h3 class="text-xl sm:text-2xl font-bold text-stone-800 text-center mb-6">Характеристики:</h3>
+                    <div id="draggable-items-container" class="flex flex-wrap justify-center gap-4 mb-8 drop-target" data-era="source-container">
+                        <!-- Draggable items will be injected here -->
+                    </div>
+                    
+                    <h3 class="text-xl sm:text-2xl font-bold text-stone-800 text-center mb-6">Епохи:</h3>
+                    <div id="drop-targets-container" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="drop-target" data-era="Бароко">
+                            <h4 class="text-lg font-semibold text-orange-700 mb-2">Бароко</h4>
+                            <p class="text-sm text-stone-500">(Пишність, емоції, рух)</p>
+                        </div>
+                        <div class="drop-target" data-era="Просвітництво">
+                            <h4 class="text-lg font-semibold text-blue-700 mb-2">Просвітництво</h4>
+                            <p class="text-sm text-stone-500">(Розум, логіка, критика)</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="feedback-message" class="message-box hidden"></div>
+                <div id="llm-explanation" class="llm-explanation-box hidden"></div>
+                <button id="check-answers-btn" class="btn-primary w-full mt-8 hidden">Перевірити відповіді</button>
+            </section>
+
+            <section id="results-screen" class="hidden game-card p-8 sm:p-10">
+                <h2 class="text-3xl sm:text-4xl font-bold text-orange-700 mb-4">Твої результати! 🎉</h2>
+                <p id="final-score" class="text-5xl font-extrabold text-emerald-600 my-8"></p>
+                <p id="result-message" class="text-lg text-stone-700 mb-8 leading-relaxed">
+                    Дякую за гру! Сподіваюся, ти поглибив свої знання про Бароко та Просвітництво!
+                </p>
+                <button id="restart-game-btn" class="btn-primary">Спробувати ще раз!</button>
+            </section>
+        </main>
+
+        <footer class="text-center mt-12 text-stone-500 text-sm">
+            <p>&copy; 2025 Ваш блог "Слово на долоні". Натхнено історією мистецтв.</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const gameData = [
+                { item: "Динамізм та емоційність", correctEra: "Бароко" },
+                { item: "Культ розуму та логіки", correctEra: "Просвітництво" },
+                { item: "Пишність та надмірність", correctEra: "Бароко" },
+                { item: "Критика суспільства та забобонів", correctEra: "Просвітництво" },
+                { item: "Метафоричність та символіка", correctEra: "Бароко" },
+                { item: "Ясність та простота форми", correctEra: "Просвітництво" },
+                { item: "Драматичні контрасти", correctEra: "Бароко" },
+                { item: "Прагнення до симетрії та порядку", correctEra: "Просвітництво" },
+                { item: "Акцент на релігійних темах та величі Бога", correctEra: "Бароко" },
+                { item: "Акцент на правах людини та світськості", correctEra: "Просвітництво" },
+                { item: "Мистецтво як видовище", correctEra: "Бароко" },
+                { item: "Мистецтво як засіб виховання", correctEra: "Просвітництво" }
+            ];
+
+            const introScreen = document.getElementById('intro-screen');
+            const quizScreen = document.getElementById('quiz-screen');
+            const resultsScreen = document.getElementById('results-screen');
+            
+            const startGameBtn = document.getElementById('start-game-btn');
+            const restartGameBtn = document.getElementById('restart-game-btn');
+            const checkAnswersBtn = document.getElementById('check-answers-btn');
+            
+            const draggableItemsContainer = document.getElementById('draggable-items-container');
+            const dropTargetsContainer = document.getElementById('drop-targets-container');
+            const matchedCountDisplay = document.getElementById('matched-count');
+            const scoreDisplay = document.getElementById('score-display');
+            const progressBarFill = document.getElementById('progress-bar-fill');
+            const feedbackMessage = document.getElementById('feedback-message');
+            const llmExplanationDiv = document.getElementById('llm-explanation');
+            const finalScoreDisplay = document.getElementById('final-score');
+            const resultMessage = document.getElementById('result-message');
+
+            const totalItems = gameData.length; // Total characteristics (12)
+            let currentDraggedItem = null;
+            let score = 0;
+
+            // --- Helper Functions ---
+            function updateDisplays() {
+                // Count all draggable items that are NOT in the source container
+                let itemsInEraTargets = 0;
+                document.querySelectorAll('.draggable-item').forEach(item => {
+                    if (item.parentElement && item.parentElement.dataset.era !== 'source-container') {
+                        itemsInEraTargets++;
+                    }
+                });
+                
+                matchedCountDisplay.textContent = `Зіставлено: ${itemsInEraTargets}/${totalItems}`;
+                scoreDisplay.textContent = `✨ ${score}`;
+                progressBarFill.style.width = `${(itemsInEraTargets / totalItems) * 100}%`;
+                
+                // Show check answers button only when all items are placed
+                if (itemsInEraTargets === totalItems) {
+                    checkAnswersBtn.classList.remove('hidden');
+                } else {
+                    checkAnswersBtn.classList.add('hidden');
+                }
+            }
+
+            function handleDragStart(event) {
+                currentDraggedItem = event.target;
+                event.dataTransfer.setData('text/plain', event.target.dataset.itemText);
+                event.dataTransfer.setData('text/item-id', event.target.dataset.itemId); // Pass unique ID
+                event.target.classList.add('dragging');
+            }
+
+            function handleDragOver(event) {
+                event.preventDefault(); // Allow drop
+                event.target.closest('.drop-target')?.classList.add('hovered');
+            }
+
+            function handleDragLeave(event) {
+                event.target.closest('.drop-target')?.classList.remove('hovered');
+            }
+
+            function handleDrop(event) {
+                event.preventDefault();
+                const dropTarget = event.target.closest('.drop-target');
+                if (!dropTarget) return;
+
+                dropTarget.classList.remove('hovered');
+
+                const droppedItemId = event.dataTransfer.getData('text/item-id');
+                const draggedElement = document.querySelector(`[data-item-id="${droppedItemId}"]`);
+
+                if (!draggedElement) return; // Ensure the dragged element is found
+
+                // Append the dragged item to the current drop target
+                dropTarget.appendChild(draggedElement);
+                draggedElement.classList.remove('dragging');
+                // Clear any previous correct/incorrect styling on the item
+                draggedElement.classList.remove('correct', 'incorrect');
+                
+                // Hide feedback and LLM explanation until check answers is clicked
+                feedbackMessage.classList.add('hidden');
+                llmExplanationDiv.classList.add('hidden');
+                llmExplanationDiv.innerHTML = '';
+
+                // Always recalculate and update displays after any drop
+                updateDisplays();
+            }
+
+            async function generateLlmExplanation(itemText, status, correctEra, chosenEra) {
+                // Clear previous explanations if any
+                llmExplanationDiv.innerHTML = ''; 
+                llmExplanationDiv.classList.remove('hidden');
+                llmExplanationDiv.innerHTML = '<p class="text-center text-stone-500">Завантаження пояснення від ШІ...</p>';
+
+
+                let prompt = `Поясни простою і доступною мовою характеристику "${itemText}" у контексті європейських культурних епох. `;
+                if (status === "correct") {
+                    prompt += `Користувач правильно відніс її до "${correctEra}". Поясни, чому ця характеристика належить саме до "${correctEra}", і додай трохи цікавої інформації про це.`;
+                } else {
+                    prompt += `Користувач помилково відніс "${itemText}" до "${chosenEra}". Правильна епоха: "${correctEra}". Поясни, чому "${itemText}" не підходить до "${chosenEra}", і розкрий справжній зв'язок "${itemText}" з "${correctEra}", щоб допомогти зрозуміти концепцію краще.`;
+                }
+
+                try {
+                    const payload = { contents: [{ role: "user", parts: [{ text: prompt }] }] };
+                    const apiKey = ""; 
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        console.error("Gemini API returned an error:", response.status, errorText);
+                        llmExplanationDiv.innerHTML += `<div class="p-4 bg-red-50 border border-red-200 rounded-lg mt-4"><h4 class="font-semibold text-red-800 mb-2">Помилка для '${itemText}':</h4><p class="text-red-700">Не вдалося отримати пояснення. Статус: ${response.status}. Деталі: ${errorText.substring(0, 100)}...</p></div>`;
+                        return;
+                    }
+
+                    const result = await response.json();
+                    if (result.candidates && result.candidates.length > 0 && result.candidates[0].content && result.candidates[0].content.parts && result.candidates[0].content.parts.length > 0) {
+                        const text = result.candidates[0].content.parts[0].text;
+                        // Append new explanation, don't overwrite if multiple explanations are generated
+                        llmExplanationDiv.innerHTML += `<div class="p-4 bg-emerald-50 border border-emerald-200 rounded-lg mt-4"><h4 class="font-semibold text-emerald-800 mb-2">✨ Пояснення для '${itemText}':</h4><p class="text-emerald-700">${text}</p></div>`;
+                    } else {
+                        llmExplanationDiv.innerHTML += `<div class="p-4 bg-red-50 border border-red-200 rounded-lg mt-4"><h4 class="font-semibold text-red-800 mb-2">Помилка для '${itemText}':</h4><p class="text-red-700">Не вдалося отримати пояснення від ШІ. Неочікувана структура відповіді.</p></div>`;
+                    }
+                } catch (error) {
+                    console.error("Error calling Gemini API:", error);
+                    llmExplanationDiv.innerHTML = '<p class="text-red-500">Помилка під час завантаження пояснення. Перевірте підключення до інтернету або спробуйте ще раз.</p>';
+                }
+            }
+
+            // --- Game Logic ---
+            startGameBtn.addEventListener('click', startGame);
+            restartGameBtn.addEventListener('click', startGame);
+            checkAnswersBtn.addEventListener('click', checkAllAnswers);
+
+            function startGame() {
+                introScreen.classList.add('hidden');
+                resultsScreen.classList.add('hidden');
+                quizScreen.classList.remove('hidden');
+
+                score = 0;
+                updateDisplays(); // Initial display update
+                renderGame();
+            }
+
+            function renderGame() {
+                draggableItemsContainer.innerHTML = '';
+                // Reset drop targets visual state and remove any dropped items
+                dropTargetsContainer.querySelectorAll('.drop-target').forEach(target => {
+                    target.classList.remove('correct', 'incorrect');
+                    // Move all items from era targets back to the source container
+                    Array.from(target.querySelectorAll('.draggable-item')).forEach(item => {
+                        draggableItemsContainer.appendChild(item);
+                        item.classList.remove('correct', 'incorrect');
+                    });
+                });
+
+                feedbackMessage.classList.add('hidden');
+                llmExplanationDiv.classList.add('hidden');
+                llmExplanationDiv.innerHTML = '';
+
+                // Shuffle gameData for random order of draggable items
+                const shuffledItems = [...gameData].sort(() => Math.random() - 0.5);
+
+                shuffledItems.forEach((data, index) => {
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'draggable-item';
+                    itemDiv.textContent = data.item;
+                    itemDiv.draggable = true;
+                    itemDiv.dataset.itemText = data.item;
+                    itemDiv.dataset.correctEra = data.correctEra;
+                    itemDiv.dataset.itemId = `item-${index}`; // Unique ID for each draggable item
+                    itemDiv.addEventListener('dragstart', handleDragStart);
+                    draggableItemsContainer.appendChild(itemDiv);
+                });
+
+                // Set up drop target event listeners (they are static, so only need to be done once)
+                // Ensure draggableItemsContainer is also a drop target
+                document.querySelectorAll('.drop-target').forEach(target => {
+                    target.addEventListener('dragover', handleDragOver);
+                    target.addEventListener('dragleave', handleDragLeave);
+                    target.addEventListener('drop', handleDrop);
+                });
+
+                checkAnswersBtn.classList.add('hidden');
+                updateDisplays(); // Update after rendering game
+            }
+
+            function checkAllAnswers() {
+                score = 0; // Reset score for re-evaluation
+                let allItemsCorrectlyPlaced = true;
+                let incorrectItemsInfo = []; // To store info for LLM explanations
+
+                // Clear all previous visual feedback before re-evaluating
+                document.querySelectorAll('.drop-target').forEach(target => {
+                    target.classList.remove('correct', 'incorrect');
+                });
+                document.querySelectorAll('.draggable-item').forEach(item => {
+                    item.classList.remove('correct', 'incorrect');
+                });
+
+                // Iterate through all draggable items to check their placement
+                document.querySelectorAll('.draggable-item').forEach(item => {
+                    const parentTarget = item.parentElement;
+                    if (!parentTarget || parentTarget.dataset.era === 'source-container') {
+                        // Item is still in the source container or has no parent, it's incorrect
+                        item.classList.add('incorrect');
+                        allItemsCorrectlyPlaced = false;
+                        incorrectItemsInfo.push({
+                            itemText: item.dataset.itemText,
+                            correctEra: item.dataset.correctEra,
+                            chosenEra: "Не розміщено" // Or "Source Container"
+                        });
+                        return; // Skip to next item
+                    }
+
+                    const droppedItemText = item.dataset.itemText;
+                    const correctEra = item.dataset.correctEra;
+                    const chosenEra = parentTarget.dataset.era;
+
+                    if (chosenEra === correctEra) {
+                        item.classList.add('correct');
+                        parentTarget.classList.add('correct'); // Highlight the target if it contains at least one correct item
+                        score++;
+                    } else {
+                        item.classList.add('incorrect');
+                        parentTarget.classList.add('incorrect'); // Highlight the target if it contains at least one incorrect item
+                        allItemsCorrectlyPlaced = false;
+                        incorrectItemsInfo.push({
+                            itemText: droppedItemText,
+                            correctEra: correctEra,
+                            chosenEra: chosenEra
+                        });
+                    }
+                });
+
+                if (allItemsCorrectlyPlaced) {
+                    feedbackMessage.textContent = "Вітаємо! Усі характеристики зіставлені правильно! 🎉";
+                    feedbackMessage.className = 'message-box bg-emerald-50 border-emerald-200 text-emerald-700';
+                    llmExplanationDiv.classList.add('hidden'); // Hide LLM if all correct
+                    llmExplanationDiv.innerHTML = '';
+                } else {
+                    feedbackMessage.textContent = "Є помилки. Перевірте виділені червоним елементи та їхні контейнери. 🤔";
+                    feedbackMessage.className = 'message-box bg-red-50 border-red-200 text-red-700';
+                    
+                    // Clear previous LLM explanations before generating new ones
+                    llmExplanationDiv.innerHTML = '';
+                    llmExplanationDiv.classList.remove('hidden');
+                    llmExplanationDiv.innerHTML = '<p class="text-center text-stone-500">Завантаження пояснень від ШІ...</p>';
+
+                    incorrectItemsInfo.forEach(info => {
+                        generateLlmExplanation(info.itemText, "incorrect", info.correctEra, info.chosenEra);
+                    });
+                }
+                feedbackMessage.classList.remove('hidden');
+                updateDisplays(); // Update score display one last time after final check
+                showResults();
+            }
+
+            function showResults() {
+                quizScreen.classList.add('hidden');
+                resultsScreen.classList.remove('hidden');
+                progressBarFill.style.width = '100%'; 
+                
+                finalScoreDisplay.textContent = `${score}/${totalItems}`; // Final score based on 12 items
+
+                let message = '';
+                const percentage = (score / totalItems) * 100;
+                if (percentage === 100) {
+                    message = "Неймовірно! Ти справжній Майстер Епох! 🤩";
+                    finalScoreDisplay.classList.add('text-emerald-600');
+                    finalScoreDisplay.classList.remove('text-amber-600', 'text-red-500');
+                } else if (percentage >= 60) {
+                    message = "Молодець! Ти чудово розрізняєш Бароко та Просвітництво. Продовжуй у тому ж дусі! 👍";
+                    finalScoreDisplay.classList.add('text-amber-600');
+                    finalScoreDisplay.classList.remove('text-emerald-600', 'text-red-500');
+                } else {
+                    message = "Не засмучуйся! Світ історії мистецтв величезний, і його варто досліджувати далі. Спробуй ще раз, і все вийде! 💪";
+                    finalScoreDisplay.classList.add('text-red-500');
+                    finalScoreDisplay.classList.remove('text-emerald-600', 'text-amber-600');
+                }
+                resultMessage.textContent = message;
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Краса всередині (інтерактивні картки)</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts - Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- React and ReactDOM CDN -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <!-- Babel for JSX transformation -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        // Main application component
+        const App = () => {
+          // List of characters from "The Hunchback of Notre-Dame" with their appearance and inner qualities
+          const characters = [
+            {
+              id: 1,
+              name: "Квазімодо",
+              appearance: "Потворний, горбатий, одноокий, глухий дзвонар собору. Його зовнішність викликає страх і відразу.",
+              innerQualities: "Незважаючи на свою відразливу зовнішність, він має добре серце, вірний, відданий і здатний на глибоку любов і самопожертву, особливо до Есмеральди. Символізує 'красу всередині' та жертовність."
+            },
+            {
+              id: 2,
+              name: "Есмеральда",
+              appearance: "Надзвичайно красива молода циганка-танцівниця з витонченою фігурою, чорним волоссям та чарівними очима.",
+              innerQualities: "Вона невинна, добросердна, співчутлива і чиста душею. Її краса приваблює, але її внутрішні якості, такі як доброта до Квазімодо, роблять її по-справжньому прекрасною. Символізує невинність, красу та трагічну долю."
+            },
+            {
+              id: 3,
+              name: "Клод Фролло",
+              appearance: "Поважний архідиякон собору, людина науки, з суворим і інтелектуальним виглядом, але з часом його обличчя стає все більш похмурим.",
+              innerQualities: "Спочатку він був шанованим вченим, але його розум спотворений одержимістю та забороненими бажаннями. Він стає жорстоким, мстивим і морально розбещеним, що контрастує з його початковим образом. Символізує лицемірство, фанатизм та руйнівну силу нерозділеного кохання/одержимості."
+            },
+            {
+              id: 4,
+              name: "Феб де Шатопер",
+              appearance: "Вродливий, чарівний і зухвалий капітан королівських стрільців. Його зовнішність викликає захоплення у жінок.",
+              innerQualities: "Під маскою привабливості ховається марнославство, поверхневість і боягузтво. Він не здатний на справжні почуття і зраджує тих, хто йому довіряє. Символізує поверхневу красу та моральну порожнечу."
+            },
+            {
+              id: 5,
+              name: "П'єр Гренгуар",
+              appearance: "Поет, філософ і драматург, часто бідний і розсіяний. Його зовнішність не є видатною, він радше непоказний.",
+              innerQualities: "Він є символом інтелектуала, який намагається зрозуміти світ, але часто є пасивним спостерігачем і нездатним впливати на події. Символізує байдужість, філософську відстороненість та іноді комічну безпорадність."
+            },
+            {
+              id: 6,
+              name: "Собор Паризької Богоматері",
+              appearance: "Велична готична споруда, що височіє над Парижем, з її шпилями, химерами, вітражами та дзвонами.",
+              innerQualities: "Собор є не просто будівлею, а живим організмом, центральним персонажем роману. Він символізує історію, архітектуру, віру, притулок, а також є свідком людських драм і пристрастей. Він є вмістилищем і протиставленням людським порокам і чеснотам."
+            }
+          ];
+
+          // State to store the selected character for displaying details
+          const [selectedCharacter, setSelectedCharacter] = React.useState(null);
+          // State to store the entered first impression
+          const [firstImpression, setFirstImpression] = React.useState('');
+          // State to indicate whether the first impression has been submitted for the current card
+          const [impressionSubmitted, setImpressionSubmitted] = React.useState(false);
+          // New state to store the IDs of opened cards
+          const [openedCardIds, setOpenedCardIds] = React.useState(new Set());
+
+          // Handler for clicking on a character card
+          const handleCardClick = (character) => {
+            setSelectedCharacter(character);
+            setFirstImpression(''); // Clear previous impression when opening a new card
+            setImpressionSubmitted(false); // Reset state for a new impression
+            // Add the ID of the opened card to the set
+            setOpenedCardIds(prevIds => new Set(prevIds).add(character.id));
+          };
+
+          // Handler for closing the modal window
+          const handleCloseModal = () => {
+            setSelectedCharacter(null);
+            setImpressionSubmitted(false); // Reset state on close
+          };
+
+          // Handler for the "Formulate first impression" button
+          const handleSubmitImpression = () => {
+            if (firstImpression.trim() === '') {
+              console.log('Будь ласка, введіть ваше перше враження.');
+              return;
+            }
+            setImpressionSubmitted(true);
+          };
+
+          return (
+            <div className="min-h-screen bg-gradient-to-br from-blue-100 to-purple-100 flex flex-col items-center justify-center p-4 font-inter">
+              <div className="bg-white p-8 rounded-2xl shadow-xl max-w-4xl w-full text-center border border-gray-200 mb-8">
+                <h1 className="text-3xl font-bold text-gray-800 mb-4">Краса всередині (інтерактивні картки)</h1>
+                <p className="text-lg text-gray-700 mb-6">
+                  Виберіть картку персонажа, щоб дізнатися про його зовнішність, сформувати перше враження, а потім розкрити його справжні внутрішні якості.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl w-full">
+                {characters.map((character) => (
+                  <div
+                    key={character.id}
+                    // Dynamic class for highlighting opened cards
+                    className={`p-6 rounded-2xl shadow-md border border-gray-200 cursor-pointer hover:shadow-lg transform hover:scale-105 transition duration-300 ease-in-out flex flex-col items-center justify-center text-center
+                      ${openedCardIds.has(character.id) ? 'bg-blue-200' : 'bg-white'}`}
+                    onClick={() => handleCardClick(character)}
+                  >
+                    <h2 className="text-2xl font-semibold text-gray-800 mb-2">{character.name}</h2>
+                    <p className="text-md text-gray-600 italic">
+                      {character.name === "Собор Паризької Богоматері" ? "Велична споруда" : "Персонаж"}
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              {selectedCharacter && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                  <div className="bg-white p-8 rounded-2xl shadow-2xl max-w-2xl w-full text-center border border-gray-200 relative">
+                    <button
+                      onClick={handleCloseModal}
+                      className="absolute top-4 right-4 text-gray-500 hover:text-gray-800 text-3xl font-bold transition duration-300"
+                    >
+                      &times;
+                    </button>
+                    <h2 className="text-3xl font-bold text-gray-800 mb-4">{selectedCharacter.name}</h2>
+
+                    {!impressionSubmitted ? (
+                      <>
+                        <p className="text-lg text-gray-700 mb-6">
+                          **Зовнішність:** {selectedCharacter.appearance}
+                        </p>
+                        <textarea
+                          className="w-full p-3 border border-gray-300 rounded-lg mb-4 resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
+                          rows="4"
+                          placeholder={`Напишіть ваше перше враження про ${selectedCharacter.name}...`}
+                          value={firstImpression}
+                          onChange={(e) => setFirstImpression(e.target.value)}
+                        ></textarea>
+                        <button
+                          onClick={handleSubmitImpression}
+                          className="px-6 py-3 bg-green-600 text-white font-semibold rounded-lg shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-75 transition duration-300 ease-in-out transform hover:scale-105"
+                        >
+                          Сформувати перше враження
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <h3 className="text-2xl font-semibold text-gray-800 mb-4">Ваше перше враження:</h3>
+                        <p className="text-lg text-gray-700 mb-6 italic">"{firstImpression}"</p>
+                        <h3 className="text-2xl font-semibold text-gray-800 mb-4">Справжні якості {selectedCharacter.name}:</h3>
+                        <p className="text-lg text-gray-700 mb-6">
+                          {selectedCharacter.innerQualities}
+                        </p>
+                        <p className="text-xl font-bold text-blue-700 mb-6">
+                          Чи змінилося ваше враження про {selectedCharacter.name}?
+                        </p>
+                        <button
+                          onClick={handleCloseModal}
+                          className="px-6 py-3 bg-gray-600 text-white font-semibold rounded-lg shadow-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-75 transition duration-300 ease-in-out transform hover:scale-105"
+                        >
+                          Закрити
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        };
+
+        // Render the App component into the root div
+        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+</body>
+</html>

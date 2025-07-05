@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Гра: Розгадай Таємницю Жука!</title>
+    <!-- Підключення Tailwind CSS для стилізації -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Використання шрифту Inter для всього документа */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Легкий сірий фон */
+            color: #334155; /* Темно-сірий текст */
+        }
+        /* Стилі для елементів форми */
+        input[type="text"],
+        textarea {
+            border-radius: 0.5rem; /* Закруглені кути */
+            border: 1px solid #cbd5e1; /* Світло-сіра рамка */
+            padding: 0.75rem 1rem; /* Відступи всередині полів */
+            width: 100%; /* Повна ширина */
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05); /* Легка тінь всередині */
+            transition: border-color 0.2s, box-shadow 0.2s; /* Плавний перехід */
+        }
+        input[type="text"]:focus,
+        textarea:focus {
+            border-color: #6366f1; /* Синя рамка при фокусі */
+            outline: none; /* Прибираємо стандартний outline */
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2); /* Легка синя тінь при фокусі */
+        }
+        /* Стилі для кнопок */
+        button {
+            background-color: #6366f1; /* Синій фон */
+            color: white; /* Білий текст */
+            padding: 0.75rem 1.5rem; /* Відступи всередині кнопки */
+            border-radius: 0.5rem; /* Закруглені кути */
+            font-weight: 600; /* Напівжирний шрифт */
+            cursor: pointer; /* Курсор-вказівник */
+            transition: background-color 0.2s, transform 0.1s; /* Плавний перехід */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Тінь */
+        }
+        button:hover {
+            background-color: #4f46e5; /* Темніший синій при наведенні */
+            transform: translateY(-1px); /* Легкий підйом кнопки */
+        }
+        button:active {
+            transform: translateY(0); /* Повернення кнопки при натисканні */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Менша тінь при натисканні */
+        }
+        /* Стилі для контейнерів */
+        .container {
+            max-width: 800px; /* Максимальна ширина контейнера */
+        }
+        /* Стилі для заголовків */
+        h2 {
+            color: #1e293b; /* Темний заголовок */
+        }
+        /* Стилі для результату */
+        .result-box {
+            background-color: #e2e8f0; /* Світло-сірий фон для результату */
+            border-radius: 0.5rem; /* Закруглені кути */
+            padding: 1rem; /* Відступи */
+            min-height: 100px; /* Мінімальна висота */
+            word-wrap: break-word; /* Перенесення довгих слів */
+            white-space: pre-wrap; /* Зберігає пробіли та переноси рядків */
+        }
+        .hint-box {
+            background-color: #fffbeb; /* Світло-жовтий фон для підказок */
+            border: 1px solid #fcd34d; /* Жовта рамка */
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+            color: #92400e; /* Темно-жовтий текст */
+        }
+    </style>
+</head>
+<body class="p-6 flex items-center justify-center min-h-screen">
+    <div class="container bg-white p-8 rounded-xl shadow-lg space-y-6">
+        <h2 class="text-3xl font-bold text-center mb-6">Гра: Розгадай Таємницю Жука!</h2>
+
+        <p class="text-center text-gray-600 mb-4">
+            Використайте свої навички дедукції, щоб розшифрувати секретне повідомлення!
+            Кожна літера оригінального тексту замінена іншою літерою.
+            Введіть ваші припущення у полі "Ваші заміни" (наприклад, `А=Б`, `В=Г`),
+            і натисніть "Розшифрувати", щоб побачити результат.
+        </p>
+
+        <!-- Зашифроване повідомлення -->
+        <div>
+            <label for="encryptedMessage" class="block text-sm font-medium text-gray-700 mb-2">Зашифроване повідомлення:</label>
+            <textarea id="encryptedMessage" rows="3" class="resize-y" readonly></textarea>
+        </div>
+
+        <!-- Підказки -->
+        <div class="hint-box">
+            <p class="font-semibold mb-2">Підказки:</p>
+            <ul class="list-disc list-inside">
+                <li>Найчастіше зустрічається літера в українській мові: **А**</li>
+                <li>Найчастіше зустрічається літера у цьому шифрі: **Г**</li>
+                <li>**У** в зашифрованому тексті означає **С**</li>
+                <li>**Р** в зашифрованому тексті означає **О**</li>
+            </ul>
+        </div>
+
+        <!-- Ключ заміни від користувача -->
+        <div>
+            <label for="userSubstitutions" class="block text-sm font-medium text-gray-700 mb-2">
+                Ваші заміни (наприклад, Зашифрована_Літера=Розшифрована_Літера, по одній на рядок):
+            </label>
+            <textarea id="userSubstitutions" rows="5" class="resize-y" placeholder="Введіть заміни: Зашифрована_Літера=Розшифрована_Літера. Використовуйте великі літери."></textarea>
+            <p class="text-sm text-gray-500 mt-1">
+                <span class="font-semibold">Приклад:</span> Якщо ви думаєте, що 'Г' означає 'А', введіть `Г=А`.
+            </p>
+        </div>
+
+        <!-- Кнопка розшифровки -->
+        <div class="flex justify-center">
+            <button id="decryptButton">Розшифрувати</button>
+        </div>
+
+        <!-- Розшифроване повідомлення -->
+        <div>
+            <h3 class="text-xl font-semibold text-gray-800 mb-2">Розшифроване повідомлення:</h3>
+            <div id="decryptedMessage" class="result-box text-gray-900">
+                Тут з'явиться розшифрований текст.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Отримання посилань на елементи DOM
+        const encryptedMessageInput = document.getElementById('encryptedMessage');
+        const userSubstitutionsInput = document.getElementById('userSubstitutions');
+        const decryptButton = document.getElementById('decryptButton');
+        const decryptedMessageDiv = document.getElementById('decryptedMessage');
+
+        // Український алфавіт
+        const ukrainianAlphabet = 'АБВГҐДЕЄЖЗИІЇЙКЛМНОПРСТУФХЦЧШЩЬЮЯ';
+
+        // Секретний ключ шифрування (Caesar cipher, зсув на 3 позиції)
+        const secretEncryptionMap = {};
+        const shift = 3; // Зсув на 3 позиції
+        for (let i = 0; i < ukrainianAlphabet.length; i++) {
+            const originalChar = ukrainianAlphabet[i];
+            const encryptedChar = ukrainianAlphabet[(i + shift) % ukrainianAlphabet.length];
+            secretEncryptionMap[originalChar] = encryptedChar;
+        }
+
+        // Функція для шифрування тексту за допомогою заданої карти заміни
+        function encryptText(text, encryptionMap) {
+            let result = '';
+            for (let i = 0; i < text.length; i++) {
+                const char = text[i].toUpperCase();
+                if (encryptionMap[char]) {
+                    result += encryptionMap[char];
+                } else {
+                    result += char; // Залишаємо пробіли та інші символи без змін
+                }
+            }
+            return result;
+        }
+
+        // Оригінальне секретне повідомлення
+        const originalSecretMessage = "СКАРБ ЗАХОВАНО ПІД СТАРИМ ДУБОМ";
+        // Шифруємо повідомлення для відображення
+        const initialEncryptedMessage = encryptText(originalSecretMessage, secretEncryptionMap);
+        encryptedMessageInput.value = initialEncryptedMessage;
+
+        // Функція для розшифровки повідомлення
+        function decryptMessage() {
+            let currentEncryptedText = encryptedMessageInput.value;
+            const userKeyLines = userSubstitutionsInput.value.split('\n');
+            const decryptionMap = {};
+
+            // Будуємо карту розшифровки з введення користувача
+            userKeyLines.forEach(line => {
+                const parts = line.trim().split('=').map(part => part.trim().toUpperCase());
+                if (parts.length === 2 && parts[0].length === 1 && parts[1].length === 1 &&
+                    ukrainianAlphabet.includes(parts[0]) && ukrainianAlphabet.includes(parts[1])) {
+                    decryptionMap[parts[0]] = parts[1]; // Зашифрована_Літера = Розшифрована_Літера
+                }
+            });
+
+            // Застосовуємо заміни
+            let finalDecryptedText = '';
+            for (let i = 0; i < currentEncryptedText.length; i++) {
+                const char = currentEncryptedText[i].toUpperCase();
+                if (decryptionMap[char]) {
+                    finalDecryptedText += decryptionMap[char];
+                } else {
+                    finalDecryptedText += char; // Залишаємо символи, для яких немає заміни, як є
+                }
+            }
+
+            decryptedMessageDiv.textContent = finalDecryptedText;
+        }
+
+        // Додаємо обробник подій для кнопки розшифровки
+        decryptButton.addEventListener('click', decryptMessage);
+
+        // Викликаємо розшифровку при завантаженні сторінки, щоб показати початковий стан
+        decryptMessage();
+    </script>
+</body>
+</html>

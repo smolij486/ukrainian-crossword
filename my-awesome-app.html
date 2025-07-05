@@ -1,0 +1,130 @@
+import React, { useState } from 'react';
+
+// Main App component
+const App = () => {
+  // Data for the quote cards
+  const quotesData = [
+    {
+      quote: "Зложити докупи обидва береги Дніпра, щоб обиба прихилились до одного берега, до однієї булави! – ось моє завдання.",
+      character: "Яким Сомко",
+      symbolism: "Символізує державницьку мудрість, прагнення єдності та сильної гетьманської влади. Його образ втілює ідеал освіченого, патріотичного правителя, який дбає про цілісність України, але іноді не розуміє глибинних народних настроїв та інтриг."
+    },
+    {
+      quote: "Будем, братці, єднатись! Нехай буде один гетьман, а то два гетьмани – то й дві України.",
+      character: "Іван Брюховецький",
+      symbolism: "Символізує популізм, демагогію, прагнення влади за будь-яку ціну, руйнівну силу анархії та розбрату. Він майстерно маніпулює натовпом, обіцяючи рівність і справедливість, але насправді веде країну до ще більшого хаосу та занепаду."
+    },
+    {
+      quote: "Нехай не буде в нас ні пана, ні мужика, ні багатого, ні вбогого, а будемо всі рівні!",
+      character: "Іван Брюховецький",
+      symbolism: "Продовжує символізувати демагогію та облудні обіцянки. Ця цитата підкреслює його здатність грати на соціальних протиріччях та обіцяти нездійсненне заради особистої вигоди, що зрештою призводить до розчарування та руїни."
+    },
+    {
+      quote: "Хто не любить України, той не любить і Бога.",
+      character: "Божий Чоловік",
+      symbolism: "Символізує народну мудрість, духовність, моральний орієнтир, голос совісті. Він є пророком, який бачить істину і намагається вказати шлях до порятунку, застерігаючи від гріха розбрату та зради."
+    },
+    {
+      quote: "Я не зрадник, я козак! Я за Україну стою!",
+      character: "Кирило Тур",
+      symbolism: "Символізує козацьку волю, відвагу, силу, але й певну дикість, некерованість, індивідуалізм. Його образ втілює суперечливу натуру козака: з одного боку – захисник, з іншого – бунтар, що діє за власними правилами, іноді нехтуючи загальним благом."
+    },
+    {
+      quote: "Ох, і нещасна наша Україна! Якби ж то вона не мала таких синів, що її роздирають!",
+      character: "Черевань",
+      symbolism: "Символізує заможно-міщанське, хуторянське мислення, байдужість до долі України, зосередженість на особистому добробуті та спокої. Він є втіленням обивателя, який прагне лише власного благополуччя і не розуміє масштабів трагедії, що розгортається навколо."
+    },
+    {
+      quote: "Немає нічого дорожчого за волю.",
+      character: "Петро Шраменко",
+      symbolism: "Символізує молоду, чисту, шляхетну Україну, яка прагне до справедливості, кохання та ідеалів. Він є носієм моральних цінностей, який змушений боротися в умовах розбрату, зберігаючи вірність своїм принципам."
+    },
+    {
+      quote: "Лучче мені вмерти, ніж бачити Україну в руїні!",
+      character: "Полковник Шрам",
+      symbolism: "Символізує досвідченого, мудрого козацького старшину, вірного ідеалам козацтва та державницькій ідеї. Він є втіленням патріотизму, жертовності та незламної волі до боротьби за єдність і незалежність України, незважаючи на особисті втрати."
+    }
+  ];
+
+  return (
+    <>
+      {/* Custom styles for the card flip effect and font */}
+      <style>
+        {`
+          .perspective-1000 {
+            perspective: 1000px;
+          }
+          .preserve-3d {
+            transform-style: preserve-3d;
+          }
+          .backface-hidden {
+            backface-visibility: hidden;
+          }
+          .rotate-y-180 {
+            transform: rotateY(180deg);
+          }
+          .font-inter {
+            font-family: 'Inter', sans-serif;
+          }
+        `}
+      </style>
+      <div className="min-h-screen bg-gradient-to-br from-blue-100 to-indigo-200 p-4 font-inter text-gray-800 antialiased">
+        <div className="container mx-auto max-w-4xl py-8">
+          <h1 className="mb-8 text-center text-4xl font-extrabold text-blue-800 md:text-5xl">
+            Голоси епохи Руїни...
+          </h1>
+          <p className="mb-12 text-center text-lg leading-relaxed text-gray-700">
+            Зануртесь у світ Пантелеймона Куліша! Перегорніть картки, щоб відкрити цитати та дізнатися, що символізує кожен персонаж у цьому епохальному творі.
+          </p>
+
+          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+            {quotesData.map((data, index) => (
+              <QuoteCard key={index} data={data} />
+            ))}
+          </div>
+
+          <p className="mt-12 text-center text-gray-600">
+            Сподіваємося, ці картки допомогли вам глибше зрозуміти складний світ "Чорної ради" та її незабутніх персонажів!
+          </p>
+        </div>
+      </div>
+    </>
+  );
+};
+
+// QuoteCard component
+const QuoteCard = ({ data }) => {
+  const [isFlipped, setIsFlipped] = useState(false);
+
+  const handleFlip = () => {
+    setIsFlipped(!isFlipped);
+  };
+
+  return (
+    <div
+      className="group perspective-1000 h-80 cursor-pointer rounded-xl shadow-lg transition-all duration-500 hover:shadow-xl"
+      onClick={handleFlip}
+    >
+      <div
+        className={`relative h-full w-full preserve-3d transition-transform duration-700 ${
+          isFlipped ? 'rotate-y-180' : ''
+        }`}
+      >
+        {/* Front of the card (Quote) */}
+        <div className="absolute backface-hidden flex h-full w-full items-center justify-center rounded-xl bg-white p-6 text-center">
+          <p className="text-xl font-semibold italic leading-relaxed text-gray-800">
+            "{data.quote}"
+          </p>
+        </div>
+
+        {/* Back of the card (Character and Symbolism) */}
+        <div className="absolute backface-hidden rotate-y-180 flex h-full w-full flex-col items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 p-6 text-center text-white">
+          <h3 className="mb-2 text-2xl font-bold">{data.character}</h3>
+          <p className="text-sm leading-relaxed opacity-90">{data.symbolism}</p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default App;

@@ -1,274 +1,349 @@
-import React, { useState, useEffect } from 'react';
-
-// Основний компонент програми
-const App = () => {
-    // Стан гри
-    const [gameStarted, setGameStarted] = useState(false); // Чи почалася гра
-    const [quizEnded, setQuizEnded] = useState(false);     // Чи закінчилася вікторина
-    const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0); // Індекс поточного питання
-    const [score, setScore] = useState(0);                 // Рахунок гравця
-    const [selectedAnswer, setSelectedAnswer] = useState(null); // Вибрана гравцем відповідь
-    const [feedbackMessage, setFeedbackMessage] = useState(''); // Повідомлення зворотного зв'язку
-    const [isCorrect, setIsCorrect] = useState(null);       // Чи була відповідь правильною
-    const [questions, setQuestions] = useState([]);         // Масив для зберігання питань для поточної гри
-
-    // Масив всіх питань для вікторини (оновлено з новими цитатами та для 12 питань)
-    const allQuestions = [
-        {
-            snippet: `«І мене в сім'ї великій,\nВ сім'ї вольній, новій,\nНе забудьте пом'янути\nНезлим тихим словом.»`,
-            question: "З якого твору цей уривок?",
-            options: ["Катерина", "Гайдамаки", "Заповіт", "Садок вишневий коло хати"],
-            correctAnswer: "Заповіт",
-            explanation: "Ці рядки є завершенням знаменитого 'Заповіту' Тараса Шевченка, де він висловлює своє останнє бажання до українського народу."
-        },
-        {
-            snippet: `«Кохайтеся, чорнобриві,\nТа не з москалями,\nБо москалі — чужі люде,\nРоблять лихо з вами.»`,
-            question: "Який твір починається цими словами?",
-            options: ["Гайдамаки", "Катерина", "Наймичка", "Тополя"],
-            correctAnswer: "Катерина",
-            explanation: "Це початкові рядки поеми 'Катерина', яка розповідає трагічну історію дівчини, зрадженої російським офіцером, і є гострою критикою соціальної несправедливості."
-        },
-        {
-            snippet: `«Реве та стогне Дніпр широкий,\nСердитий вітер завива,\nДодолу верби гне високі,\nГорами хвилі підійма.»`,
-            question: "Цей уривок описує природу. З якого він твору?",
-            options: ["Причинна", "Гайдамаки", "Іван Підкова", "Тарасова ніч"],
-            correctAnswer: "Причинна",
-            explanation: "Це початок балади 'Причинна', де Шевченко майстерно описує бурю на Дніпрі, що є прологом до трагічної історії кохання."
-        },
-        {
-            snippet: `«Садок вишневий коло хати,\nХрущі над вишнями гудуть,\nПлугатарі з плугами йдуть,\nСпівають ідучи дівчата,\nА матері вечерять ждуть.»`,
-            question: "Яку картину українського села змальовує цей вірш?",
-            options: ["Бідність і страждання", "Ідилічне життя та гармонію", "Революційні настрої", "Самотні роздуми"],
-            correctAnswer: "Ідилічне життя та гармонію",
-            explanation: "Вірш 'Садок вишневий коло хати' є одним із найвідоміших описів ідилічного, мирного українського життя, що символізує гармонію людини з природою та родинний затишок."
-        },
-        {
-            snippet: `«Борітеся — поборете!\nВам Бог помагає!\nЗа вас правда, за вас сила\nІ воля святая!»`,
-            question: "Який основний заклик міститься в цих рядках?",
-            options: ["До покори та смирення", "До боротьби за свободу та правду", "До еміграції", "До забуття минулого"],
-            correctAnswer: "До боротьби за свободу та правду",
-            explanation: "Ці потужні рядки з поеми 'Кавказ' є одним із найвідоміших закликів Шевченка до боротьби за волю та справедливість, що став гаслом для багатьох поколінь українців."
-        },
-        {
-            snippet: `«Мені однаково, чи буду\nЯ жить в Україні, чи ні.\nЧи хто згадає, чи забуде\nМене в снігу на чужині —\nОднаково мені.»`,
-            question: "Який настрій передає цей уривок?",
-            options: ["Радість і щастя", "Байдужість до долі", "Глибокий смуток та відчай", "Надію на світле майбутнє"],
-            correctAnswer: "Глибокий смуток та відчай",
-            explanation: "У вірші 'Мені однаково, чи буду...' Шевченко висловлює глибокий смуток і відчай через свою долю вигнанця, але водночас підкреслює, що йому не байдужа доля України."
-        },
-        {
-            snippet: `«І виріс я на чужині,\nІ сивію в чужому краї,\nІ одинокий в чужині\nКому я долю довіряю?»`,
-            question: "Яка тема є центральною в цьому уривку?",
-            options: ["Любов до природи", "Самотність та ностальгія за Батьківщиною", "Боротьба за права", "Дитячі спогади"],
-            correctAnswer: "Самотність та ностальгія за Батьківщиною",
-            explanation: "Цей уривок відображає глибоку самотність та тугу Шевченка за рідною землею під час його заслання та життя на чужині."
-        },
-        {
-            snippet: `«Тече вода з-під явора\nЯром на долину.\nПишається над водою\nЧервона калина.»`,
-            question: "З якого вірша ці рядки, що описують український пейзаж?",
-            options: ["Тополя", "Тече вода з-під явора", "Марія", "Сон"],
-            correctAnswer: "Тече вода з-під явора",
-            explanation: "Це початок одного з найвідоміших ліричних віршів Шевченка, який став народною піснею і оспівує красу української природи."
-        },
-        {
-            snippet: `«Учітесь, читайте,\nІ чужому научайтесь,\nЙ свого не цурайтесь.»`,
-            question: "Який заклик до українців міститься в цих словах?",
-            options: ["До покори", "До еміграції", "До освіти та збереження національної ідентичності", "До збройного повстання"],
-            correctAnswer: "До освіти та збереження національної ідентичності",
-            explanation: "Ці рядки з поеми 'І мертвим, і живим, і ненарожденним...' є програмним закликом Шевченка до української інтелігенції вчитися у світі, але не забувати свого коріння та культури."
-        },
-        {
-            snippet: `«Свою Україну любіть.\nЛюбіть її... во время люте,\nВ остатню тяжкую минуту\nЗа неї Господа моліть.»`,
-            question: "Яку головну ідею висловлює Шевченко в цьому уривку?",
-            options: ["Заклик до подорожей", "Заклик до любові та відданості Україні за будь-яких обставин", "Заклик до забуття минулого", "Заклик до особистого збагачення"],
-            correctAnswer: "Заклик до любові та відданості Україні за будь-яких обставин",
-            explanation: "Ці слова з 'Чигиринського Кобзаря' (поема 'Гайдамаки') є потужним вираженням безмежної любові Шевченка до України та закликом до її захисту та збереження навіть у найважчі часи."
-        },
-        {
-            snippet: `«Та не однаково мені,\nЯк Україну злії люди\nПрисплять, лукаві, і в огні\nЇї окраденую збудять…\nОх, не однаково мені.»`,
-            question: "Яке почуття висловлює автор у цих рядках?",
-            options: ["Безтурботність", "Байдужість", "Глибоке занепокоєння за долю України", "Радість"],
-            correctAnswer: "Глибоке занепокоєння за долю України",
-            explanation: "Ці рядки є продовженням вірша 'Мені однаково, чи буду...', де Шевченко розкриває, що йому не байдужа доля України, і він глибоко переживає за її майбутнє."
-        },
-        {
-            snippet: `«За сонцем хмаронька пливе,\nЧервоні поли розстилає\nІ сонце спатоньки зове\nУ синє море; покриває\nВолоку чорною.»`,
-            question: "Який природний феномен описується в цьому уривку?",
-            options: ["Схід сонця", "Дощ", "Захід сонця", "Повінь"],
-            correctAnswer: "Захід сонця",
-            explanation: "Цей уривок майстерно описує красу заходу сонця над морем, де хмари, мов червоні поли, покривають небо, а потім настає темрява."
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Загадки великого Кобзаря</title>
+    <!-- Підключення Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Підключення шрифту Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <!-- Підключення React, ReactDOM та Babel для транспіляції JSX -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6; /* Light gray background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
         }
-    ];
-
-    // Функція для перемішування масиву (алгоритм Фішера-Єйтса)
-    const shuffleArray = (array) => {
-        for (let i = array.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [array[i], array[j]] = [array[j], array[i]];
+        /* Анімація для контейнера гри */
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
-        return array;
-    };
-
-    // Ініціалізація гри
-    const initializeGame = () => {
-        const shuffledQuestions = shuffleArray([...allQuestions]); // Копіюємо та перемішуємо
-        setQuestions(shuffledQuestions.slice(0, 12)); // Беремо перші 12 питань для поточної гри
-        setCurrentQuestionIndex(0);
-        setScore(0);
-        setGameStarted(false); // Починаємо з екрану привітання
-        setQuizEnded(false);
-        setSelectedAnswer(null);
-        setFeedbackMessage('');
-        setIsCorrect(null);
-    };
-
-    // Ефект, що запускається один раз при завантаженні компонента
-    useEffect(() => {
-        initializeGame();
-    }, []);
-
-    // Обробник вибору відповіді
-    const handleAnswerClick = (selectedOption) => {
-        if (selectedAnswer !== null) return; // Запобігаємо повторному вибору
-
-        setSelectedAnswer(selectedOption);
-        const currentQuestion = questions[currentQuestionIndex];
-        const correct = selectedOption === currentQuestion.correctAnswer;
-        setIsCorrect(correct);
-
-        if (correct) {
-            setScore(prevScore => prevScore + 1);
-            setFeedbackMessage(`Вірно! ${currentQuestion.explanation}`);
-        } else {
-            setFeedbackMessage(`Невірно. Правильна відповідь: "${currentQuestion.correctAnswer}". ${currentQuestion.explanation}`);
+        .animate-slideIn {
+            animation: slideIn 0.5s ease-out forwards;
         }
-    };
-
-    // Обробник переходу до наступного питання
-    const handleNextQuestion = () => {
-        setSelectedAnswer(null);
-        setFeedbackMessage('');
-        setIsCorrect(null);
-
-        if (currentQuestionIndex < questions.length - 1) {
-            setCurrentQuestionIndex(prevIndex => prevIndex + 1);
-        } else {
-            setQuizEnded(true); // Завершення вікторини
+        /* Стилі для кнопок, що імітують натискання */
+        .choice-button, .start-button, .next-button {
+            transition: all 0.2s ease-in-out;
+            position: relative;
+            overflow: hidden;
         }
-    };
+        .choice-button:hover, .start-button:hover, .next-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+        .choice-button:active, .start-button:active, .next-button:active {
+            transform: translateY(0);
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+        }
+        .choice-button.bg-green-500, .choice-button.bg-red-500 {
+            animation: pulse 0.5s forwards;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+        /* Додаткові стилі для тексту уривка */
+        .question-text {
+            white-space: pre-wrap; /* Зберігає переноси рядків з цитат */
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
 
-    // Обробник початку гри
-    const handleStartGame = () => {
-        setGameStarted(true);
-        setCurrentQuestionIndex(0); // Переконаємось, що починаємо з першого питання
-        setScore(0); // Скидаємо рахунок
-        setSelectedAnswer(null);
-        setFeedbackMessage('');
-        setIsCorrect(null);
-        // Перемішуємо питання знову, щоб кожного разу були різні
-        const shuffledQuestions = shuffleArray([...allQuestions]);
-        setQuestions(shuffledQuestions.slice(0, 12)); // Знову вибираємо 12 питань
-    };
+    <script type="text/babel">
+        // Основний компонент програми
+        const App = () => {
+            // Стан гри
+            const [gameStarted, setGameStarted] = React.useState(false); // Чи почалася гра
+            const [quizEnded, setQuizEnded] = React.useState(false);      // Чи закінчилася вікторина
+            const [currentQuestionIndex, setCurrentQuestionIndex] = React.useState(0); // Індекс поточного питання
+            const [score, setScore] = React.useState(0);                  // Рахунок гравця
+            const [selectedAnswer, setSelectedAnswer] = React.useState(null); // Вибрана гравцем відповідь
+            const [feedbackMessage, setFeedbackMessage] = React.useState(''); // Повідомлення зворотного зв'язку
+            const [isCorrect, setIsCorrect] = React.useState(null);        // Чи була відповідь правильною
+            const [questions, setQuestions] = React.useState([]);          // Масив для зберігання питань для поточної гри
 
-    // Обробник повторної гри
-    const handlePlayAgain = () => {
-        initializeGame(); // Повністю ініціалізуємо гру
-        setGameStarted(true); // Відразу переходимо до ігрового екрану
-    };
+            // Масив всіх питань для вікторини (оновлено з новими цитатами та для 12 питань)
+            const allQuestions = [
+                {
+                    snippet: `«І мене в сім'ї великій,\nВ сім'ї вольній, новій,\nНе забудьте пом'янути\nНезлим тихим словом.»`,
+                    question: "З якого твору цей уривок?",
+                    options: ["Катерина", "Гайдамаки", "Заповіт", "Садок вишневий коло хати"],
+                    correctAnswer: "Заповіт",
+                    explanation: "Ці рядки є завершенням знаменитого 'Заповіту' Тараса Шевченка, де він висловлює своє останнє бажання до українського народу."
+                },
+                {
+                    snippet: `«Кохайтеся, чорнобриві,\nТа не з москалями,\nБо москалі — чужі люде,\nРоблять лихо з вами.»`,
+                    question: "Який твір починається цими словами?",
+                    options: ["Гайдамаки", "Катерина", "Наймичка", "Тополя"],
+                    correctAnswer: "Катерина",
+                    explanation: "Це початкові рядки поеми 'Катерина', яка розповідає трагічну історію дівчини, зрадженої російським офіцером, і є гострою критикою соціальної несправедливості."
+                },
+                {
+                    snippet: `«Реве та стогне Дніпр широкий,\nСердитий вітер завива,\nДодолу верби гне високі,\nГорами хвилі підійма.»`,
+                    question: "Цей уривок описує природу. З якого він твору?",
+                    options: ["Причинна", "Гайдамаки", "Іван Підкова", "Тарасова ніч"],
+                    correctAnswer: "Причинна",
+                    explanation: "Це початок балади 'Причинна', де Шевченко майстерно описує бурю на Дніпрі, що є прологом до трагічної історії кохання."
+                },
+                {
+                    snippet: `«Садок вишневий коло хати,\nХрущі над вишнями гудуть,\nПлугатарі з плугами йдуть,\nСпівають ідучи дівчата,\nА матері вечерять ждуть.»`,
+                    question: "Яку картину українського села змальовує цей вірш?",
+                    options: ["Бідність і страждання", "Ідилічне життя та гармонію", "Революційні настрої", "Самотні роздуми"],
+                    correctAnswer: "Ідилічне життя та гармонію",
+                    explanation: "Вірш 'Садок вишневий коло хати' є одним із найвідоміших описів ідилічного, мирного українського життя, що символізує гармонію людини з природою та родинний затишок."
+                },
+                {
+                    snippet: `«Борітеся — поборете!\nВам Бог помагає!\nЗа вас правда, за вас сила\nІ воля святая!»`,
+                    question: "Який основний заклик міститься в цих рядках?",
+                    options: ["До покори та смирення", "До боротьби за свободу та правду", "До еміграції", "До забуття минулого"],
+                    correctAnswer: "До боротьби за свободу та правду",
+                    explanation: "Ці потужні рядки з поеми 'Кавказ' є одним із найвідоміших закликів Шевченка до боротьби за волю та справедливість, що став гаслом для багатьох поколінь українців."
+                },
+                {
+                    snippet: `«Мені однаково, чи буду\nЯ жить в Україні, чи ні.\nЧи хто згадає, чи забуде\nМене в снігу на чужині —\nОднаково мені.»`,
+                    question: "Який настрій передає цей уривок?",
+                    options: ["Радість і щастя", "Байдужість до долі", "Глибокий смуток та відчай", "Надію на світле майбутнє"],
+                    correctAnswer: "Глибокий смуток та відчай",
+                    explanation: "У вірші 'Мені однаково, чи буду...' Шевченко висловлює глибокий смуток і відчай через свою долю вигнанця, але водночас підкреслює, що йому не байдужа доля України."
+                },
+                {
+                    snippet: `«І виріс я на чужині,\nІ сивію в чужому краї,\nІ одинокий в чужині\nКому я долю довіряю?»`,
+                    question: "Яка тема є центральною в цьому уривку?",
+                    options: ["Любов до природи", "Самотність та ностальгія за Батьківщиною", "Боротьба за права", "Дитячі спогади"],
+                    correctAnswer: "Самотність та ностальгія за Батьківщиною",
+                    explanation: "Цей уривок відображає глибоку самотність та тугу Шевченка за рідною землею під час його заслання та життя на чужині."
+                },
+                {
+                    snippet: `«Тече вода з-під явора\nЯром на долину.\nПишається над водою\nЧервона калина.»`,
+                    question: "З якого вірша ці рядки, що описують український пейзаж?",
+                    options: ["Тополя", "Тече вода з-під явора", "Марія", "Сон"],
+                    correctAnswer: "Тече вода з-під явора",
+                    explanation: "Це початок одного з найвідоміших ліричних віршів Шевченка, який став народною піснею і оспівує красу української природи."
+                },
+                {
+                    snippet: `«Учітесь, читайте,\nІ чужому научайтесь,\nЙ свого не цурайтесь.»`,
+                    question: "Який заклик до українців міститься в цих словах?",
+                    options: ["До покори", "До еміграції", "До освіти та збереження національної ідентичності", "До збройного повстання"],
+                    correctAnswer: "До освіти та збереження національної ідентичності",
+                    explanation: "Ці рядки з поеми 'І мертвим, і живим, і ненарожденним...' є програмним закликом Шевченка до української інтелігенції вчитися у світі, але не забувати свого коріння та культури."
+                },
+                {
+                    snippet: `«Свою Україну любіть.\nЛюбіть її... во время люте,\nВ остатню тяжкую минуту\nЗа неї Господа моліть.»`,
+                    question: "Яку головну ідею висловлює Шевченко в цьому уривку?",
+                    options: ["Заклик до подорожей", "Заклик до любові та відданості Україні за будь-яких обставин", "Заклик до забуття минулого", "Заклик до особистого збагачення"],
+                    correctAnswer: "Заклик до любові та відданості Україні за будь-яких обставин",
+                    explanation: "Ці слова з 'Чигиринського Кобзаря' (поема 'Гайдамаки') є потужним вираженням безмежної любові Шевченка до України та закликом до її захисту та збереження навіть у найважчі часи."
+                },
+                {
+                    snippet: `«Та не однаково мені,\nЯк Україну злії люди\nПрисплять, лукаві, і в огні\nЇї окраденую збудять…\nОх, не однаково мені.»`,
+                    question: "Яке почуття висловлює автор у цих рядках?",
+                    options: ["Безтурботність", "Байдужість", "Глибоке занепокоєння за долю України", "Радість"],
+                    correctAnswer: "Глибоке занепокоєння за долю України",
+                    explanation: "Ці рядки є продовженням вірша 'Мені однаково, чи буду...', де Шевченко розкриває, що йому не байдужа доля України, і він глибоко переживає за її майбутнє."
+                },
+                {
+                    snippet: `«За сонцем хмаронька пливе,\nЧервоні поли розстилає\nІ сонце спатоньки зове\nУ синє море; покриває\nВолоку чорною.»`,
+                    question: "Який природний феномен описується в цьому уривку?",
+                    options: ["Схід сонця", "Дощ", "Захід сонця", "Повінь"],
+                    correctAnswer: "Захід сонця",
+                    explanation: "Цей уривок майстерно описує красу заходу сонця над морем, де хмари, мов червоні поли, покривають небо, а потім настає темрява."
+                }
+            ];
 
-    // Відображення поточного питання
-    const currentQuestion = questions[currentQuestionIndex];
+            // Функція для перемішування масиву (алгоритм Фішера-Єйтса)
+            const shuffleArray = (array) => {
+                for (let i = array.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [array[i], array[j]] = [array[j], array[i]];
+                }
+                return array;
+            };
 
-    return (
-        <div className="p-10 flex items-center justify-center min-h-screen bg-gray-50 text-gray-800">
-            <div className="game-container max-w-3xl w-full bg-white p-14 rounded-3xl shadow-2xl border-4 border-purple-300 animate-slideIn">
-                <h2 className="text-center mb-10 text-5xl font-extrabold text-purple-800 drop-shadow-lg">
-                    Загадки великого Кобзаря
-                </h2>
+            // Ініціалізація гри
+            const initializeGame = () => {
+                const shuffledQuestions = shuffleArray([...allQuestions]); // Копіюємо та перемішуємо
+                setQuestions(shuffledQuestions.slice(0, 12)); // Беремо перші 12 питань для поточної гри
+                setCurrentQuestionIndex(0);
+                setScore(0);
+                setGameStarted(false); // Починаємо з екрану привітання
+                setQuizEnded(false);
+                setSelectedAnswer(null);
+                setFeedbackMessage('');
+                setIsCorrect(null);
+            };
 
-                {!gameStarted ? (
-                    // Екран привітання
-                    <div id="startScreen" className="w-full text-center">
-                        <p className="text-xl mb-10 text-gray-600 leading-relaxed">
-                            Перевірте свої знання творчості Тараса Шевченка!
-                            Вам буде запропоновано 12 питань.
-                        </p>
-                        <button
-                            onClick={handleStartGame}
-                            className="start-button bg-teal-500 hover:bg-teal-600 active:bg-teal-700 text-white py-4 px-8 rounded-xl font-bold text-lg uppercase tracking-wider shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 w-full"
-                        >
-                            Почати гру
-                        </button>
-                    </div>
-                ) : quizEnded ? (
-                    // Екран завершення гри
-                    <div id="endScreen" className="w-full text-center">
-                        <p className="final-score text-4xl font-bold text-purple-700 mb-8">
-                            Ваш результат: <span className="text-teal-600">{score}</span> з {questions.length}
-                        </p>
-                        <button
-                            onClick={handlePlayAgain}
-                            className="start-button bg-teal-500 hover:bg-teal-600 active:bg-teal-700 text-white py-4 px-8 rounded-xl font-bold text-lg uppercase tracking-wider shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 w-full"
-                        >
-                            Зіграти знову
-                        </button>
-                    </div>
-                ) : (
-                    // Ігровий екран
-                    <div id="gameScreen" className="w-full">
-                        <div id="questionText" className="question-text min-h-40 bg-purple-50 p-10 rounded-2xl text-2xl leading-relaxed mb-10 whitespace-pre-wrap text-purple-800 italic shadow-inner border border-purple-200">
-                            {currentQuestion?.snippet}
-                        </div>
+            // Ефект, що запускається один раз при завантаженні компонента
+            React.useEffect(() => {
+                initializeGame();
+            }, []);
 
-                        <p className="text-xl font-semibold mb-6 text-gray-700">{currentQuestion?.question}</p>
+            // Обробник вибору відповіді
+            const handleAnswerClick = (selectedOption) => {
+                if (selectedAnswer !== null) return; // Запобігаємо повторному вибору
 
-                        <div id="choices" className="flex flex-col space-y-5 w-full">
-                            {currentQuestion?.options.map((option, index) => (
+                setSelectedAnswer(selectedOption);
+                const currentQuestion = questions[currentQuestionIndex];
+                const correct = selectedOption === currentQuestion.correctAnswer;
+                setIsCorrect(correct);
+
+                if (correct) {
+                    setScore(prevScore => prevScore + 1);
+                    setFeedbackMessage(`Вірно! ${currentQuestion.explanation}`);
+                } else {
+                    setFeedbackMessage(`Невірно. Правильна відповідь: "${currentQuestion.correctAnswer}". ${currentQuestion.explanation}`);
+                }
+            };
+
+            // Обробник переходу до наступного питання
+            const handleNextQuestion = () => {
+                setSelectedAnswer(null);
+                setFeedbackMessage('');
+                setIsCorrect(null);
+
+                if (currentQuestionIndex < questions.length - 1) {
+                    setCurrentQuestionIndex(prevIndex => prevIndex + 1);
+                } else {
+                    setQuizEnded(true); // Завершення вікторини
+                }
+            };
+
+            // Обробник початку гри
+            const handleStartGame = () => {
+                setGameStarted(true);
+                setCurrentQuestionIndex(0); // Переконаємось, що починаємо з першого питання
+                setScore(0); // Скидаємо рахунок
+                setSelectedAnswer(null);
+                setFeedbackMessage('');
+                setIsCorrect(null);
+                // Перемішуємо питання знову, щоб кожного разу були різні
+                const shuffledQuestions = shuffleArray([...allQuestions]);
+                setQuestions(shuffledQuestions.slice(0, 12)); // Знову вибираємо 12 питань
+            };
+
+            // Обробник повторної гри
+            const handlePlayAgain = () => {
+                initializeGame(); // Повністю ініціалізуємо гру
+                setGameStarted(true); // Відразу переходимо до ігрового екрану
+            };
+
+            // Відображення поточного питання
+            const currentQuestion = questions[currentQuestionIndex];
+
+            return (
+                <div className="p-10 flex items-center justify-center min-h-screen bg-gray-50 text-gray-800">
+                    <div className="game-container max-w-3xl w-full bg-white p-14 rounded-3xl shadow-2xl border-4 border-purple-300 animate-slideIn">
+                        <h2 className="text-center mb-10 text-5xl font-extrabold text-purple-800 drop-shadow-lg">
+                            Загадки великого Кобзаря
+                        </h2>
+
+                        {!gameStarted ? (
+                            // Екран привітання
+                            <div id="startScreen" className="w-full text-center">
+                                <p className="text-xl mb-10 text-gray-600 leading-relaxed">
+                                    Перевірте свої знання творчості Тараса Шевченка!
+                                    Вам буде запропоновано 12 питань.
+                                </p>
                                 <button
-                                    key={index}
-                                    onClick={() => handleAnswerClick(option)}
-                                    disabled={selectedAnswer !== null}
-                                    className={`
-                                        choice-button
-                                        bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white py-5 px-8 rounded-2xl font-bold text-xl uppercase tracking-wide shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 w-full
-                                        ${selectedAnswer === option
-                                            ? (isCorrect ? 'bg-green-500 hover:bg-green-600' : 'bg-red-500 hover:bg-red-600')
-                                            : ''
-                                        }
-                                        ${selectedAnswer !== null && option === currentQuestion.correctAnswer && selectedAnswer !== option
-                                            ? 'border-4 border-green-500' // Підсвічуємо правильну відповідь, якщо обрано неправильну
-                                            : ''
-                                        }
-                                        ${selectedAnswer !== null ? 'opacity-70 cursor-not-allowed' : ''}
-                                    `}
+                                    onClick={handleStartGame}
+                                    className="start-button bg-teal-500 hover:bg-teal-600 active:bg-teal-700 text-white py-4 px-8 rounded-xl font-bold text-lg uppercase tracking-wider shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 w-full"
                                 >
-                                    {option}
+                                    Почати гру
                                 </button>
-                            ))}
-                        </div>
+                            </div>
+                        ) : quizEnded ? (
+                            // Екран завершення гри
+                            <div id="endScreen" className="w-full text-center">
+                                <p className="final-score text-4xl font-bold text-purple-700 mb-8">
+                                    Ваш результат: <span className="text-teal-600">{score}</span> з {questions.length}
+                                </p>
+                                <button
+                                    onClick={handlePlayAgain}
+                                    className="start-button bg-teal-500 hover:bg-teal-600 active:bg-teal-700 text-white py-4 px-8 rounded-xl font-bold text-lg uppercase tracking-wider shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 w-full"
+                                >
+                                    Зіграти знову
+                                </button>
+                            </div>
+                        ) : (
+                            // Ігровий екран
+                            <div id="gameScreen" className="w-full">
+                                <div id="questionText" className="question-text min-h-40 bg-purple-50 p-10 rounded-2xl text-2xl leading-relaxed mb-10 whitespace-pre-wrap text-purple-800 italic shadow-inner border border-purple-200">
+                                    {currentQuestion?.snippet}
+                                </div>
 
-                        {feedbackMessage && (
-                            <div id="feedbackMessage" className={`
-                                feedback-message p-8 rounded-2xl mt-10 text-center font-semibold text-lg leading-relaxed shadow-md border-2
-                                ${isCorrect ? 'bg-green-50 border-green-300 text-green-800' : 'bg-red-50 border-red-300 text-red-800'}
-                            `}>
-                                {feedbackMessage}
+                                <p className="text-xl font-semibold mb-6 text-gray-700">{currentQuestion?.question}</p>
+
+                                <div id="choices" className="flex flex-col space-y-5 w-full">
+                                    {currentQuestion?.options.map((option, index) => (
+                                        <button
+                                            key={index}
+                                            onClick={() => handleAnswerClick(option)}
+                                            disabled={selectedAnswer !== null}
+                                            className={`
+                                                choice-button
+                                                bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white py-5 px-8 rounded-2xl font-bold text-xl uppercase tracking-wide shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 w-full
+                                                ${selectedAnswer === option
+                                                    ? (isCorrect ? 'bg-green-500 hover:bg-green-600' : 'bg-red-500 hover:bg-red-600')
+                                                    : ''
+                                                }
+                                                ${selectedAnswer !== null && option === currentQuestion.correctAnswer && selectedAnswer !== option
+                                                    ? 'border-4 border-green-500' // Підсвічуємо правильну відповідь, якщо обрано неправильну
+                                                    : ''
+                                                }
+                                                ${selectedAnswer !== null ? 'opacity-70 cursor-not-allowed' : ''}
+                                            `}
+                                        >
+                                            {option}
+                                        </button>
+                                    ))}
+                                </div>
+
+                                {feedbackMessage && (
+                                    <div id="feedbackMessage" className={`
+                                        feedback-message p-8 rounded-2xl mt-10 text-center font-semibold text-lg leading-relaxed shadow-md border-2
+                                        ${isCorrect ? 'bg-green-50 border-green-300 text-green-800' : 'bg-red-50 border-red-300 text-red-800'}
+                                    `}>
+                                        {feedbackMessage}
+                                    </div>
+                                )}
+
+                                {selectedAnswer !== null && (
+                                    <button
+                                        onClick={handleNextQuestion}
+                                        className="next-button bg-teal-500 hover:bg-teal-600 active:bg-teal-700 text-white py-4 px-8 rounded-xl font-bold text-lg uppercase tracking-wider shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 w-full mt-10"
+                                    >
+                                        {currentQuestionIndex < questions.length - 1 ? 'Наступне питання' : 'Завершити вікторину'}
+                                    </button>
+                                )}
                             </div>
                         )}
-
-                        {selectedAnswer !== null && (
-                            <button
-                                onClick={handleNextQuestion}
-                                className="next-button bg-teal-500 hover:bg-teal-600 active:bg-teal-700 text-white py-4 px-8 rounded-xl font-bold text-lg uppercase tracking-wider shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 w-full mt-10"
-                            >
-                                {currentQuestionIndex < questions.length - 1 ? 'Наступне питання' : 'Завершити вікторину'}
-                            </button>
-                        )}
                     </div>
-                )}
-            </div>
-        </div>
-    );
-};
+                </div>
+            );
+        };
 
-export default App;
+        // Рендеринг компонента React у DOM
+        const container = document.getElementById('root');
+        const root = ReactDOM.createRoot(container);
+        root.render(React.createElement(App));
+    </script>
+</body>
+</html>

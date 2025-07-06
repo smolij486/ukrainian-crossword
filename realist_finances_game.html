@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Фінанси Реаліста: Гра</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .game-container {
+            background-color: #ffffff;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            box-sizing: border-box;
+        }
+        .header {
+            font-size: 2.25rem; /* text-4xl */
+            font-weight: 700; /* font-bold */
+            color: #334155; /* slate-700 */
+            margin-bottom: 15px;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .stat-item {
+            background-color: #e2e8f0; /* slate-200 */
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 1.125rem; /* text-lg */
+            font-weight: 600; /* font-semibold */
+            color: #475569; /* slate-600 */
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+        .message-box {
+            background-color: #f8fafc; /* slate-50 */
+            border: 1px solid #cbd5e1; /* slate-300 */
+            border-radius: 10px;
+            padding: 15px;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            color: #334155; /* slate-700 */
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+        }
+        .game-button {
+            background-color: #4f46e5; /* indigo-600 */
+            color: white;
+            padding: 12px 25px;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3);
+            border: none;
+            outline: none;
+            flex: 1 1 auto; /* Allow buttons to grow and shrink */
+            min-width: 150px; /* Minimum width for buttons */
+        }
+        .game-button:hover {
+            background-color: #4338ca; /* indigo-700 */
+            transform: translateY(-2px);
+        }
+        .game-button:active {
+            background-color: #3730a3; /* indigo-800 */
+            transform: translateY(0);
+        }
+        .game-button:disabled {
+            background-color: #94a3b8; /* slate-400 */
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+        .start-button {
+            background-color: #22c55e; /* green-500 */
+            box-shadow: 0 4px 10px rgba(34, 197, 94, 0.3);
+        }
+        .start-button:hover {
+            background-color: #16a34a; /* green-600 */
+        }
+        .start-button:active {
+            background-color: #15803d; /* green-700 */
+        }
+        .gobseck-button {
+            background-color: #ef4444; /* red-500 */
+            box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3);
+        }
+        .gobseck-button:hover {
+            background-color: #dc2626; /* red-600 */
+        }
+        .gobseck-button:active {
+            background-color: #b91c1c; /* red-700 */
+        }
+        .pay-debt-button {
+            background-color: #f59e0b; /* amber-500 */
+            box-shadow: 0 4px 10px rgba(245, 158, 11, 0.3);
+        }
+        .pay-debt-button:hover {
+            background-color: #d97706; /* amber-600 */
+        }
+        .pay-debt-button:active {
+            background-color: #b45309; /* amber-700 */
+        }
+
+        /* Modal styling */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 1000; /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            width: 80%;
+            max-width: 400px;
+            text-align: center;
+            position: relative;
+        }
+        .modal-message {
+            font-size: 1.25rem;
+            color: #334155;
+            margin-bottom: 20px;
+        }
+        .modal-button {
+            background-color: #4f46e5;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            border: none;
+            outline: none;
+        }
+        .modal-button:hover {
+            background-color: #4338ca;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1 class="header">Фінанси Реаліста</h1>
+
+        <div class="stats-grid">
+            <div class="stat-item">Гроші: <span id="money">100</span></div>
+            <div class="stat-item">Місяць: <span id="month">1</span></div>
+            <div class="stat-item">Борг Гобсеку: <span id="gobseckDebt">0</span></div>
+        </div>
+
+        <div id="messageBox" class="message-box">Ласкаво просимо до гри "Фінанси Реаліста"! Натисніть "Почати нову гру", щоб розпочати.</div>
+
+        <div class="button-group">
+            <button id="nextMonthBtn" class="game-button">Наступний Місяць</button>
+            <button id="workBtn" class="game-button">Працювати</button>
+            <button id="riskBtn" class="game-button">Ризикувати</button>
+            <button id="gobseckLoanBtn" class="game-button gobseck-button">Взяти Позику у Гобсека</button>
+            <button id="payGobseckBtn" class="game-button pay-debt-button">Сплатити Борг Гобсеку</button>
+            <button id="newGameBtn" class="game-button start-button">Почати Нову Гру</button>
+        </div>
+    </div>
+
+    <!-- Custom Modal for messages -->
+    <div id="gameModal" class="modal">
+        <div class="modal-content">
+            <p id="modalMessage" class="modal-message"></p>
+            <button id="modalCloseBtn" class="modal-button">ОК</button>
+        </div>
+    </div>
+
+    <script>
+        // Game state variables
+        let money = 0;
+        let month = 0;
+        let gobseckDebt = 0;
+        let gameActive = false;
+        let actionPerformedThisMonth = false; // Flag to limit work/risk actions per month
+
+        // DOM elements
+        const moneyDisplay = document.getElementById('money');
+        const monthDisplay = document.getElementById('month');
+        const gobseckDebtDisplay = document.getElementById('gobseckDebt');
+        const messageBox = document.getElementById('messageBox');
+        const nextMonthBtn = document.getElementById('nextMonthBtn');
+        const workBtn = document.getElementById('workBtn');
+        const riskBtn = document.getElementById('riskBtn');
+        const gobseckLoanBtn = document.getElementById('gobseckLoanBtn');
+        const payGobseckBtn = document.getElementById('payGobseckBtn');
+        const newGameBtn = document.getElementById('newGameBtn');
+
+        // Modal elements
+        const gameModal = document.getElementById('gameModal');
+        const modalMessage = document.getElementById('modalMessage');
+        const modalCloseBtn = document.getElementById('modalCloseBtn');
+
+        // Game configuration
+        const STARTING_MONEY = 80; // Lower starting money
+        const MONTHLY_RENT = 30; // Fixed monthly expense
+        const MONTHLY_FOOD = 25; // Fixed monthly expense
+        const WORK_INCOME_MIN = 50; // Min income from work (CHANGED)
+        const WORK_INCOME_MAX = 70; // Max income from work (CHANGED)
+        const RISK_MIN_OUTCOME = -80; // Can lose more money
+        const RISK_MAX_OUTCOME = 150; // Can gain more money
+        const GOBSECK_LOAN_AMOUNT = 120;
+        const GOBSECK_INTEREST_RATE = 0.15; // Decreased interest rate (15%) (CHANGED)
+        const MAX_MONTHS = 12;
+        const MAX_DEBT_TOLERANCE = 500; // Game over if debt exceeds this
+
+        /**
+         * Displays a message in the custom modal.
+         * @param {string} message - The message to display.
+         * @param {function} [callback] - Optional callback function to execute after modal closes.
+         */
+        function showModal(message, callback = null) {
+            modalMessage.textContent = message;
+            gameModal.style.display = 'flex'; // Show the modal
+
+            // Remove previous event listener to prevent multiple calls
+            modalCloseBtn.onclick = null;
+            modalCloseBtn.onclick = () => {
+                gameModal.style.display = 'none'; // Hide the modal
+                if (callback) {
+                    callback();
+                }
+            };
+        }
+
+        /**
+         * Updates the display of game statistics and button states.
+         */
+        function updateDisplay() {
+            moneyDisplay.textContent = money.toFixed(2);
+            monthDisplay.textContent = month;
+            gobseckDebtDisplay.textContent = gobseckDebt.toFixed(2);
+
+            // Enable/disable action buttons based on game state and if an action has been performed this month
+            workBtn.disabled = !gameActive || actionPerformedThisMonth;
+            riskBtn.disabled = !gameActive || actionPerformedThisMonth;
+            nextMonthBtn.disabled = !gameActive; // Next month is always available if game is active
+
+            // Enable/disable loan button: active if game is active AND money is low (less than half loan amount)
+            // It should NOT be disabled by actionPerformedThisMonth
+            gobseckLoanBtn.disabled = !gameActive || money > GOBSECK_LOAN_AMOUNT / 2;
+
+            // Enable/disable pay debt button: active if game is active AND there is debt AND enough money to pay at least a small amount
+            payGobseckBtn.disabled = !gameActive || gobseckDebt <= 0 || money < 20; // Minimum payment increased to 20
+        }
+
+        /**
+         * Displays a message in the main message box.
+         * @param {string} message - The message to display.
+         */
+        function showGameMessage(message) {
+            messageBox.textContent = message;
+        }
+
+        /**
+         * Starts a new game, resetting all stats.
+         */
+        function newGame() {
+            money = STARTING_MONEY;
+            month = 0; // Start at month 0, first 'Next Month' will make it 1
+            gobseckDebt = 0;
+            gameActive = true;
+            actionPerformedThisMonth = false; // Reset action flag
+            showGameMessage("Гра розпочато! Ваша мета - протриматися 12 місяців, керуючи фінансами. Заробляйте гроші, щоб покрити витрати та уникнути боргів!");
+            newGameBtn.textContent = "Перезапустити Гру";
+            updateDisplay(); // Update display to enable/disable buttons correctly
+        }
+
+        /**
+         * Ends the game and displays the final message.
+         * @param {string} message - The game over message.
+         */
+        function endGame(message) {
+            gameActive = false;
+            showModal(message, () => {
+                showGameMessage("Гра завершена. Натисніть 'Почати Нову Гру' для перезапуску.");
+                // Disable all action buttons after game over
+                nextMonthBtn.disabled = true;
+                workBtn.disabled = true;
+                riskBtn.disabled = true;
+                gobseckLoanBtn.disabled = true;
+                payGobseckBtn.disabled = true;
+            });
+        }
+
+        /**
+         * Processes the end of a month (expenses, interest, game over checks).
+         */
+        function processEndOfMonth() {
+            let monthlySummary = [];
+
+            // Apply monthly fixed expenses
+            money -= MONTHLY_RENT;
+            money -= MONTHLY_FOOD;
+            monthlySummary.push(`Витрати місяця: Оренда (-${MONTHLY_RENT.toFixed(2)}), Їжа (-${MONTHLY_FOOD.toFixed(2)}).`);
+
+            // Apply Gobseck's interest
+            if (gobseckDebt > 0) {
+                const interest = gobseckDebt * GOBSECK_INTEREST_RATE;
+                gobseckDebt += interest;
+                monthlySummary.push(`Гобсек нарахував відсотки: +${interest.toFixed(2)}. Ваш борг: ${gobseckDebt.toFixed(2)}.`);
+            }
+
+            // Check for game over conditions
+            if (money < -50 && gobseckDebt > MAX_DEBT_TOLERANCE / 2) {
+                endGame(`Ви збанкрутували, а борг Гобсеку завеликий! Він забирає все. Гра завершена. Ваш борг: ${gobseckDebt.toFixed(2)}.`);
+                return;
+            }
+            if (gobseckDebt > MAX_DEBT_TOLERANCE) {
+                endGame(`Борг Гобсеку (${gobseckDebt.toFixed(2)}) став непосильним! Він прийшов за своїм. Гра завершена.`);
+                return;
+            }
+            if (month > MAX_MONTHS) {
+                let finalMessage = `Вітаємо! Ви протрималися ${MAX_MONTHS} місяців! Ваші фінанси: ${money.toFixed(2)}, борг Гобсеку: ${gobseckDebt.toFixed(2)}.`;
+                if (gobseckDebt <= 0 && money >= 0) {
+                    finalMessage += " Ви повністю розрахувалися і досягли фінансової стабільності! Справжній реаліст!";
+                } else if (gobseckDebt > 0) {
+                    finalMessage += " Ви вижили, але все ще маєте борг Гобсеку. Життя триває...";
+                } else {
+                    finalMessage += " Ви вижили, але з деякими фінансовими труднощами. Життя триває...";
+                }
+                endGame(finalMessage);
+                return;
+            }
+
+            showGameMessage(monthlySummary.join(" "));
+            updateDisplay();
+        }
+
+        /**
+         * Advances to the next month.
+         */
+        function nextMonth() {
+            if (!gameActive) return;
+
+            month++;
+            actionPerformedThisMonth = false; // Reset action flag for the new month
+            let eventMessage = "";
+
+            // Random events
+            const eventChance = Math.random();
+            if (eventChance < 0.25) { // 25% chance of a bad event
+                const expense = Math.floor(Math.random() * 70) + 40; // 40-110
+                money -= expense;
+                eventMessage = `Несподівані витрати: ${expense.toFixed(2)}. Можливо, раптовий ремонт або хвороба.`;
+            } else if (eventChance > 0.75) { // 25% chance of a good event
+                const bonus = Math.floor(Math.random() * 60) + 30; // 30-90
+                money += bonus;
+                eventMessage = `Несподіваний дохід: ${bonus.toFixed(2)}. Можливо, знайшли загублену річ або отримали невеликий подарунок.`;
+            } else {
+                eventMessage = "Місяць пройшов відносно спокійно, без значних несподіванок.";
+            }
+
+            showGameMessage(`Настав ${month}-й місяць. ${eventMessage}`);
+            processEndOfMonth(); // Process expenses and interest for the new month
+            updateDisplay();
+        }
+
+        /**
+         * Simulates working for income.
+         */
+        function performWork() {
+            if (!gameActive || actionPerformedThisMonth) return; // Prevent multiple actions
+
+            const income = Math.floor(Math.random() * (WORK_INCOME_MAX - WORK_INCOME_MIN + 1)) + WORK_INCOME_MIN;
+            money += income;
+            showGameMessage(`Ви попрацювали і заробили ${income.toFixed(2)}. Це була важка праця.`);
+            actionPerformedThisMonth = true; // Set flag
+            updateDisplay();
+        }
+
+        /**
+         * Simulates taking a risk for income.
+         */
+        function takeRisk() {
+            if (!gameActive || actionPerformedThisMonth) return; // Prevent multiple actions
+
+            const outcome = Math.floor(Math.random() * (RISK_MAX_OUTCOME - RISK_MIN_OUTCOME + 1)) + RISK_MIN_OUTCOME;
+            money += outcome;
+            if (outcome >= 0) {
+                showGameMessage(`Ви ризикнули і заробили ${outcome.toFixed(2)}! Фортуна була на вашому боці.`);
+            } else {
+                showGameMessage(`Ви ризикнули і втратили ${Math.abs(outcome).toFixed(2)}... Це був невдалий хід.`);
+            }
+            actionPerformedThisMonth = true; // Set flag
+            updateDisplay();
+        }
+
+        /**
+         * Allows the player to take a loan from Gobseck.
+         */
+        function takeGobseckLoan() {
+            if (!gameActive) return; // Only check if game is active.
+
+            if (money > GOBSECK_LOAN_AMOUNT / 2) { // Allow taking loan if money is low enough
+                showModal("Поки що ваші фінанси дозволяють обійтися без позики. Будьте обережні з Гобсеком!");
+                return;
+            }
+
+            money += GOBSECK_LOAN_AMOUNT;
+            gobseckDebt += GOBSECK_LOAN_AMOUNT;
+            showGameMessage(`Ви взяли позику у Гобсека на ${GOBSECK_LOAN_AMOUNT}. Ваш борг: ${gobseckDebt.toFixed(2)}. Пам'ятайте про відсотки!`);
+            updateDisplay();
+        }
+
+        /**
+         * Allows the player to pay back debt to Gobseck.
+         */
+        function payGobseckDebt() {
+            if (!gameActive) return;
+            if (gobseckDebt <= 0) {
+                showModal("У вас немає боргу перед Гобсеком.");
+                return;
+            }
+            // Can pay up to 50% of current money, or full debt if less, minimum 20
+            const amountToPay = Math.min(gobseckDebt, money * 0.5);
+            if (amountToPay < 20) { // Minimum payment to be effective
+                showModal("У вас недостатньо грошей, щоб зробити значний платіж (мінімум 20).");
+                return;
+            }
+            money -= amountToPay;
+            gobseckDebt -= amountToPay;
+            showGameMessage(`Ви сплатили ${amountToPay.toFixed(2)} боргу Гобсеку. Залишок боргу: ${gobseckDebt.toFixed(2)}. Мудре рішення!`);
+            updateDisplay();
+        }
+
+        // Event Listeners
+        newGameBtn.addEventListener('click', newGame);
+        nextMonthBtn.addEventListener('click', nextMonth);
+        workBtn.addEventListener('click', performWork);
+        riskBtn.addEventListener('click', takeRisk);
+        gobseckLoanBtn.addEventListener('click', takeGobseckLoan);
+        payGobseckBtn.addEventListener('click', payGobseckDebt);
+
+        // Initial setup on load
+        window.onload = function() {
+            updateDisplay();
+            newGameBtn.disabled = false; // Enable new game button
+            // Disable other buttons until game starts
+            nextMonthBtn.disabled = true;
+            workBtn.disabled = true;
+            riskBtn.disabled = true;
+            gobseckLoanBtn.disabled = true;
+            payGobseckBtn.disabled = true;
+        };
+    </script>
+</body>
+</html>

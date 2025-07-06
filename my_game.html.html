@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Гра "Впізнай героя за цитатою"</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for 3D flip effect and font */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .card-container {
+            perspective: 1000px; /* Establishes the 3D context */
+        }
+        .card-inner {
+            transform-style: preserve-3d; /* Ensures children are positioned in 3D space */
+            transition: transform 0.7s ease-in-out; /* Smooth flip animation */
+        }
+        .card-inner.is-flipped {
+            transform: rotateY(180deg); /* Flip when active */
+        }
+        .card-face {
+            backface-visibility: hidden; /* Hide the back of the element when facing away */
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 1.5rem; /* p-6 */
+            border-radius: 0.75rem; /* rounded-xl */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-lg */
+        }
+        .card-face-front {
+            background-color: #FACC15; /* bg-yellow-400 */
+            color: #1F2937; /* text-gray-800 */
+        }
+        .card-face-back {
+            background-color: #2563EB; /* bg-blue-600 */
+            color: #FFFFFF; /* text-white */
+            transform: rotateY(180deg); /* Initially rotated to be the back */
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4 font-sans">
+    <div id="root" class="w-full flex flex-col items-center"></div>
+
+    <!-- React and ReactDOM CDNs - MUST be loaded BEFORE your app script -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <!-- Babel for JSX transformation in browser (for development only) - MUST be loaded BEFORE your app script -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Your application script with type="text/babel" to enable JSX transformation -->
+    <script type="text/babel">
+        const { useState } = React;
+
+        // Main application component
+        const App = () => {
+          // Character data with quotes
+          const charactersData = [
+            {
+              id: 1,
+              name: "Черевань",
+              description: "Символізує заможно-міщанське, хуторянське мислення, байдужість до долі України, зосередженість на особистому добробуті.",
+              quote: "Який Черевань? Хіба він не Черевань? Він же такий пузатий, як бочка!",
+            },
+            {
+              id: 2,
+              name: "Кирило Тур",
+              description: "Символізує козацьку волю, відчайдушність, пристрасність, вірність побратимству, здатність до самопожертви.",
+              quote: "Немає на світі нічого дорожчого за волю!",
+            },
+            {
+              id: 3,
+              name: "Петро Шраменко",
+              description: "Символізує шляхетність, вірність, честь, відданість Україні, ідеали лицарства.",
+              quote: "Нехай краще смерть, ніж ганьба!",
+            },
+            {
+              id: 4,
+              name: "Леся Череванівна",
+              description: "Символізує красу, ніжність, вірність, доброту, внутрішню силу.",
+              quote: "Моє серце належить тому, хто любить Україну.",
+            },
+            {
+              id: 5,
+              name: "Яким Сомко",
+              description: "Символізує мудрість, державницьке мислення, прагнення єдності України.",
+              quote: "Гетьман мусить бути над козаками батьком, а не товаришем…",
+            },
+            {
+              id: 6,
+              name: "Іван Брюховецький",
+              description: "Символізує підступність, жадобу влади, зраду національних інтересів.",
+              quote: "Влада – це все, а решта – ніщо.",
+            },
+            {
+              id: 7,
+              name: "Василь Невольник",
+              description: "Символізує козака-невільника, який прагне волі та справедливості, виступає за єдність України.",
+              quote: "Краще вмерти, ніж жити в неволі!",
+            },
+            {
+              id: 8,
+              name: "Полковник Шрам",
+              description: "Символізує старого, мудрого та досвідченого козака, який є втіленням козацької честі та вірності Україні.",
+              quote: "Немає нічого святішого за рідну землю!",
+            },
+          ];
+
+          // State to keep track of which cards are flipped.
+          const [flippedCardIds, setFlippedCardIds] = useState([]);
+
+          // Handler for clicking a card
+          const handleCardClick = (id) => {
+            setFlippedCardIds((prevFlippedIds) =>
+              prevFlippedIds.includes(id)
+                ? prevFlippedIds.filter((cardId) => cardId !== id)
+                : [...prevFlippedIds, id]
+            );
+          };
+
+          return (
+            <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4 font-sans">
+              <h1 className="text-4xl font-bold text-gray-800 mb-8 text-center">
+                Гра "Впізнай героя за цитатою"
+              </h1>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl w-full">
+                {charactersData.map((character) => (
+                  <Card
+                    key={character.id}
+                    character={character}
+                    isFlipped={flippedCardIds.includes(character.id)}
+                    onCardClick={handleCardClick}
+                  />
+                ))}
+              </div>
+            </div>
+          );
+        };
+
+        // Card component
+        const Card = ({ character, isFlipped, onCardClick }) => {
+          return (
+            <div
+              className="relative w-64 h-80 cursor-pointer group rounded-xl shadow-lg transition-transform duration-700 ease-in-out card-container"
+              onClick={() => onCardClick(character.id)}
+            >
+              <div
+                className={`relative w-full h-full card-inner ${
+                  isFlipped ? 'is-flipped' : ''
+                }`}
+              >
+                {/* Front side of the card (quote, yellow background) */}
+                <div className="card-face card-face-front">
+                  <p className="text-2xl font-bold mb-4">Цитата:</p>
+                  <p className="text-xl italic">"{character.quote}"</p>
+                </div>
+
+                {/* Back side of the card (name, description, blue background) */}
+                <div className="card-face card-face-back">
+                  <h3 className="text-2xl font-bold mb-4">{character.name}</h3>
+                  <p className="text-md">{character.description}</p>
+                </div>
+              </div>
+            </div>
+          );
+        };
+
+        // Modern React 18 rendering
+        const container = document.getElementById('root');
+        const root = ReactDOM.createRoot(container);
+        root.render(<App />);
+    </script>
+</body>
+</html>

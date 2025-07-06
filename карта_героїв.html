@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Інтерактивна Карта</title> <!-- Changed title here -->
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Light blue-gray background */
+        }
+        .map-container {
+            position: relative;
+            width: 100%;
+            max-width: 900px; /* Max width for the map */
+            margin: 2rem auto;
+            border-radius: 1rem; /* Rounded corners */
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); /* Soft shadow */
+            background-color: #ffffff;
+            border: 1px solid #e2e8f0; /* Light border */
+        }
+        svg {
+            display: block;
+            width: 100%;
+            height: auto;
+            background-color: #e0f2f7; /* Light blue map background */
+        }
+        .region {
+            fill: #a7d9f2; /* Default region color */
+            stroke: #60a5fa; /* Border color */
+            stroke-width: 1.5px; /* Slightly thinner border */
+            transition: fill 0.3s ease;
+        }
+        .region:hover {
+            fill: #7dd3fc; /* Lighter blue on hover */
+        }
+        .person-marker {
+            cursor: pointer;
+            transition: transform 0.2s ease, opacity 0.2s ease;
+        }
+        .person-marker:hover {
+            transform: scale(1.1);
+        }
+        .person-marker circle {
+            fill: #ef4444; /* Red marker */
+            stroke: #dc2626;
+            stroke-width: 1.5px;
+        }
+        .person-marker text {
+            fill: #1f2937; /* Dark text */
+            font-size: 14px;
+            font-weight: bold;
+            text-anchor: middle;
+            pointer-events: none; /* Allow clicking through text to circle */
+        }
+        .info-panel {
+            background-color: #ffffff;
+            border-radius: 0.75rem;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+            max-width: 900px;
+            margin-left: auto;
+            margin-right: auto;
+            border: 1px solid #e2e8f0;
+        }
+        .close-button {
+            background-color: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 9999px; /* Full rounded */
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+        }
+        .close-button:hover {
+            background-color: #dc2626;
+            transform: translateY(-1px);
+        }
+        @media (max-width: 768px) {
+            .map-container {
+                margin: 1rem auto;
+                padding: 0.5rem;
+            }
+            .info-panel {
+                padding: 1rem;
+                margin-top: 1rem;
+            }
+            .person-marker text {
+                font-size: 12px;
+            }
+            h1 {
+                font-size: 2rem; /* Adjust heading size for smaller screens */
+            }
+        }
+    </style>
+</head>
+<body class="p-4">
+    <div class="container mx-auto p-4 bg-white rounded-xl shadow-lg">
+        <h1 class="text-3xl md:text-4xl font-extrabold text-center text-gray-800 mb-6">
+            Інтерактивна Карта <!-- Changed H1 title here -->
+        </h1>
+        <p class="text-center text-gray-600 mb-8 max-w-2xl mx-auto">
+            Дослідіть ключових героїв з роману П. Куліша "Чорна рада" та важливих історичних діячів періоду Руїни.
+            Натисніть на позначку персонажа на карті, щоб отримати детальнішу інформацію.
+        </p>
+
+        <div class="map-container">
+            <svg viewBox="0 0 800 600" preserveAspectRatio="xMidYMid meet">
+                <!-- Simplified geographical outlines of Ukraine regions -->
+                <!-- These paths are rough approximations for visualization -->
+
+                <!-- Лівобережна Україна (Left-Bank Ukraine) -->
+                <path id="left-bank" class="region"
+                      d="M400 100 C450 80, 700 100, 750 200 C780 300, 700 400, 550 400 L400 350 Z"
+                      data-region-name="Лівобережна Україна"></path>
+                <text x="575" y="250" class="text-gray-700 font-bold text-lg pointer-events-none" text-anchor="middle">Лівобережна Україна</text>
+
+                <!-- Правобережна Україна (Right-Bank Ukraine) -->
+                <path id="right-bank" class="region"
+                      d="M50 150 C80 50, 350 70, 400 100 L400 350 C380 400, 150 480, 50 400 Z"
+                      data-region-name="Правобережна Україна"></path>
+                <text x="225" y="275" class="text-gray-700 font-bold text-lg pointer-events-none" text-anchor="middle">Правобережна Україна</text>
+
+                <!-- Запорізька Січ (Zaporizhian Sich) -->
+                <path id="sich" class="region"
+                      d="M250 400 C300 380, 500 420, 550 450 C520 520, 350 580, 200 500 Z"
+                      data-region-name="Запорізька Січ"></path>
+                <text x="375" y="475" class="text-gray-700 font-bold text-lg pointer-events-none" text-anchor="middle">Запорізька Січ</text>
+
+                <!-- Markers for historical figures will be dynamically added here by JavaScript -->
+            </svg>
+        </div>
+
+        <div id="info-panel" class="info-panel hidden">
+            <div class="flex justify-between items-center mb-4">
+                <h2 id="person-name" class="text-2xl font-bold text-gray-800"></h2>
+                <button id="close-info" class="close-button">Закрити</button>
+            </div>
+            <p id="person-description" class="text-gray-700 mb-2"></p>
+            <p class="text-gray-600"><strong class="text-gray-800">Боровся за:</strong> <span id="person-affiliation"></span></p>
+        </div>
+    </div>
+
+    <script>
+        // Data for characters from "Chorna Rada" by P. Kulish and other key historical figures
+        const historicalFigures = [
+            {
+                id: 'somko',
+                name: 'Яким Сомко',
+                region: 'left-bank',
+                coords: { x: 570, y: 190 },
+                affiliation: 'Лівобережна Україна (за єдність, проти Брюховецького)',
+                description: 'Наказний гетьман Лівобережної України, шляхетний і освічений козак. Символізує державницьку ідею, прагнення до порядку та єдності. Боровся проти Брюховецького за гетьманську булаву, але був страчений після Чорної ради. У творі описується як "високий, огрядний собі пан, кругловидий, русявий; голова в кучерях, як у золотому вінку; очі ясні, веселі, як зорі…"; у літописах пишуть: "Сомко був воїн уроди, возраста і красоти зіло дивної".'
+            },
+            {
+                id: 'briukhovetsky-kulish',
+                name: 'Іван Брюховецький',
+                region: 'left-bank',
+                coords: { x: 650, y: 250 },
+                affiliation: 'Лівобережна Україна (за підтримки "черні", промосковська орієнтація)',
+                description: 'Кошовий отаман, який став гетьманом Лівобережної України завдяки підтримці "черні" (низового козацтва та селян). У романі зображений як популіст, що використовує демагогію для досягнення влади. Його правління призвело до посилення московського впливу.'
+            },
+            {
+                id: 'shram',
+                name: 'Полковник Шрам',
+                region: 'right-bank',
+                coords: { x: 250, y: 200 },
+                affiliation: 'Правобережна Україна (за єдність, вірний Сомку)',
+                description: 'Старий полковник, побратим Богдана Хмельницького, патріот і захисник Правобережної України. Разом із сином Петром вирушає на Лівобережжя, щоб підтримати Якима Сомка і боротися за єдність України.'
+            },
+            {
+                id: 'kirilo-tur',
+                name: 'Кирило Тур',
+                region: 'sich',
+                coords: { x: 375, y: 420 },
+                affiliation: 'Запорізька Січ (козацька воля, незалежність)',
+                description: 'Запорозький козак, силач і відчайдух. Символізує волелюбний дух Січі, її непередбачуваність та готовність до будь-яких пригод. Його дії часто керуються власними уявленнями про честь та свободу.'
+            },
+            {
+                id: 'petro-shram',
+                name: 'Петро Шрам',
+                region: 'right-bank',
+                coords: { x: 180, y: 300 },
+                affiliation: 'Правобережна Україна (ідеаліст, шукач справедливості)',
+                description: 'Молодий син полковника Шрама, ідеаліст, який шукає своє місце у світі та прагне справедливості. Його доля переплітається з долями інших героїв, і він стає свідком трагічних подій Руїни.'
+            },
+            {
+                id: 'vasil-nevolnik',
+                name: 'Василь Невольник',
+                region: 'sich',
+                coords: { x: 450, y: 500 },
+                affiliation: 'Запорізька Січ (мудрість, зв\'язок з минулим)',
+                description: 'Колишній невільник, який повернувся з турецької неволі. Мудрий і досвідчений козак, що є носієм народної мудрості та пам\'яті про славне минуле. Його присутність на Січі підкреслює її роль як притулку для всіх, хто шукає волі.'
+            },
+            {
+                id: 'teteria',
+                name: 'Павло Тетеря',
+                region: 'right-bank',
+                coords: { x: 300, y: 150 }, // Adjusted coordinates for new map
+                affiliation: 'Правобережна Україна (пропольська орієнтація)',
+                description: 'Гетьман Правобережної України (1663-1665). Був прихильником Речі Посполитої та намагався відновити її вплив на українських землях. Його політика викликала невдоволення серед козацтва.'
+            }
+        ];
+
+        const svg = document.querySelector('svg');
+        const infoPanel = document.getElementById('info-panel');
+        const personName = document.getElementById('person-name');
+        const personDescription = document.getElementById('person-description');
+        const personAffiliation = document.getElementById('person-affiliation');
+        const closeInfoButton = document.getElementById('close-info');
+
+        // Function to create a person marker on the map
+        function createPersonMarker(person) {
+            const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+            group.classList.add('person-marker');
+            group.setAttribute('data-person-id', person.id);
+
+            const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            circle.setAttribute('cx', person.coords.x);
+            circle.setAttribute('cy', person.coords.y);
+            circle.setAttribute('r', 10); // Radius of the circle
+
+            const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            text.setAttribute('x', person.coords.x);
+            text.setAttribute('y', person.coords.y + 20); // Position text below the circle
+            text.textContent = person.name;
+
+            group.appendChild(circle);
+            group.appendChild(text);
+            svg.appendChild(group);
+
+            group.addEventListener('click', () => showPersonInfo(person));
+        }
+
+        // Function to display person information
+        function showPersonInfo(person) {
+            personName.textContent = person.name;
+            personDescription.textContent = person.description;
+            personAffiliation.textContent = person.affiliation;
+            infoPanel.classList.remove('hidden');
+            infoPanel.scrollIntoView({ behavior: 'smooth', block: 'start' }); // Scroll to info panel
+        }
+
+        // Hide info panel when close button is clicked
+        closeInfoButton.addEventListener('click', () => {
+            infoPanel.classList.add('hidden');
+        });
+
+        // Initialize map with markers
+        window.onload = function() {
+            historicalFigures.forEach(person => {
+                createPersonMarker(person);
+            });
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Гра: Правда чи Міф про Марка Вовчка</title>
+    <!-- Підключення Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Додаткові стилі для гри */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Легкий фон */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .game-container {
+            background-color: #ffffff;
+            border-radius: 1.5rem; /* rounded-3xl */
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); /* shadow-2xl */
+            padding: 2.5rem; /* p-10 */
+            max-width: 700px;
+            width: 100%;
+            text-align: center;
+            border: 1px solid #e2e8f0; /* border-gray-200 */
+        }
+        .btn-option {
+            background-image: linear-gradient(to right, #6b46c1, #805ad5);
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .btn-option:hover {
+            background-image: linear-gradient(to right, #5a3aab, #6b46c1);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+        }
+        .btn-option:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .btn-restart {
+            background-color: #4a5568; /* gray-700 */
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .btn-restart:hover {
+            background-color: #2d3748; /* gray-800 */
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+        }
+        .btn-restart:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .correct-answer {
+            background-color: #d1fae5; /* green-100 */
+            border: 2px solid #34d399; /* green-400 */
+        }
+        .wrong-answer {
+            background-color: #fee2e2; /* red-100 */
+            border: 2px solid #ef4444; /* red-500 */
+        }
+    </style>
+</head>
+<body>
+
+    <div id="quiz-container" class="game-container">
+        <h1 class="text-4xl font-extrabold text-purple-800 mb-6">Правда чи Міф про Марка Вовчка</h1>
+        <p class="text-lg text-gray-600 mb-8">Перевірте свої знання про життя та творчість Марка Вовчка!</p>
+
+        <div class="mb-8 p-6 bg-purple-50 rounded-xl shadow-inner">
+            <p id="question-display" class="text-2xl font-semibold text-gray-800 mb-6"></p>
+            <div id="options-container" class="flex flex-col md:flex-row justify-center gap-4">
+                <button id="true-button" class="btn-option text-white font-bold py-3 px-8 rounded-full text-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-75">
+                    Правда
+                </button>
+                <button id="false-button" class="btn-option text-white font-bold py-3 px-8 rounded-full text-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-75">
+                    Міф
+                </button>
+            </div>
+        </div>
+
+        <p id="feedback-message" class="text-lg font-semibold mb-6"></p>
+        <p class="text-xl text-gray-700 mb-6">Рахунок: <span id="score-display" class="font-bold text-purple-600">0</span> / <span id="total-questions-display" class="font-bold text-gray-500">0</span></p>
+
+        <button id="restart-button" class="btn-restart text-white font-bold py-3 px-8 rounded-full text-lg hidden focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-75">
+            Грати знову
+        </button>
+    </div>
+
+    <script>
+        // Масив питань для вікторини
+        const questions = [
+            {
+                question: "Справжнє ім'я Марка Вовчка було Марія Вілінська.",
+                answer: true,
+                explanation: "Правда. За псевдонімом Марко Вовчок ховалася Марія Вілінська."
+            },
+            {
+                question: "Марко Вовчок писала лише про романтичні історії та бали.",
+                answer: false,
+                explanation: "Міф. Вона писала про реальність, кріпацтво, нещасливі шлюби та психологічну глибину жіночої долі."
+            },
+            {
+                question: "Повість 'Маруся' показує, що ідеал української дівчини завжди виживає у жорстокому світі.",
+                answer: false,
+                explanation: "Міф. 'Маруся' показує, що ідеал не може вижити у жорстокому світі безправ'я та тиранії."
+            },
+            {
+                question: "Марко Вовчок була також відомою перекладачкою творів європейських авторів.",
+                answer: true,
+                explanation: "Правда. Вона перекладала твори Жюля Верна, Віктора Гюго та інших."
+            },
+            {
+                question: "Головна героїня повісті 'Інститутка' була доброю та співчутливою до кріпаків завдяки своїй освіті.",
+                answer: false,
+                explanation: "Міф. 'Інститутка' була жорстокою деспоткою, яка використовувала свою освіту для витонченішого знущання."
+            },
+            {
+                question: "Тарас Шевченко високо цінував творчість Марка Вовчка і називав її своєю 'дочкою'.",
+                answer: true,
+                explanation: "Правда. Шевченко був у захваті від її творів і відчував до неї батьківські почуття."
+            },
+            {
+                question: "Перша збірка її творів вийшла під назвою 'Народні оповідання'.",
+                answer: true,
+                explanation: "Правда. Це була її перша збірка, що принесла їй широке визнання."
+            },
+            {
+                question: "Марко Вовчок ніколи не виїжджала за межі України.",
+                answer: false,
+                explanation: "Міф. Вона тривалий час жила і працювала за кордоном, зокрема у Франції та Італії."
+            },
+            {
+                question: "Її твори були перекладені багатьма європейськими мовами.",
+                answer: true,
+                explanation: "Правда. Її твори перекладали французькою, німецькою, чеською та іншими мовами."
+            },
+            {
+                question: "Марко Вовчок активно боролася за права жінок у своїх творах.",
+                answer: true,
+                explanation: "Правда. Вона була однією з перших українських письменниць, яка відкрито порушувала питання фемінізму та жіночої емансипації."
+            },
+            {
+                question: "Повість 'Три долі' розповідає про щасливе життя трьох сестер-кріпачок.",
+                answer: false,
+                explanation: "Міф. 'Три долі' висвітлює трагічні долі жінок, які страждають від соціальної несправедливості та особистих драм."
+            },
+            {
+                question: "Марко Вовчок ніколи не використовувала чоловічі псевдоніми.",
+                answer: false,
+                explanation: "Міф. Її найвідоміший псевдонім 'Марко Вовчок' є чоловічим."
+            },
+            {
+                question: "Вона була однією з перших, хто писав українською мовою про життя селянства.",
+                answer: true,
+                explanation: "Правда. Її 'Народні оповідання' стали знаковими для зображення життя простого народу."
+            },
+            {
+                question: "Марко Вовчок була лише прозаїком і ніколи не писала поезії.",
+                answer: false,
+                explanation: "Міф. Хоча вона відома передусім як прозаїк, у її доробку є і поетичні твори, хоча їх менше."
+            },
+            {
+                question: "Її твори справили значний вплив на розвиток української літератури.",
+                answer: true,
+                explanation: "Правда. Марко Вовчок вважається однією з ключових фігур української літератури XIX століття."
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+
+        // Отримання елементів DOM
+        const questionDisplay = document.getElementById('question-display');
+        const trueButton = document.getElementById('true-button');
+        const falseButton = document.getElementById('false-button');
+        const feedbackMessage = document.getElementById('feedback-message');
+        const scoreDisplay = document.getElementById('score-display');
+        const totalQuestionsDisplay = document.getElementById('total-questions-display');
+        const restartButton = document.getElementById('restart-button');
+        const optionsContainer = document.getElementById('options-container');
+
+        // Функція для ініціалізації/перезапуску гри
+        function initializeGame() {
+            currentQuestionIndex = 0;
+            score = 0;
+            totalQuestionsDisplay.textContent = questions.length;
+            scoreDisplay.textContent = score;
+            feedbackMessage.textContent = '';
+            restartButton.classList.add('hidden');
+            trueButton.disabled = false;
+            falseButton.disabled = false;
+            trueButton.classList.remove('correct-answer', 'wrong-answer');
+            falseButton.classList.remove('correct-answer', 'wrong-answer');
+            loadQuestion();
+        }
+
+        // Функція для завантаження наступного питання
+        function loadQuestion() {
+            if (currentQuestionIndex < questions.length) {
+                const q = questions[currentQuestionIndex];
+                questionDisplay.textContent = q.question;
+                feedbackMessage.textContent = '';
+                trueButton.disabled = false;
+                falseButton.disabled = false;
+                trueButton.classList.remove('correct-answer', 'wrong-answer');
+                falseButton.classList.remove('correct-answer', 'wrong-answer');
+                optionsContainer.classList.remove('pointer-events-none'); // Дозволити кліки
+            } else {
+                endGame();
+            }
+        }
+
+        // Функція для перевірки відповіді
+        function checkAnswer(selectedAnswer) {
+            const q = questions[currentQuestionIndex];
+            optionsContainer.classList.add('pointer-events-none'); // Заборонити кліки під час перевірки
+
+            if (selectedAnswer === q.answer) {
+                score++;
+                feedbackMessage.textContent = `Правильно! ${q.explanation}`;
+                feedbackMessage.className = 'text-lg font-semibold mb-6 text-green-600';
+                if (selectedAnswer === true) {
+                    trueButton.classList.add('correct-answer');
+                } else {
+                    falseButton.classList.add('correct-answer');
+                }
+            } else {
+                feedbackMessage.textContent = `Неправильно. ${q.explanation}`;
+                feedbackMessage.className = 'text-lg font-semibold mb-6 text-red-600';
+                if (selectedAnswer === true) {
+                    trueButton.classList.add('wrong-answer');
+                    falseButton.classList.add('correct-answer'); // Показати правильну відповідь
+                } else {
+                    falseButton.classList.add('wrong-answer');
+                    trueButton.classList.add('correct-answer'); // Показати правильну відповідь
+                }
+            }
+            scoreDisplay.textContent = score;
+
+            // Затримка перед переходом до наступного питання
+            setTimeout(() => {
+                currentQuestionIndex++;
+                loadQuestion();
+            }, 2000); // 2 секунди
+        }
+
+        // Функція для завершення гри
+        function endGame() {
+            questionDisplay.textContent = `Вікторину завершено! Ваш фінальний рахунок: ${score} з ${questions.length}.`;
+            feedbackMessage.textContent = 'Дякуємо за гру!';
+            feedbackMessage.className = 'text-lg font-semibold mb-6 text-purple-700';
+            trueButton.disabled = true;
+            falseButton.disabled = true;
+            trueButton.classList.remove('correct-answer', 'wrong-answer');
+            falseButton.classList.remove('correct-answer', 'wrong-answer');
+            restartButton.classList.remove('hidden');
+        }
+
+        // Обробники подій
+        trueButton.addEventListener('click', () => checkAnswer(true));
+        falseButton.addEventListener('click', () => checkAnswer(false));
+        restartButton.addEventListener('click', initializeGame);
+
+        // Ініціалізація гри при завантаженні сторінки
+        window.onload = initializeGame;
+    </script>
+</body>
+</html>

@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Інтерактивні картки: Захар Беркут</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for the cards */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Align to top for better scrolling */
+            min-height: 10vh; /* Reduced min-height to allow more space for cards */
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .cards-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            max-width: 1200px;
+            width: 100%;
+            margin-top: 20px;
+        }
+        .card-wrapper {
+            perspective: 1000px; /* For 3D flip effect */
+            height: 420px; /* Increased fixed height for consistent card size */
+        }
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.8s;
+            transform-style: preserve-3d;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+        }
+        .card-wrapper.flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden; /* Hide back of the card during flip */
+            backface-visibility: hidden;
+            border-radius: 15px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .card-front {
+            background-color: #bbdefb; /* Light blue */
+            color: #1a237e; /* Dark blue text */
+            font-size: 1.5rem; /* Base font size */
+            font-weight: bold;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .card-front p { /* Targeting the paragraph inside card-front for specific font size */
+            font-size: 1.25rem; /* Slightly smaller font for the title text on the front */
+            line-height: 1.3;
+            margin-top: 10px; /* Add some space below the image */
+        }
+        .card-front img {
+            width: 100%;
+            height: 60%; /* Adjust image height on front */
+            object-fit: cover;
+            border-radius: 10px;
+            margin-bottom: 5px; /* Reduced margin */
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        .card-back {
+            background-color: #ffffff; /* White background for content */
+            color: #374151;
+            transform: rotateY(180deg);
+            text-align: left;
+            overflow-y: auto; /* Enable scrolling for long content */
+            padding: 25px;
+            display: flex; /* Use flexbox for content alignment */
+            flex-direction: column;
+            justify-content: flex-start; /* Align content to the top */
+        }
+        .card-back h3 {
+            font-size: 1.25rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #4f46e5;
+        }
+        .card-back ul {
+            list-style: disc;
+            margin-left: 20px;
+            line-height: 1.5; /* Slightly reduced line height */
+            margin-top: 0; /* Ensure no extra margin at the top of the list */
+            padding-top: 0; /* Ensure no extra padding at the top of the list */
+        }
+        .card-back li {
+            margin-bottom: 8px;
+            font-size: 0.9rem; /* Slightly smaller font for list items */
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .cards-container {
+                grid-template-columns: 1fr; /* Single column on small screens */
+            }
+            .card-wrapper {
+                height: 470px; /* Slightly taller for more content on mobile */
+            }
+            .card-front p {
+                font-size: 1.1rem; /* Even smaller on mobile */
+            }
+            .card-back h3 {
+                font-size: 1.1rem;
+            }
+            .card-back ul {
+                font-size: 0.85rem; /* Even smaller list items on mobile */
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="cards-container">
+        <!-- Cards will be generated here by JavaScript -->
+    </div>
+
+    <script>
+        const cardData = [
+            {
+                id: 'card1',
+                frontTitle: "Сила громади у творі 'Захар Беркут'",
+                frontImage: "https://placehold.co/400x250/e0f2fe/0c4a6e?text=Тухольська+громада",
+                backTitle: "Коли один за всіх, і всі за одного, але без Д'Артаньяна!",
+                backContent: `
+                    <ul>
+                        <li><strong>Колективний розум:</strong> Тухольці не мали одного "царя", який би все вирішував. Вони мали віче – місце, де кожен голос мав вагу, де обговорювалися найскладніші питання. Це як сучасний "мозковий штурм" на максималках, тільки замість фліпчартів – карпатські скелі.</li>
+                        <li><strong>Взаємодопомога:</strong> У Тухлі не було "моя хата скраю". Кожен розумів, що його виживання залежить від сусіда, а виживання сусіда – від нього. Це була справжня "екосистема" взаємопідтримки, де не було місця егоїзму.</li>
+                        <li><strong>Спільна мета:</strong> Захист своєї землі, своєї свободи, своїх родин – це було тим клеєм, що тримав громаду разом. Жоден особистий інтерес не міг переважити цю спільну мету. Навіть коли довелося пожертвувати Максимом, громада прийняла це важке рішення заради вищого блага. (Так, це боляче, але ефективно!)</li>
+                        <li><strong>Лідерство-служіння:</strong> Захар Беркут – це не диктатор, а мудрий "батько" громади. Він не керував, а служив. Його авторитет базувався на мудрості, справедливості та готовності до самопожертви. Це вам не сучасні "коучі", які обіцяють успіх за три дні, Захар Беркут обіцяв (і давав!) виживання.</li>
+                    </ul>
+                `
+            },
+            {
+                id: 'card2',
+                frontTitle: "Паралелі з сучасністю: Єдність у 21 столітті",
+                frontImage: "https://placehold.co/400x250/c8e6c9/1b5e20?text=Сучасне+волонтерство",
+                backTitle: "Від монголів до 'руського міра': Як єдність працює у 21 столітті",
+                backContent: `
+                    <ul>
+                        <li><strong>Донати – це наш "гірський потік":</strong> Пам'ятаєте, як тухольці затопили монголів? Сучасні українці "затоплюють" ворога донатами! Мільярди гривень, зібрані звичайними людьми на ЗСУ, на дрони, на автівки – це пряма паралель до того, як кожен тухолець докладався до спільної справи. Це не просто гроші, це колективна енергія, що перетворюється на реальну силу.</li>
+                        <li><strong>Волонтерство – це наша "тухольська оборона":</strong> Коли держава не справлялася, або коли потрібно було "тут і зараз", з'явилися мільйони волонтерів. Від плетіння маскувальних сіток до доставки гуманітарки під обстрілами – це сучасні Максим, Мирослава та Захар Беркут, які без вагань віддають свій час, сили і ресурси заради перемоги. Це не просто "допомога", це справжня народна армія тилу.</li>
+                        <li><strong>Патріотизм та самовідданість:</strong> Сучасні українці демонструють глибокий патріотизм, що виявляється не лише у словах, а й у конкретних діях. Це готовність віддавати останнє заради захисту країни та побратимів.</li>
+                        <li><strong>Шкільні благодійні ярмарки:</strong> Навіть наймолодші українці долучаються до спільної справи, організовуючи ярмарки та збираючи кошти на потреби ЗСУ. Це яскравий приклад єдності та солідарності, що пронизує всі верстви суспільства.</li>
+                        <li><strong>Інформаційний фронт – це наше "віче":</strong> У часи монголів інформація передавалася з уст в уста. Сьогодні – це соцмережі, месенджери, новини. Українці миттєво об'єднуються для поширення правди, протидії фейкам, організації акцій. Це як сучасне віче, що працює 24/7.</li>
+                    </ul>
+                `
+            },
+            {
+                id: 'card3',
+                frontTitle: "Громада в українській традиції",
+                frontImage: "https://placehold.co/400x250/bbdefb/1a237e?text=Українська+демократія",
+                backTitle: "Від віча до 'хабів': Еволюція народної демократії",
+                backContent: `
+                    <ul>
+                        <li><strong>Віче – прабатько демократії:</strong> Ще з часів Київської Русі віче було формою прямої демократії, де вирішувалися найважливіші питання. Це була школа самоврядування, де вчилися слухати, переконувати та приймати спільні рішення.</li>
+                        <li><strong>Козацька демократія – "Січ-Мати":</strong> Козаки на Січі – це була справжня військова громада, де обирали отамана, де панували рівність і братерство. Це була модель суспільства, де кожен мав право голосу і де особисті інтереси підпорядковувалися інтересам Січі.</li>
+                        <li><strong>Сільська громада:</strong> Протягом століть українське село жило за принципами громади, де вирішували спільні питання, допомагали одне одному в біді, разом будували церкви та школи.</li>
+                        <li><strong>Сучасні волонтерські хаби та ініціативи:</strong> Це прямі нащадки віча та козацької демократії. Люди об'єднуються за спільною метою, створюють горизонтальні зв'язки, швидко реагують на виклики, без зайвої бюрократії. Це доказ того, що "ген громади" міцно сидить в українцях.</li>
+                    </ul>
+                `
+            },
+            {
+                id: 'card4',
+                frontTitle: "Уроки Захара Беркута",
+                frontImage: "https://placehold.co/400x250/fff3e0/e65100?text=Мудрість+Беркута",
+                backTitle: "Мудрість, що не старіє, навіть без Wi-Fi!",
+                backContent: `
+                    <ul>
+                        <li><strong>Цінність єдності:</strong> Головний урок – разом ми сила. Роз'єднані ми – здобич. Це стосується і родини, і колективу, і цілої нації.</li>
+                        <li><strong>Мудре лідерство:</strong> Справжній лідер – це той, хто служить громаді, а не панує над нею. Той, хто вміє слухати, надихати та жертвувати особистим заради спільного.</li>
+                        <li><strong>Стратегічне мислення:</strong> Навіть у безнадійній ситуації завжди є вихід, якщо мислити нестандартно і використовувати доступні ресурси (як тухольці використали гори та річку).</li>
+                        <li><strong>Жертовність:</strong> Іноді для великої перемоги потрібні великі жертви. Це важко, але іноді неминуче. Історія Максима – яскраве тому підтвердження.</li>
+                        <li><strong>Непохитність духу:</strong> Не здаватися, навіть коли все проти тебе. Віра у свою справу, у свою громаду – це те, що дає сили боротися до кінця.</li>
+                    </ul>
+                `
+            }
+        ];
+
+        const cardsContainer = document.querySelector('.cards-container');
+
+        // Function to create and append card elements
+        function createCard(data) {
+            const cardWrapper = document.createElement('div');
+            cardWrapper.className = 'card-wrapper';
+            cardWrapper.id = data.id;
+
+            const cardInner = document.createElement('div');
+            cardInner.className = 'card-inner';
+
+            const cardFront = document.createElement('div');
+            cardFront.className = 'card-front';
+            cardFront.innerHTML = `
+                <img src="${data.frontImage}" alt="${data.frontTitle}">
+                <p>${data.frontTitle}</p>
+            `;
+
+            const cardBack = document.createElement('div');
+            cardBack.className = 'card-back';
+            cardBack.innerHTML = `
+                <h3>${data.backTitle}</h3>
+                ${data.backContent}
+            `;
+
+            cardInner.appendChild(cardFront);
+            cardInner.appendChild(cardBack);
+            cardWrapper.appendChild(cardInner);
+
+            cardWrapper.addEventListener('click', () => {
+                cardWrapper.classList.toggle('flipped');
+            });
+
+            return cardWrapper;
+        }
+
+        // Render all cards on page load
+        window.onload = () => {
+            cardData.forEach(data => {
+                cardsContainer.appendChild(createCard(data));
+            });
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Зістав риси характеру - Хіба ревуть воли?</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for the game */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Align to top for better scrolling */
+            min-height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .game-container {
+            background-color: #ffffff;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            max-width: 900px;
+            width: 100%;
+            margin-top: 20px;
+        }
+        .character-card {
+            background-color: #e0f7fa; /* light cyan */
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border: 1px solid #b2ebf2;
+            text-align: center;
+            font-weight: 600;
+            color: #006064; /* dark cyan */
+            min-height: 100px; /* Ensure drop target is visible */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .trait-item {
+            background-color: #fff3e0; /* light orange */
+            border-radius: 8px;
+            padding: 10px 15px;
+            margin: 8px;
+            border: 1px solid #ffcc80;
+            cursor: grab;
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: #e65100; /* dark orange */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s ease, opacity 0.2s ease;
+        }
+        .trait-item:active {
+            cursor: grabbing;
+            transform: scale(1.05);
+        }
+        .trait-item.dragging {
+            opacity: 0.6;
+        }
+        .drop-zone {
+            min-height: 50px;
+            border: 2px dashed #90a4ae; /* blue-grey */
+            border-radius: 8px;
+            margin-top: 10px;
+            padding: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+        }
+        .drop-zone.hovered {
+            background-color: #e8f5e9; /* light green */
+            border-color: #66bb6a; /* green */
+        }
+        .check-button, .reset-button {
+            background-color: #4f46e5; /* indigo-600 */
+            color: white;
+            padding: 12px 25px;
+            border-radius: 10px;
+            font-size: 1.125rem; /* text-lg */
+            font-weight: 700; /* font-bold */
+            cursor: pointer;
+            border: none;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            width: 100%;
+            box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3);
+        }
+        .check-button:hover, .reset-button:hover {
+            background-color: #4338ca; /* indigo-700 */
+            transform: translateY(-2px);
+        }
+        .reset-button {
+            background-color: #ef4444; /* red-500 */
+            box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3);
+        }
+        .reset-button:hover {
+            background-color: #dc2626; /* red-600 */
+        }
+        .results-summary {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #e0f2fe; /* light blue */
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            text-align: center;
+            color: #0c4a6e;
+            border: 1px solid #90cdf4;
+            display: none; /* Hidden by default */
+        }
+        .correct-feedback {
+            background-color: #d1fae5; /* green-100 */
+            border-color: #34d399; /* green-400 */
+        }
+        .incorrect-feedback {
+            background-color: #fee2e2; /* red-100 */
+            border-color: #ef4444; /* red-500 */
+        }
+        .trait-item.correct {
+            background-color: #a7f3d0; /* green-200 */
+            border-color: #34d399; /* green-400 */
+        }
+        .trait-item.incorrect {
+            background-color: #fecaca; /* red-200 */
+            border-color: #ef4444; /* red-500 */
+        }
+        .hidden-trait {
+            display: none !important;
+        }
+
+        @media (min-width: 768px) {
+            .grid-cols-2 {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .grid-cols-3 {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1 class="text-3xl md:text-4xl font-bold text-center mb-8 text-gray-800">Зістав риси характеру: "Хіба ревуть воли, як ясла повні?"</h1>
+        <p class="text-center text-gray-600 mb-6">Перетягніть риси характеру до відповідних персонажів.</p>
+
+        <div id="traits-pool" class="flex flex-wrap justify-center mb-8 p-4 bg-gray-100 rounded-lg border border-gray-200">
+            <h2 class="text-xl font-semibold text-gray-700 w-full text-center mb-4">Риси характеру:</h2>
+            <!-- Traits will be loaded here by JavaScript -->
+        </div>
+
+        <div id="characters-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <!-- Characters with drop zones will be loaded here by JavaScript -->
+        </div>
+
+        <div class="flex flex-col md:flex-row gap-4">
+            <button id="check-answers-btn" class="check-button">Перевірити відповіді</button>
+            <button id="reset-game-btn" class="reset-button">Скинути гру</button>
+        </div>
+
+        <div id="game-results" class="results-summary">
+            <!-- Results will be displayed here -->
+        </div>
+    </div>
+
+    <script>
+        // Data for characters and their correct traits
+        const gameData = [
+            {
+                character: "Чіпка Вареник",
+                traits: [
+                    "Прагнення до справедливості",
+                    "Внутрішня боротьба",
+                    "Бунтарський дух",
+                    "Трансформація від шукача правди до злочинця",
+                    "Представник 'пропащої сили'"
+                ]
+            },
+            {
+                character: "Мотря (мати Чіпки)",
+                traits: [
+                    "Жертва соціальної несправедливості",
+                    "Важка доля",
+                    "Любов до сина, що межує з відчаєм",
+                    "Народна мудрість та страждання"
+                ]
+            },
+            {
+                character: "Галя",
+                traits: [
+                    "Ніжна і чиста душа",
+                    "Мрійливість",
+                    "Символ краси та надії",
+                    "Трагічна доля"
+                ]
+            },
+            {
+                character: "Грицько Чупруненко",
+                traits: [
+                    "Прагматизм",
+                    "Господарська жилка",
+                    "Пристосуванство до обставин",
+                    "Байдужість до чужого горя"
+                ]
+            }
+        ];
+
+        let allTraits = [];
+        gameData.forEach(item => {
+            allTraits = allTraits.concat(item.traits.map(trait => ({ text: trait, character: item.character })));
+        });
+
+        // Shuffle traits for random placement in the pool
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+        shuffleArray(allTraits);
+
+        const traitsPool = document.getElementById('traits-pool');
+        const charactersGrid = document.getElementById('characters-grid');
+        const checkAnswersBtn = document.getElementById('check-answers-btn');
+        const resetGameBtn = document.getElementById('reset-game-btn');
+        const gameResultsDiv = document.getElementById('game-results');
+
+        // Function to render the game
+        function renderGame() {
+            traitsPool.innerHTML = '<h2 class="text-xl font-semibold text-gray-700 w-full text-center mb-4">Риси характеру:</h2>';
+            charactersGrid.innerHTML = '';
+            gameResultsDiv.classList.add('hidden');
+            gameResultsDiv.textContent = '';
+
+            // Render traits in the pool
+            allTraits.forEach((trait, index) => {
+                const traitItem = document.createElement('div');
+                traitItem.className = 'trait-item';
+                traitItem.textContent = trait.text;
+                traitItem.setAttribute('draggable', true);
+                traitItem.dataset.originalCharacter = trait.character; // Store correct character
+                traitItem.id = `trait-${index}`; // Unique ID for tracking, used for dataTransfer
+                traitsPool.appendChild(traitItem);
+
+                traitItem.addEventListener('dragstart', (e) => {
+                    // Set the ID of the dragged element in dataTransfer
+                    e.dataTransfer.setData('text/plain', e.target.id);
+                    // Add dragging class for visual feedback
+                    setTimeout(() => {
+                        e.target.classList.add('dragging');
+                    }, 0);
+                });
+
+                traitItem.addEventListener('dragend', (e) => {
+                    // Remove dragging class
+                    e.target.classList.remove('dragging');
+                });
+            });
+
+            // Render characters with drop zones
+            gameData.forEach((charData, index) => {
+                const characterCard = document.createElement('div');
+                characterCard.className = 'character-card';
+                characterCard.innerHTML = `
+                    <h3 class="text-xl font-bold">${charData.character}</h3>
+                    <div class="drop-zone" data-character="${charData.character}"></div>
+                `;
+                charactersGrid.appendChild(characterCard);
+
+                const dropZone = characterCard.querySelector('.drop-zone');
+
+                dropZone.addEventListener('dragover', (e) => {
+                    e.preventDefault(); // Allow drop
+                    dropZone.classList.add('hovered');
+                });
+
+                dropZone.addEventListener('dragleave', () => {
+                    dropZone.classList.remove('hovered');
+                });
+
+                dropZone.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    dropZone.classList.remove('hovered');
+                    const data = e.dataTransfer.getData('text/plain');
+                    const draggedItem = document.getElementById(data);
+
+                    if (draggedItem) {
+                        dropZone.appendChild(draggedItem);
+                        draggedItem.classList.remove('correct', 'incorrect'); // Clear previous feedback
+                    }
+                });
+            });
+        }
+
+        // Function to check answers
+        function checkAnswers() {
+            let correctCount = 0;
+            let totalTraits = allTraits.length;
+
+            // Clear previous feedback
+            document.querySelectorAll('.trait-item').forEach(item => {
+                item.classList.remove('correct', 'incorrect');
+            });
+            document.querySelectorAll('.character-card').forEach(card => {
+                card.classList.remove('correct-feedback', 'incorrect-feedback');
+            });
+
+            gameData.forEach(charData => {
+                const dropZone = document.querySelector(`.drop-zone[data-character="${charData.character}"]`);
+                const droppedTraits = Array.from(dropZone.children);
+                let charCorrect = true; // Assume correct until proven otherwise
+
+                droppedTraits.forEach(traitItem => {
+                    if (traitItem.dataset.originalCharacter === charData.character) {
+                        traitItem.classList.add('correct');
+                        correctCount++;
+                    } else {
+                        traitItem.classList.add('incorrect');
+                        charCorrect = false; // Mark character card as incorrect if any trait is wrong
+                    }
+                });
+
+                // Check for missing traits (if the user didn't drag all correct ones)
+                const correctTraitsForChar = charData.traits.length;
+                const droppedCorrectTraits = droppedTraits.filter(item => item.dataset.originalCharacter === charData.character).length;
+                if (droppedCorrectTraits !== correctTraitsForChar) {
+                    charCorrect = false;
+                }
+
+                if (charCorrect && droppedTraits.length === correctTraitsForChar) {
+                    dropZone.closest('.character-card').classList.add('correct-feedback');
+                } else {
+                    dropZone.closest('.character-card').classList.add('incorrect-feedback');
+                }
+            });
+
+            gameResultsDiv.textContent = `Ви правильно зіставили ${correctCount} з ${totalTraits} рис!`;
+            gameResultsDiv.classList.remove('hidden');
+        }
+
+        // Event listeners
+        checkAnswersBtn.addEventListener('click', checkAnswers);
+        resetGameBtn.addEventListener('click', renderGame); // Simply re-render the game to reset
+
+        // Initial render
+        window.onload = renderGame;
+    </script>
+</body>
+</html>

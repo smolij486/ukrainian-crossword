@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Дух Сантьяго: Інтерпретація цитат</title>
+    <!-- Tailwind CSS CDN for modern styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom CSS for game aesthetics and responsiveness */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5; /* Light gray background */
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Align to top for better content flow */
+            min-height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .game-container {
+            background-color: #ffffff;
+            border-radius: 15px; /* Rounded corners for the main container */
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); /* Soft shadow for depth */
+            padding: 30px;
+            max-width: 900px; /* Max width for readability */
+            width: 100%;
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .quote-card {
+            background-color: #f9fafb;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #e5e7eb;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .quote-text {
+            font-size: 1.15rem; /* text-lg */
+            font-style: italic;
+            color: #374151;
+            line-height: 1.6;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        .answer-option {
+            display: flex;
+            align-items: flex-start; /* Align radio button and text to the top */
+            padding: 10px 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            border: 1px solid #d1d5db;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            background-color: #ffffff;
+        }
+        .answer-option:hover {
+            background-color: #f3f4f6;
+            border-color: #9ca3af;
+        }
+        .answer-option input[type="radio"] {
+            margin-right: 12px;
+            margin-top: 4px; /* Adjust vertical alignment of radio button */
+            accent-color: #4f46e5; /* Primary color for radio button */
+        }
+        .answer-option.correct {
+            background-color: #d1fae5; /* green-100 */
+            border-color: #34d399; /* green-400 */
+        }
+        .answer-option.incorrect {
+            background-color: #fee2e2; /* red-100 */
+            border-color: #ef4444; /* red-500 */
+        }
+        .check-button {
+            background-color: #4f46e5; /* indigo-600 */
+            color: white;
+            padding: 14px 25px;
+            border-radius: 10px;
+            font-size: 1.125rem; /* text-lg */
+            font-weight: 700; /* font-bold */
+            cursor: pointer;
+            border: none;
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+            width: 100%;
+            margin-top: 20px;
+            box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3);
+        }
+        .check-button:hover {
+            background-color: #4338ca; /* indigo-700 */
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(79, 70, 229, 0.4);
+        }
+        .check-button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 5px rgba(79, 70, 229, 0.2);
+        }
+        .results-summary {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #e0f2fe; /* light blue */
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            text-align: center;
+            color: #0c4a6e;
+            border: 1px solid #90cdf4;
+            display: none; /* Hidden by default */
+        }
+        .explanation-text {
+            font-size: 0.9rem;
+            color: #4b5563;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px dashed #e5e7eb;
+            text-align: left;
+            display: none; /* Hidden by default, shown on check */
+        }
+        .quote-card.incorrect .explanation-text,
+        .quote-card.correct .explanation-text {
+            display: block; /* Show explanation for both correct and incorrect after check */
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 640px) {
+            .game-container {
+                padding: 20px;
+            }
+            .quote-text {
+                font-size: 1rem;
+            }
+            .answer-option {
+                padding: 8px 12px;
+                font-size: 0.9rem;
+            }
+            .check-button {
+                font-size: 1rem;
+                padding: 10px 20px;
+            }
+            .explanation-text {
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1 class="text-3xl md:text-4xl font-bold text-center mb-8 text-gray-800">Дух Сантьяго</h1>
+        <p class="text-center text-gray-600 mb-6">Оберіть варіант, який найкраще розкриває сенс цитати Сантьяго та його велич духу.</p>
+
+        <div id="quotes-list">
+            <!-- Quotes and options will be loaded here by JavaScript -->
+        </div>
+
+        <button id="check-answers-btn" class="check-button">Перевірити відповіді</button>
+
+        <div id="game-results" class="results-summary">
+            <!-- Results will be displayed here -->
+        </div>
+    </div>
+
+    <script>
+        // Data for quotes, options, correct answer index, and explanation
+        const quotesData = [
+            {
+                quote: "Людину можна знищити, але не перемогти.",
+                options: [
+                    "Фізична поразка завжди означає повний крах.",
+                    "Навіть після фізичної поразки дух людини може залишатися незламним.",
+                    "Ця фраза стосується лише військових битв.",
+                    "Перемога завжди залежить від зовнішніх обставин."
+                ],
+                correct: 1,
+                explanation: "Ця цитата підкреслює, що справжня перемога чи поразка відбувається всередині людини, у її волі та гідності, які неможливо зламати зовнішніми обставинами."
+            },
+            {
+                quote: "Риба, я люблю тебе і поважаю тебе дуже. Але я вб'ю тебе, перш ніж цей день закінчиться.",
+                options: [
+                    "Сантьяго ненавидить рибу і бажає їй зла.",
+                    "Він демонструє жорстокість до природи.",
+                    "Повага до супротивника не виключає рішучості у боротьбі за виживання та досягнення мети.",
+                    "Це ознака його слабкості та нерішучості."
+                ],
+                correct: 2,
+                explanation: "Ця фраза показує глибоку повагу Сантьяго до природи та свого супротивника, попри необхідність боротися за своє життя та мету. Це свідчить про його внутрішню шляхетність."
+            },
+            {
+                quote: "Він був занадто старий, щоб витягнути її, але він був занадто молодий, щоб здатися.",
+                options: [
+                    "Сантьяго був у розквіті сил.",
+                    "Його вік не мав жодного значення для боротьби.",
+                    "Вік не є перешкодою для внутрішньої сили та волі до перемоги, що перевершує фізичні обмеження.",
+                    "Він був занадто оптимістичний, не оцінюючи свої можливості."
+                ],
+                correct: 2,
+                explanation: "Цитата підкреслює незламність духу Сантьяго, який, попри фізичний вік, зберігає молодість душі та рішучість боротися до кінця."
+            },
+            {
+                quote: "Я бажаю, щоб хлопчик був тут.",
+                options: [
+                    "Сантьяго не міг впоратися з рибою самостійно.",
+                    "Він відчував самотність і потребу в людському зв'язку та підтримці, що є природним для людини.",
+                    "Хлопчик був єдиним, хто міг би йому допомогти.",
+                    "Це ознака його залежності від інших."
+                ],
+                correct: 1,
+                explanation: "Ця фраза розкриває людську потребу в спілкуванні та підтримці, навіть для такого самодостатнього героя, як Сантьяго, показуючи його людяність."
+            },
+            {
+                quote: "Кожен день – це новий день. Щастить, коли пощастить. Але я віддаю перевагу точності. Тоді, коли щастить, ти готовий.",
+                options: [
+                    "Сантьяго вірив лише у сліпу удачу.",
+                    "Він був песимістом щодо свого майбутнього.",
+                    "Важливість підготовки, наполегливості та активної позиції, щоб бути готовим до можливостей, а не пасивно чекати удачі.",
+                    "Удача не має жодного значення в житті."
+                ],
+                correct: 2,
+                explanation: "Цитата демонструє філософію Сантьяго щодо праці, підготовки та активної позиції у житті, а не пасивного очікування удачі. Це його шлях до успіху."
+            },
+            {
+                quote: "Я бажаю, щоб мені наснилися леви.",
+                options: [
+                    "Сантьяго боявся моря.",
+                    "Він мріяв про повернення до молодості та сили, про свободу від тягаря реальності.",
+                    "Йому просто подобалися леви.",
+                    "Це був його спосіб уникнути думок про рибу."
+                ],
+                correct: 1,
+                explanation: "Ця цитата символізує прагнення Сантьяго до юності, сили та свободи, що є протилежністю його поточній боротьбі та старінню."
+            },
+            {
+                quote: "Біль не має значення для чоловіка.",
+                options: [
+                    "Сантьяго не відчував болю.",
+                    "Він вважав, що чоловік не повинен показувати емоцій.",
+                    "Фізичний біль не повинен зламати дух і волю до боротьби.",
+                    "Він був безстрашним."
+                ],
+                correct: 2,
+                explanation: "Ця фраза підкреслює стоїцизм Сантьяго та його віру в те, що внутрішня сила духу важливіша за фізичні страждання."
+            },
+            {
+                quote: "Я не вірю в удачу. Я вірю в майстерність.",
+                options: [
+                    "Сантьяго був забобонним.",
+                    "Він вважав, що все залежить від везіння.",
+                    "Успіх досягається завдяки досвіду, знанням і наполегливій праці, а не сліпій удачі.",
+                    "Він не вірив у жодні зовнішні сили."
+                ],
+                correct: 2,
+                explanation: "Ця цитата відображає прагматичний і заснований на досвіді підхід Сантьяго до життя та риболовлі, де майстерність переважає над випадковістю."
+            }
+        ];
+
+        const quotesListContainer = document.getElementById('quotes-list');
+        const checkAnswersBtn = document.getElementById('check-answers-btn');
+        const gameResultsDiv = document.getElementById('game-results');
+
+        // Function to render the quiz questions
+        function renderGame() {
+            quotesListContainer.innerHTML = ''; // Clear previous content
+            quotesData.forEach((q, index) => {
+                const quoteCard = document.createElement('div');
+                quoteCard.className = 'quote-card';
+                quoteCard.innerHTML = `
+                    <p class="quote-text">"${q.quote}"</p>
+                    <div class="answers-group" data-question-index="${index}">
+                        ${q.options.map((option, optIndex) => `
+                            <label class="answer-option">
+                                <input type="radio" name="quote${index}" value="${optIndex}">
+                                <span>${option}</span>
+                            </label>
+                        `).join('')}
+                    </div>
+                    <p class="explanation-text hidden">${q.explanation}</p>
+                `;
+                quotesListContainer.appendChild(quoteCard);
+            });
+        }
+
+        // Function to check answers and display results
+        function checkAnswers() {
+            let correctCount = 0;
+            quotesData.forEach((q, index) => {
+                const selectedOption = document.querySelector(`input[name="quote${index}"]:checked`);
+                const quoteCard = document.querySelector(`.quote-card:nth-child(${index + 1})`);
+                const answerOptions = quoteCard.querySelectorAll('.answer-option');
+                const explanationText = quoteCard.querySelector('.explanation-text');
+
+                // Reset previous styling
+                answerOptions.forEach(option => {
+                    option.classList.remove('correct', 'incorrect');
+                });
+                quoteCard.classList.remove('correct', 'incorrect');
+                explanationText.classList.add('hidden'); // Hide explanation initially
+
+                if (selectedOption) {
+                    const userAnswerIndex = parseInt(selectedOption.value);
+                    if (userAnswerIndex === q.correct) {
+                        correctCount++;
+                        selectedOption.closest('.answer-option').classList.add('correct');
+                        quoteCard.classList.add('correct');
+                    } else {
+                        selectedOption.closest('.answer-option').classList.add('incorrect');
+                        // Highlight the correct answer
+                        answerOptions[q.correct].classList.add('correct');
+                        quoteCard.classList.add('incorrect');
+                    }
+                } else {
+                    // If no answer selected, still highlight the correct one
+                    answerOptions[q.correct].classList.add('correct');
+                    quoteCard.classList.add('incorrect'); // Mark as incorrect if not answered
+                }
+                explanationText.classList.remove('hidden'); // Show explanation after checking
+            });
+
+            // Display overall results
+            gameResultsDiv.textContent = `Ви правильно інтерпретували ${correctCount} з ${quotesData.length} цитат!`;
+            gameResultsDiv.classList.remove('hidden');
+        }
+
+        // Event listener for the check answers button
+        checkAnswersBtn.addEventListener('click', checkAnswers);
+
+        // Render the game when the page loads
+        document.addEventListener('DOMContentLoaded', renderGame);
+    </script>
+</body>
+</html>

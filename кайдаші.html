@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Вгадай, хто сказав? - Кайдашева сім'я</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for the game */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Align to top for better scrolling */
+            min-height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .game-container {
+            background-color: #ffffff;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            max-width: 900px;
+            width: 100%;
+            margin-top: 20px;
+        }
+        .quote-card {
+            background-color: #f9fafb;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border: 1px solid #e5e7eb;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .quote-text {
+            font-size: 1.15rem; /* text-lg */
+            font-style: italic;
+            color: #374151;
+            line-height: 1.5;
+        }
+        .character-select {
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid #d1d5db;
+            background-color: #ffffff;
+            font-size: 1rem;
+            color: #4b5563;
+            width: 100%; /* Full width on small screens */
+            max-width: 250px; /* Max width on larger screens */
+            transition: border-color 0.2s ease;
+        }
+        .character-select:focus {
+            outline: none;
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2);
+        }
+        .check-button {
+            background-color: #4f46e5; /* indigo-600 */
+            color: white;
+            padding: 12px 25px;
+            border-radius: 10px;
+            font-size: 1.125rem; /* text-lg */
+            font-weight: 700; /* font-bold */
+            cursor: pointer;
+            border: none;
+            transition: background-color 0.3s ease;
+            width: 100%;
+            margin-top: 20px;
+            box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3);
+        }
+        .check-button:hover {
+            background-color: #4338ca; /* indigo-700 */
+        }
+        .results-summary {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #e0f2fe; /* light blue */
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            text-align: center;
+            color: #0c4a6e;
+            border: 1px solid #90cdf4;
+            display: none; /* Hidden by default */
+        }
+        .quote-card.correct {
+            background-color: #d1fae5; /* green-100 */
+            border-color: #34d399; /* green-400 */
+        }
+        .quote-card.incorrect {
+            background-color: #fee2e2; /* red-100 */
+            border-color: #ef4444; /* red-500 */
+        }
+        .correct-answer-display {
+            font-size: 0.95rem;
+            color: #16a34a; /* green-700 */
+            font-weight: 500;
+            margin-top: 5px;
+        }
+        .incorrect-answer-display {
+            font-size: 0.95rem;
+            color: #dc2626; /* red-600 */
+            font-weight: 500;
+            margin-top: 5px;
+        }
+        .quote-card.incorrect .correct-answer-display {
+            display: block; /* Show correct answer for incorrect attempts */
+        }
+        .quote-card:not(.incorrect) .correct-answer-display {
+            display: none; /* Hide correct answer for correct or unchecked attempts */
+        }
+
+        /* Flex layout for larger screens */
+        @media (min-width: 640px) {
+            .quote-card {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+            }
+            .quote-text {
+                flex-grow: 1;
+                margin-right: 20px;
+            }
+            .character-select {
+                width: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1 class="text-3xl md:text-4xl font-bold text-center mb-8 text-gray-800">Вгадай, хто сказав?</h1>
+        <p class="text-center text-gray-600 mb-6">Зіставте цитати з твору "Кайдашева сім'я" з персонажами, які їх виголосили.</p>
+
+        <div id="quotes-list">
+            <!-- Quotes will be loaded here by JavaScript -->
+        </div>
+
+        <button id="check-quotes-btn" class="check-button">Перевірити відповіді</button>
+
+        <div id="game-results" class="results-summary">
+            <!-- Results will be displayed here -->
+        </div>
+    </div>
+
+    <script>
+        // Data for quotes and their correct characters
+        const quotesData = [
+            {
+                quote: "Ох, і нащо мені здалося те життя на світі! Нащо мені тая дочка, як вона мені на віку довіку допікає!",
+                character: "Маруся Кайдашиха"
+            },
+            {
+                quote: "Не вчи вченого, а сам учися!",
+                character: "Карпо Кайдаш"
+            },
+            {
+                quote: "Та що ж це за напасть така! Та щоб тобі, Лавріне, ті кістки в горлі застрягли!",
+                character: "Мотря"
+            },
+            {
+                quote: "Який батько, такий і син.",
+                character: "Омелько Кайдаш"
+            },
+            {
+                quote: "Я не хочу, щоб мене люди обзивали ледащицею.",
+                character: "Мелашка"
+            },
+            {
+                quote: "Ото, мамо, якби ви не сварились, то ми б і жили добре.",
+                character: "Лаврін Кайдаш"
+            },
+            {
+                quote: "І нащо мені тая груша здалася, коли через неї стільки лиха!",
+                character: "Маруся Кайдашиха"
+            },
+            {
+                quote: "Нащо мені тая хата, як я в ній не маю спокою!",
+                character: "Мотря"
+            },
+            {
+                quote: "Якби не було Кайдашів, то й не було б і сварки.",
+                character: "Лаврін Кайдаш"
+            }
+        ];
+
+        // All possible characters for dropdowns
+        const characters = [
+            "Виберіть персонажа",
+            "Маруся Кайдашиха",
+            "Омелько Кайдаш",
+            "Карпо Кайдаш",
+            "Лаврін Кайдаш",
+            "Мотря",
+            "Мелашка"
+        ].sort((a, b) => {
+            if (a === "Виберіть персонажа") return -1; // Keep "Select character" at the top
+            if (b === "Виберіть персонажа") return 1;
+            return a.localeCompare(b); // Sort others alphabetically
+        });
+
+        const quotesListContainer = document.getElementById('quotes-list');
+        const checkQuotesBtn = document.getElementById('check-quotes-btn');
+        const gameResultsDiv = document.getElementById('game-results');
+
+        // Function to render the quotes and dropdowns
+        function renderGame() {
+            quotesListContainer.innerHTML = ''; // Clear previous content
+            quotesData.forEach((q, index) => {
+                const quoteCard = document.createElement('div');
+                quoteCard.className = 'quote-card';
+                quoteCard.innerHTML = `
+                    <p class="quote-text">"${q.quote}"</p>
+                    <div class="flex flex-col items-start w-full sm:w-auto">
+                        <select class="character-select" data-quote-index="${index}">
+                            ${characters.map(char => `<option value="${char}">${char}</option>`).join('')}
+                        </select>
+                        <p class="correct-answer-display mt-1 hidden">Правильна відповідь: <span class="font-semibold">${q.character}</span></p>
+                    </div>
+                `;
+                quotesListContainer.appendChild(quoteCard);
+            });
+        }
+
+        // Function to check answers and display results
+        function checkAnswers() {
+            let correctCount = 0;
+            quotesData.forEach((q, index) => {
+                const selectElement = document.querySelector(`.character-select[data-quote-index="${index}"]`);
+                const quoteCard = selectElement.closest('.quote-card');
+                const correctAnswerDisplay = quoteCard.querySelector('.correct-answer-display');
+
+                // Reset previous styling
+                quoteCard.classList.remove('correct', 'incorrect');
+                correctAnswerDisplay.classList.add('hidden'); // Hide correct answer by default
+
+                if (selectElement.value === q.character) {
+                    correctCount++;
+                    quoteCard.classList.add('correct');
+                } else {
+                    quoteCard.classList.add('incorrect');
+                    correctAnswerDisplay.classList.remove('hidden'); // Show correct answer
+                }
+            });
+
+            // Display overall results
+            gameResultsDiv.textContent = `Ви правильно вгадали ${correctCount} з ${quotesData.length} цитат!`;
+            gameResultsDiv.classList.remove('hidden');
+        }
+
+        // Event listener for the check answers button
+        checkQuotesBtn.addEventListener('click', checkAnswers);
+
+        // Render the game when the page loads
+        window.onload = renderGame;
+    </script>
+</body>
+</html>

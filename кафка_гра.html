@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ранок Грегора: Симуляція Перетворення</title>
+    <!-- Tailwind CSS CDN for modern styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom CSS for game aesthetics and responsiveness */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5; /* Light gray background */
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Align to top for better content flow */
+            min-height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .game-container {
+            background-color: #ffffff;
+            border-radius: 15px; /* Rounded corners for the main container */
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); /* Soft shadow for depth */
+            padding: 30px;
+            max-width: 800px; /* Max width for readability */
+            width: 100%;
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .scenario-image {
+            width: 100%;
+            max-height: 300px;
+            object-fit: cover; /* Ensures image covers the area without distortion */
+            border-radius: 10px; /* Rounded corners for images */
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1); /* Subtle shadow for images */
+        }
+        .scenario-text {
+            font-size: 1.15rem; /* text-lg equivalent */
+            line-height: 1.6; /* Improved readability */
+            text-align: center;
+            margin-bottom: 25px;
+            color: #374151; /* Dark gray text for contrast */
+        }
+        .choices-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px; /* Space between choice buttons */
+            width: 100%;
+        }
+        .choice-button {
+            background-color: #4f46e5; /* Indigo-600 for primary actions */
+            color: white;
+            padding: 14px 20px;
+            border-radius: 10px; /* Rounded buttons */
+            font-size: 1.05rem; /* text-lg equivalent */
+            font-weight: 600; /* font-semibold */
+            cursor: pointer;
+            border: none;
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease; /* Smooth transitions for interactivity */
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3); /* Button shadow */
+        }
+        .choice-button:hover {
+            background-color: #4338ca; /* Darker indigo on hover */
+            transform: translateY(-2px); /* Slight lift effect on hover */
+            box-shadow: 0 6px 15px rgba(79, 70, 229, 0.4); /* Enhanced shadow on hover */
+        }
+        .choice-button:active {
+            transform: translateY(0); /* Press-down effect on click */
+            box-shadow: 0 2px 5px rgba(79, 70, 229, 0.2); /* Reduced shadow on active */
+        }
+        .restart-button {
+            background-color: #ef4444; /* Red-500 for restart/danger actions */
+            margin-top: 30px;
+            box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3);
+        }
+        .restart-button:hover {
+            background-color: #dc2626; /* Darker red on hover */
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(239, 68, 68, 0.4);
+        }
+        .game-over-text {
+            font-size: 1.5rem; /* text-2xl equivalent */
+            font-weight: 700; /* font-bold */
+            color: #dc2626; /* Red for game over */
+            text-align: center;
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+        .victory-text {
+            font-size: 1.5rem; /* text-2xl equivalent */
+            font-weight: 700; /* font-bold */
+            color: #16a34a; /* Green for victory */
+            text-align: center;
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+        .outcome-text {
+            font-size: 1.1rem;
+            color: #4b5563; /* Gray text for outcome descriptions */
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        /* Responsive adjustments for smaller screens */
+        @media (max-width: 640px) {
+            .game-container {
+                padding: 20px;
+            }
+            .scenario-text {
+                font-size: 1rem;
+            }
+            .choice-button {
+                font-size: 0.95rem;
+                padding: 12px 15px;
+            }
+            .game-over-text, .victory-text {
+                font-size: 1.25rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1 class="text-3xl md:text-4xl font-bold text-center mb-8 text-gray-800">Ранок Грегора: Симуляція Перетворення</h1>
+
+        <!-- Image for the current scenario -->
+        <img id="scenario-img" class="scenario-image" src="https://placehold.co/800x300/e0f2fe/0c4a6e?text=Ранок+Грегора" alt="Сценарій гри: Грегор прокидається">
+
+        <!-- Text describing the current scenario -->
+        <p id="scenario-text" class="scenario-text">
+            Одного ранку ви прокинулися і виявили, що перетворилися на величезну комаху. Ваша перша думка: "Я проспав потяг на роботу!" Що робити?
+        </p>
+
+        <!-- Container for choice buttons -->
+        <div id="choices-container" class="choices-container">
+            <!-- Choice buttons will be dynamically inserted here by JavaScript -->
+        </div>
+
+        <!-- Element to display game outcome (win/lose message) -->
+        <p id="game-outcome" class="outcome-text hidden"></p>
+        <!-- Restart button, hidden until game ends -->
+        <button id="restart-btn" class="choice-button restart-button hidden">Почати знову</button>
+    </div>
+
+    <script>
+        // Define game scenarios and their properties (text, image, choices, outcome)
+        const scenarios = {
+            start: {
+                text: "Одного ранку ви прокинулися і виявили, що перетворилися на величезну комаху. Ваша перша думка: 'Я проспав потяг на роботу!' Що робити?",
+                image: "https://placehold.co/800x300/e0f2fe/0c4a6e?text=Ранок+Грегора",
+                choices: [
+                    { text: "Спробувати встати з ліжка і піти на роботу, незважаючи ні на що.", next: "try_to_work" },
+                    { text: "Залишитися в ліжку, намагаючись зрозуміти, що сталося.", next: "stay_in_bed" }
+                ]
+            },
+            try_to_work: {
+                text: "Ви намагаєтеся встати, але ваше нове тіло не слухається. З кімнати лунають дивні звуки. Батьки та сестра стукають у двері, стурбовані вашою відсутністю.",
+                image: "https://placehold.co/800x300/ffecb3/e65100?text=Спроба+встати",
+                choices: [
+                    { text: "Насилу відкрити двері, щоб показати себе.", next: "open_door_initial" },
+                    { text: "Сховатися під ліжком, сподіваючись, що вони підуть.", next: "hide_under_bed_fail" } // Leads to a game over
+                ]
+            },
+            stay_in_bed: {
+                text: "Ви лежите, намагаючись осмислити ситуацію. Час іде. З-за дверей чути стурбовані голоси родини та начальника, який прийшов перевірити, чому ви не на роботі.",
+                image: "https://placehold.co/800x300/bbdefb/1a237e?text=Роздуми+в+ліжку",
+                choices: [
+                    { text: "Спробувати відповісти, незважаючи на дивний голос.", next: "try_to_speak_fail" },
+                    { text: "Мовчати, сподіваючись, що вони подумають, що ви захворіли.", next: "remain_silent_forced_reveal" } // Leads to a game over
+                ]
+            },
+            open_door_initial: {
+                text: "Ви насилу відкриваєте двері. Ваша сім'я та начальник бачать вас. Їхні обличчя спотворюються жахом і відразою. Начальник тікає, батько хапає палицю.",
+                image: "https://placehold.co/800x300/ffcdd2/b71c1c?text=Шок+сім'ї",
+                choices: [
+                    { text: "Намагатися пояснити, що це все ще ви (хоча й марно).", next: "try_to_explain_failed" },
+                    { text: "Відступити назад у кімнату, розуміючи їхній жах.", next: "father_aggression" }
+                ]
+            },
+            hide_under_bed_fail: {
+                text: "Ви ховаєтеся під ліжком. Сім'я вривається в кімнату, бачить безлад і розуміє, що щось не так. Вони починають шукати вас, їхні голоси сповнені страху та роздратування.",
+                image: "https://placehold.co/800x300/fbe9e7/bf360c?text=Схованка+під+ліжком",
+                outcome: "game_over",
+                outcomeText: "Поразка. Ваша спроба сховатися лише посилила страх і нерозуміння. Сім'я починає вас ненавидіти."
+            },
+            try_to_speak_fail: {
+                text: "Ви намагаєтеся відповісти, але з вашого рота виходить лише жахливий писк. Начальник, почувши це, тікає. Батько починає нервово бити кулаком по дверях.",
+                image: "https://placehold.co/800x300/ffcdd2/b71c1c?text=Незрозумілий+голос",
+                choices: [
+                    { text: "Відкрити двері, щоб показати себе, незважаючи на страх.", next: "open_door_initial" }, // Leads back to initial reveal
+                    { text: "Залишитися за дверима, усвідомлюючи неможливість спілкування.", next: "remain_silent_forced_reveal" } // Leads to a game over
+                ]
+            },
+            remain_silent_forced_reveal: {
+                text: "Ви мовчите. Начальник, роздратований вашою відсутністю, погрожує звільненням. Батько вибиває двері. Вони бачать вас.",
+                image: "https://placehold.co/800x300/ffcdd2/b71c1c?text=Вибиті+двері",
+                outcome: "game_over",
+                outcomeText: "Поразка. Мовчання не врятувало вас від зіткнення з реальністю. Сім'я шокована, начальник розгніваний."
+            },
+            try_to_explain_failed: {
+                text: "Ви намагаєтеся пояснити, але ваші рухи та звуки лише посилюють їхній жах. Сестра, Грета, єдина, хто ще намагається вас зрозуміти, але її обличчя сповнене болю. Батько змушує вас відступити назад.",
+                image: "https://placehold.co/800x300/e0f7fa/006064?text=Спроба+пояснити",
+                outcome: "game_over",
+                outcomeText: "Поразка. Ваші спроби пояснити лише посилили жах. Ви зачинені у своїй кімнаті, ізольовані."
+            },
+            father_aggression: {
+                text: "Батько, розлючений і наляканий, штовхає вас назад у кімнату, використовуючи палицю. Двері з гуркотом зачиняються. Ви лежите на підлозі, відчуваючи біль і повну безпорадність.",
+                image: "https://placehold.co/800x300/ff7043/ffffff?text=Батько+штовхає",
+                choices: [
+                    { text: "Прийняти допомогу Грети, коли вона з'явиться.", next: "grete_initial_care" },
+                    { text: "Відмовитися від будь-якої допомоги, прагнучи самотності.", next: "complete_isolation_early" }
+                ]
+            },
+            complete_isolation_early: {
+                text: "Ви відмовляєтеся від будь-якої взаємодії. Сім'я залишає вас на самоті, зачиняючи двері. Ви залишаєтеся в повній ізоляції, голодний і самотній.",
+                image: "https://placehold.co/800x300/ffe0b2/e65100?text=Повна+ізоляція",
+                outcome: "game_over",
+                outcomeText: "Поразка. Ви обрали повну ізоляцію, що призвело до вашого повільного згасання в самотності."
+            },
+            grete_initial_care: {
+                text: "Сестра Грета бере на себе обов'язок доглядати за вами. Вона приносить їжу, прибирає кімнату. Спочатку вона співчутлива, але її обличчя все частіше виражає втому та відразу.",
+                image: "https://placehold.co/800x300/dcedc8/33691e?text=Грета+доглядає",
+                choices: [
+                    { text: "Намагатися бути якомога менш обтяжливим для Грети.", next: "grete_deterioration" },
+                    { text: "Спробувати вийти з кімнати, коли Грети немає.", next: "explore_house_fail" } // Leads to a game over
+                ]
+            },
+            explore_house_fail: {
+                text: "Ви намагаєтеся вийти з кімнати, але двері міцно замкнені. Ваші спроби привертають увагу батька, який ще більше замикає вас.",
+                image: "https://placehold.co/800x300/ffcdd2/b71c1c?text=Замкнені+двері",
+                outcome: "game_over",
+                outcomeText: "Поразка. Ваша спроба втекти призвела лише до посилення ув'язнення."
+            },
+            grete_deterioration: {
+                text: "З часом Грета все більше втомлюється. Її відвідування стають рідшими, їжа – менш привабливою. Вона вже не приховує своєї відрази. Сім'я починає обговорювати ваше майбутнє.",
+                image: "https://placehold.co/800x300/c5cae9/3f51b5?text=Грета+втомилася",
+                choices: [
+                    { text: "Спробувати показати свою людяність, наприклад, слухаючи музику.", next: "music_incident" },
+                    { text: "Повністю відмовитися від їжі та спілкування, згасаючи.", next: "starve_and_isolate" } // Leads to victory (death)
+                ]
+            },
+            music_incident: {
+                text: "Ви чуєте, як Грета грає на скрипці для квартирантів. Музика зворушує вас, і ви, незважаючи на страх, виповзаєте з кімнати. Квартиранти бачать вас і жахаються.",
+                image: "https://placehold.co/800x300/ffccbc/795548?text=Музика+і+жах",
+                choices: [
+                    { text: "Спробувати сховатися, щоб не викликати подальшого жаху.", next: "lodgers_flee" },
+                    { text: "Залишитися на місці, сподіваючись на розуміння.", next: "lodgers_flee" } // Both lead to lodgers fleeing
+                ]
+            },
+            lodgers_flee: {
+                text: "Квартиранти, обурені та налякані, негайно заявляють, що виселяються. Сім'я в розпачі. Грета заявляє, що так більше не може тривати.",
+                image: "https://placehold.co/800x300/f8bbd0/ad1457?text=Квартиранти+тікають",
+                choices: [
+                    { text: "Прийняти свою долю і дозволити подіям йти своїм ходом.", next: "final_decline" },
+                    { text: "Спробувати втекти з дому (безнадійно).", next: "escape_attempt_fail" } // Leads to a game over
+                ]
+            },
+            escape_attempt_fail: {
+                text: "Ваша спроба втекти з дому виявляється марною. Ви занадто слабкі та незграбні. Сім'я знаходить вас виснаженим.",
+                image: "https://placehold.co/800x300/ffcdd2/b71c1c?text=Невдала+втеча",
+                outcome: "game_over",
+                outcomeText: "Поразка. Ваша втеча була приречена на провал. Ви лише прискорили свою загибель."
+            },
+            final_decline: {
+                text: "Після інциденту з квартирантами ваша сім'я остаточно відмовляється від вас. Ви перестаєте їсти, лежите нерухомо. Одного ранку служниця знаходить вас мертвим. Сім'я відчуває величезне полегшення.",
+                image: "https://placehold.co/800x300/90a4ae/263238?text=Останні+дні",
+                outcome: "victory", // This is a "victory" in the sense of Gregor's release from suffering
+                outcomeText: "Перемога (звільнення). Ви померли, звільнившись від страждань і тягаря для сім'ї. Сім'я відчуває полегшення і починає нове життя."
+            },
+            starve_and_isolate: {
+                text: "Ви відмовляєтеся від їжі, лежите нерухомо. Сім'я, бачачи вашу апатію, починає відчувати полегшення від вашої відсутності. Одного ранку вас знаходять мертвим.",
+                image: "https://placehold.co/800x300/cfd8dc/37474f?text=Згасання+Грегора",
+                outcome: "victory", // This is a "victory" in the sense of Gregor's release from suffering
+                outcomeText: "Перемога (звільнення). Ви померли, звільнившись від страждань і тягаря для сім'ї. Сім'я відчуває полегшення і починає нове життя."
+            }
+        };
+
+        // Get DOM elements
+        const scenarioTextElement = document.getElementById('scenario-text');
+        const scenarioImageElement = document.getElementById('scenario-img');
+        const choicesContainer = document.getElementById('choices-container');
+        const gameOutcomeElement = document.getElementById('game-outcome');
+        const restartButton = document.getElementById('restart-btn');
+
+        let currentScenario = 'start'; // Initialize game with the 'start' scenario
+
+        /**
+         * Renders the current game scenario on the screen.
+         * @param {string} scenarioKey - The key of the scenario to render.
+         */
+        function renderScenario(scenarioKey) {
+            const scenario = scenarios[scenarioKey];
+            if (!scenario) {
+                console.error("Scenario not found:", scenarioKey);
+                // Fallback to a default error message or restart
+                scenarioTextElement.textContent = "Помилка: Сценарій не знайдено. Будь ласка, перезапустіть гру.";
+                scenarioImageElement.src = "https://placehold.co/800x300/ff0000/ffffff?text=Помилка";
+                choicesContainer.innerHTML = '';
+                gameOutcomeElement.classList.remove('hidden');
+                gameOutcomeElement.textContent = "Виникла непередбачена помилка.";
+                gameOutcomeElement.classList.add('game-over-text');
+                restartButton.classList.remove('hidden');
+                return;
+            }
+
+            scenarioTextElement.textContent = scenario.text;
+            scenarioImageElement.src = scenario.image;
+            scenarioImageElement.alt = `Сценарій: ${scenario.text.substring(0, Math.min(scenario.text.length, 50))}...`; // Dynamic alt text, limited to 50 chars for brevity
+
+            choicesContainer.innerHTML = ''; // Clear previous choices
+            gameOutcomeElement.classList.add('hidden'); // Hide outcome text
+            restartButton.classList.add('hidden'); // Hide restart button
+
+            // If the scenario has an outcome (game over or victory), display it
+            if (scenario.outcome) {
+                gameOutcomeElement.textContent = scenario.outcomeText;
+                gameOutcomeElement.classList.remove('hidden');
+                restartButton.classList.remove('hidden');
+                // Apply specific styling for game over or victory
+                if (scenario.outcome === 'game_over') {
+                    gameOutcomeElement.classList.add('game-over-text');
+                    gameOutcomeElement.classList.remove('victory-text');
+                } else if (scenario.outcome === 'victory') {
+                    gameOutcomeElement.classList.add('victory-text');
+                    gameOutcomeElement.classList.remove('game-over-text');
+                }
+                return; // Stop here, no choices needed for end scenarios
+            }
+
+            // Create buttons for each choice in the current scenario
+            scenario.choices.forEach(choice => {
+                const button = document.createElement('button');
+                button.textContent = choice.text;
+                button.classList.add('choice-button');
+                button.addEventListener('click', () => {
+                    currentScenario = choice.next; // Update current scenario
+                    renderScenario(currentScenario); // Render the next scenario
+                });
+                choicesContainer.appendChild(button);
+            });
+        }
+
+        /**
+         * Resets the game to the initial state.
+         */
+        function restartGame() {
+            currentScenario = 'start';
+            renderScenario(currentScenario);
+        }
+
+        // Add event listener to the restart button
+        restartButton.addEventListener('click', restartGame);
+
+        // Initial render when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            renderScenario(currentScenario);
+        });
+    </script>
+</body>
+</html>

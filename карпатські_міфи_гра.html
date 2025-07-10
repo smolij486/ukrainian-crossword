@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Карпатські Міфи: Вгадай Істоту</title>
+    <!-- Tailwind CSS CDN for modern styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom CSS for game aesthetics and responsiveness */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5; /* Light gray background */
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Align to top for better content flow */
+            min-height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .game-container {
+            background-color: #ffffff;
+            border-radius: 15px; /* Rounded corners for the main container */
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); /* Soft shadow for depth */
+            padding: 30px;
+            max-width: 800px; /* Max width for readability */
+            width: 100%;
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .scenario-image {
+            width: 100%;
+            max-height: 300px;
+            object-fit: cover; /* Ensures image covers the area without distortion */
+            border-radius: 10px; /* Rounded corners for images */
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1); /* Subtle shadow for images */
+        }
+        .scenario-text {
+            font-size: 1.15rem; /* text-lg equivalent */
+            line-height: 1.6; /* Improved readability */
+            text-align: center;
+            margin-bottom: 25px;
+            color: #374151; /* Dark gray text for contrast */
+            font-style: italic; /* Make the scenario text italic */
+        }
+        .choices-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px; /* Space between choice buttons */
+            width: 100%;
+        }
+        .choice-button {
+            background-color: #4f46e5; /* Indigo-600 for primary actions */
+            color: white;
+            padding: 14px 20px;
+            border-radius: 10px; /* Rounded buttons */
+            font-size: 1.05rem; /* text-lg equivalent */
+            font-weight: 600; /* font-semibold */
+            cursor: pointer;
+            border: none;
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease; /* Smooth transitions for interactivity */
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3); /* Button shadow */
+        }
+        .choice-button:hover {
+            background-color: #4338ca; /* Darker indigo on hover */
+            transform: translateY(-2px); /* Slight lift effect on hover */
+            box-shadow: 0 6px 15px rgba(79, 70, 229, 0.4); /* Enhanced shadow on hover */
+        }
+        .choice-button:active {
+            transform: translateY(0); /* Press-down effect on click */
+            box-shadow: 0 2px 5px rgba(79, 70, 229, 0.2); /* Reduced shadow on active */
+        }
+        .feedback-area {
+            margin-top: 25px;
+            padding: 20px;
+            border-radius: 10px;
+            width: 100%;
+            text-align: center;
+            font-size: 1rem;
+            line-height: 1.5;
+            display: none; /* Hidden by default */
+        }
+        .feedback-area.correct {
+            background-color: #d1fae5; /* green-100 */
+            border: 1px solid #34d399; /* green-400 */
+            color: #16a34a; /* green-700 */
+        }
+        .feedback-area.incorrect {
+            background-color: #fee2e2; /* red-100 */
+            border: 1px solid #ef4444; /* red-500 */
+            color: #dc2626; /* red-600 */
+        }
+        .next-button, .restart-button {
+            background-color: #10b981; /* emerald-500 */
+            color: white;
+            padding: 12px 25px;
+            border-radius: 10px;
+            font-size: 1.05rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            margin-top: 20px;
+            box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);
+            display: none; /* Hidden by default */
+        }
+        .next-button:hover, .restart-button:hover {
+            background-color: #059669; /* emerald-600 */
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(16, 185, 129, 0.4);
+        }
+        .restart-button.final {
+            background-color: #ef4444; /* red-500 */
+            box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3);
+        }
+        .restart-button.final:hover {
+            background-color: #dc2626; /* red-600 */
+            box-shadow: 0 6px 15px rgba(239, 68, 68, 0.4);
+        }
+
+        /* Responsive adjustments for smaller screens */
+        @media (max-width: 640px) {
+            .game-container {
+                padding: 20px;
+            }
+            .scenario-text {
+                font-size: 1rem;
+            }
+            .choice-button {
+                font-size: 0.95rem;
+                padding: 12px 15px;
+            }
+            .feedback-area {
+                font-size: 0.9rem;
+            }
+            .next-button, .restart-button {
+                font-size: 1rem;
+                padding: 10px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1 class="text-3xl md:text-4xl font-bold text-center mb-8 text-gray-800">Карпатські Міфи: Вгадай Істоту</h1>
+        <p class="text-center text-gray-600 mb-6">Прочитайте опис і вгадайте, про яку містичну істоту йдеться.</p>
+
+        <!-- Image for the current scenario (placeholder) -->
+        <img id="scenario-img" class="scenario-image" src="https://placehold.co/800x300/e0f2fe/0c4a6e?text=Загадка+Карпат" alt="Загадка Карпат">
+
+        <!-- Text describing the current scenario/creature -->
+        <p id="scenario-text" class="scenario-text">
+            Ви чуєте дивний шепіт з глибини лісу, що збиває вас зі шляху, а дерева навколо, здається, рухаються. Хто це може бути?
+        </p>
+
+        <!-- Container for choice buttons (mythical creatures) -->
+        <div id="choices-container" class="choices-container">
+            <!-- Choice buttons will be dynamically inserted here by JavaScript -->
+        </div>
+
+        <!-- Feedback area for correct/incorrect answers and explanations -->
+        <div id="feedback-area" class="feedback-area">
+            <!-- Feedback text will be displayed here -->
+        </div>
+
+        <!-- Buttons for navigating between cases or restarting -->
+        <button id="next-button" class="next-button">Наступна загадка</button>
+        <button id="restart-button" class="restart-button final">Почати знову</button>
+    </div>
+
+    <script>
+        // Data for each mythical creature scenario
+        const mythicalCreaturesData = [
+            {
+                scenario: "Ви чуєте дивний шепіт з глибини лісу, що збиває вас зі шляху, а дерева навколо, здається, рухаються. Хто це може бути?",
+                image: "https://placehold.co/800x300/a7f3d0/059669?text=Лісовик",
+                options: [
+                    { text: "Нявка", isCorrect: false },
+                    { text: "Лісовик", isCorrect: true },
+                    { text: "Чугайстер", isCorrect: false },
+                    { text: "Водяник", isCorrect: false }
+                ],
+                explanation: "Це **Лісовик** – дух лісу, який може збивати з пантелику мандрівників, змінювати вигляд дерев та створювати ілюзії. Він є господарем лісу і вимагає поваги."
+            },
+            {
+                scenario: "Біля річки з'являється прекрасна дівчина з довгим волоссям, її очі сповнені туги. Вона кличе вас до себе, і ви відчуваєте непереборне бажання піти за нею у воду.",
+                image: "https://placehold.co/800x300/fbcfe8/be185d?text=Нявка",
+                options: [
+                    { text: "Мавка", isCorrect: false },
+                    { text: "Русалка Польова", isCorrect: false },
+                    { text: "Нявка", isCorrect: true },
+                    { text: "Відьма", isCorrect: false }
+                ],
+                explanation: "Це **Нявка** – дух померлої дівчини, яка загинула неприродною смертю, часто у воді. Вона приваблює чоловіків своєю красою і може затягнути їх у вир."
+            },
+            {
+                scenario: "Ви бачите високого, волохатого чоловіка, що танцює у лісі, наспівуючи пісню. Він здається доброзичливим і пропонує вам приєднатися до танцю, а потім відганяє злих духів.",
+                image: "https://placehold.co/800x300/a5d6a7/2e7d32?text=Чугайстер",
+                options: [
+                    { text: "Щезник", isCorrect: false },
+                    { text: "Лісовик", isCorrect: false },
+                    { text: "Чугайстер", isCorrect: true },
+                    { text: "Домовик", isCorrect: false }
+                ],
+                explanation: "Це **Чугайстер** – добрий лісовий дух, який є захисником людей від нявок. Він любить танцювати і може затанцювати нявку до смерті."
+            },
+            {
+                scenario: "Ви йдете знайомою стежкою, але раптом все навколо стає дивним, ви губитеся, а в голові чуєте зловісний сміх, що зводить з розуму. Ваші думки плутаються.",
+                image: "https://placehold.co/800x300/fecaca/dc2626?text=Щезник",
+                options: [
+                    { text: "Лісовик", isCorrect: false },
+                    { text: "Водяник", isCorrect: false },
+                    { text: "Щезник", isCorrect: true },
+                    { text: "Перелесник", isCorrect: false }
+                ],
+                explanation: "Це **Щезник** – злий дух, що може збивати людей зі шляху, плутати їхні думки і навіть зводити з розуму своїм зловісним сміхом."
+            },
+            {
+                scenario: "Над глибоким виром у річці з'являється старий чоловік з довгою бородою. Вода навколо нього спокійна, але ви відчуваєте його владу над стихією і розумієте, що він є господарем вод.",
+                image: "https://placehold.co/800x300/bbdefb/1a237e?text=Водяник",
+                options: [
+                    { text: "Лісовик", isCorrect: false },
+                    { text: "Водяник", isCorrect: true },
+                    { text: "Русалка", isCorrect: false },
+                    { text: "Вовкулака", isCorrect: false }
+                ],
+                explanation: "Це **Водяник** – господар водних просторів, озер, річок та боліт. Він може бути як спокійним, так і небезпечним, залежно від ставлення до нього."
+            }
+        ];
+
+        let currentScenarioIndex = 0; // Start with the first scenario
+
+        // Get DOM elements
+        const scenarioImgElem = document.getElementById('scenario-img');
+        const scenarioTextElem = document.getElementById('scenario-text');
+        const choicesContainerElem = document.getElementById('choices-container');
+        const feedbackArea = document.getElementById('feedback-area');
+        const nextButton = document.getElementById('next-button');
+        const restartButton = document.getElementById('restart-button');
+
+        /**
+         * Renders the current mythical creature scenario.
+         * @param {number} index - The index of the scenario to render.
+         */
+        function renderScenario(index) {
+            currentScenarioIndex = index;
+            const scenarioData = mythicalCreaturesData[index];
+
+            if (!scenarioData) {
+                displayFinalMessage();
+                return;
+            }
+
+            // Reset UI for a new scenario
+            feedbackArea.style.display = 'none';
+            feedbackArea.classList.remove('correct', 'incorrect');
+            nextButton.style.display = 'none';
+            restartButton.style.display = 'none';
+            choicesContainerElem.innerHTML = ''; // Clear previous choices
+
+            scenarioImgElem.src = scenarioData.image;
+            scenarioImgElem.alt = scenarioData.scenario.substring(0, Math.min(scenarioData.scenario.length, 50)) + "...";
+            scenarioTextElem.textContent = scenarioData.scenario;
+
+            // Create choice buttons
+            scenarioData.options.forEach((option, optIndex) => {
+                const button = document.createElement('button');
+                button.textContent = option.text;
+                button.classList.add('choice-button');
+                button.addEventListener('click', () => handleChoice(button, option.isCorrect, scenarioData.explanation));
+                choicesContainerElem.appendChild(button);
+            });
+        }
+
+        /**
+         * Handles user's choice, provides feedback, and enables next/restart buttons.
+         * @param {HTMLElement} clickedButton - The button element that was clicked.
+         * @param {boolean} isCorrect - True if the selected choice is correct.
+         * @param {string} explanation - The explanation for the answer.
+         */
+        function handleChoice(clickedButton, isCorrect, explanation) {
+            // Disable all choice buttons after a selection
+            Array.from(choicesContainerElem.children).forEach(button => {
+                button.disabled = true;
+                button.style.opacity = '0.7'; // Visual feedback for disabled
+            });
+
+            // Highlight selected button and provide feedback
+            clickedButton.style.backgroundColor = isCorrect ? '#10b981' : '#ef4444'; // Green for correct, red for incorrect
+            clickedButton.style.boxShadow = '0 6px 15px rgba(0, 0, 0, 0.2)';
+            clickedButton.style.transform = 'translateY(-2px)';
+
+            feedbackArea.textContent = explanation;
+            feedbackArea.classList.add(isCorrect ? 'correct' : 'incorrect');
+            feedbackArea.style.display = 'block';
+
+            // Show next scenario or restart button
+            if (currentScenarioIndex < mythicalCreaturesData.length - 1) {
+                nextButton.style.display = 'block';
+            } else {
+                restartButton.style.display = 'block'; // Show restart button at the end
+                restartButton.classList.add('final'); // Add specific styling for final restart
+            }
+        }
+
+        /**
+         * Moves to the next scenario.
+         */
+        function goToNextScenario() {
+            renderScenario(currentScenarioIndex + 1);
+        }
+
+        /**
+         * Restarts the game from the beginning.
+         */
+        function restartGame() {
+            renderScenario(0);
+        }
+
+        /**
+         * Displays a final message when all scenarios are completed.
+         */
+        function displayFinalMessage() {
+            scenarioImgElem.src = "https://placehold.co/800x300/a5d6a7/1b5e20?text=Вітаємо!+Ви+пройшли+гру!";
+            scenarioImgElem.alt = "Гра завершена";
+            scenarioTextElem.textContent = "Вітаємо, знавцю Карпатських міфів! Ви успішно розгадали всі загадки. Ваші знання вражають!";
+            choicesContainerElem.innerHTML = ''; // Clear choices
+            feedbackArea.style.display = 'none';
+            nextButton.style.display = 'none';
+            restartButton.style.display = 'block'; // Show restart button
+            restartButton.classList.add('final');
+        }
+
+        // Add event listeners to navigation buttons
+        nextButton.addEventListener('click', goToNextScenario);
+        restartButton.addEventListener('click', restartGame);
+
+        // Initial render when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            renderScenario(0);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Правда чи міф?</title>
+    <!-- Tailwind CSS CDN for modern styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom CSS for game aesthetics and responsiveness */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5; /* Light gray background */
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Align to top for better content flow */
+            min-height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .game-container {
+            background-color: #ffffff;
+            border-radius: 15px; /* Rounded corners for the main container */
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); /* Soft shadow for depth */
+            padding: 30px;
+            max-width: 800px; /* Max width for readability */
+            width: 100%;
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .question-card {
+            background-color: #f9fafb;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #e5e7eb;
+            width: 100%;
+        }
+        .question-text {
+            font-size: 1.15rem; /* text-lg equivalent */
+            line-height: 1.6; /* Improved readability */
+            text-align: center;
+            margin-bottom: 20px;
+            color: #374151; /* Dark gray text for contrast */
+            font-weight: 500;
+        }
+        .choices-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px; /* Space between choice buttons */
+            width: 100%;
+        }
+        .choice-button {
+            background-color: #4f46e5; /* Indigo-600 for primary actions */
+            color: white;
+            padding: 14px 25px;
+            border-radius: 10px; /* Rounded buttons */
+            font-size: 1.05rem; /* text-lg equivalent */
+            font-weight: 600; /* font-semibold */
+            cursor: pointer;
+            border: none;
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease; /* Smooth transitions for interactivity */
+            flex: 1; /* Make buttons take equal width */
+            max-width: 180px; /* Limit max width for buttons */
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3); /* Button shadow */
+        }
+        .choice-button:hover {
+            background-color: #4338ca; /* Darker indigo on hover */
+            transform: translateY(-2px); /* Slight lift effect on hover */
+            box-shadow: 0 6px 15px rgba(79, 70, 229, 0.4); /* Enhanced shadow on hover */
+        }
+        .choice-button:active {
+            transform: translateY(0); /* Press-down effect on click */
+            box-shadow: 0 2px 5px rgba(79, 70, 229, 0.2); /* Reduced shadow on active */
+        }
+        .feedback-area {
+            margin-top: 25px;
+            padding: 20px;
+            border-radius: 10px;
+            width: 100%;
+            text-align: center;
+            font-size: 1rem;
+            line-height: 1.5;
+            display: none; /* Hidden by default */
+        }
+        .feedback-area.correct {
+            background-color: #d1fae5; /* green-100 */
+            border: 1px solid #34d399; /* green-400 */
+            color: #16a34a; /* green-700 */
+        }
+        .feedback-area.incorrect {
+            background-color: #fee2e2; /* red-100 */
+            border: 1px solid #ef4444; /* red-500 */
+            color: #dc2626; /* red-600 */
+        }
+        .next-button, .restart-button {
+            background-color: #10b981; /* emerald-500 */
+            color: white;
+            padding: 12px 25px;
+            border-radius: 10px;
+            font-size: 1.05rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            margin-top: 20px;
+            box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);
+            display: none; /* Hidden by default */
+        }
+        .next-button:hover, .restart-button:hover {
+            background-color: #059669; /* emerald-600 */
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(16, 185, 129, 0.4);
+        }
+        .restart-button.final {
+            background-color: #ef4444; /* red-500 */
+            box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3);
+        }
+        .restart-button.final:hover {
+            background-color: #dc2626; /* red-600 */
+            box-shadow: 0 6px 15px rgba(239, 68, 68, 0.4);
+        }
+        .final-score {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #1a237e;
+            margin-top: 20px;
+        }
+
+        /* Responsive adjustments for smaller screens */
+        @media (max-width: 640px) {
+            .game-container {
+                padding: 20px;
+            }
+            .question-text {
+                font-size: 1rem;
+            }
+            .choices-container {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .choice-button {
+                font-size: 0.95rem;
+                padding: 12px 15px;
+                max-width: none; /* Allow full width on small screens */
+            }
+            .feedback-area {
+                font-size: 0.9rem;
+            }
+            .next-button, .restart-button {
+                font-size: 1rem;
+                padding: 10px 20px;
+            }
+            .final-score {
+                font-size: 1.25rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1 class="text-3xl md:text-4xl font-bold text-center mb-8 text-gray-800">Правда чи міф?</h1>
+        <p class="text-center text-gray-600 mb-6">Визначте, чи є твердження правдою, чи міфом, ґрунтуючись на повісті.</p>
+
+        <div id="question-card" class="question-card">
+            <!-- Question text will be inserted here -->
+            <p id="question-text" class="question-text"></p>
+            <div id="choices-container" class="choices-container">
+                <button id="true-button" class="choice-button">Правда</button>
+                <button id="false-button" class="choice-button">Міф</button>
+            </div>
+        </div>
+
+        <!-- Feedback area for correct/incorrect answers and explanations -->
+        <div id="feedback-area" class="feedback-area">
+            <!-- Feedback text will be displayed here -->
+        </div>
+
+        <!-- Buttons for navigating between questions or restarting -->
+        <button id="next-button" class="next-button">Наступне питання</button>
+        <button id="restart-button" class="restart-button final">Почати знову</button>
+        <p id="final-score" class="final-score hidden"></p>
+    </div>
+
+    <script>
+        // Data for each true/false question
+        const quizData = [
+            {
+                question: "Івоніка та Марійка завжди мріяли, щоб їхні сини стали освіченими людьми, а не хліборобами.",
+                correctAnswer: false,
+                explanation: "Міф. Івоніка та Марійка, як типові селяни, понад усе цінували землю і прагнули, щоб їхні сини продовжували господарювати на ній. Вони бачили майбутнє своїх синів саме як хліборобів."
+            },
+            {
+                question: "Михайло був повністю вільний у виборі свого кохання і ніколи не відчував тиску від родини.",
+                correctAnswer: false,
+                explanation: "Міф. Михайло кохав Анну, але його родина, особливо мати Марійка, не схвалювала цей вибір через бідність Анни. Він відчував сильний тиск і внутрішній конфлікт між почуттями та очікуваннями родини."
+            },
+            {
+                question: "Сава вбив Михайла виключно через свою жорстокість і без будь-яких мотивів, пов'язаних із землею.",
+                correctAnswer: false,
+                explanation: "Міф. Хоча Сава був жорстоким, основним мотивом вбивства Михайла була заздрість та прагнення заволодіти землею, яка мала перейти до старшого брата. Це був конфлікт за спадок."
+            },
+            {
+                question: "Анна після смерті Михайла повністю змирилася зі своєю долею і не боролася за своїх дітей.",
+                correctAnswer: false,
+                explanation: "Міф. Анна, попри трагедію, виявила незламну силу духу. Вона боролася за своїх дітей, відстоюючи їхнє право на спадок та гідність, навіть протистоячи родині Федорчуків."
+            },
+            {
+                question: "Земля у повісті є лише фоном для подій і не має символічного значення.",
+                correctAnswer: false,
+                explanation: "Міф. Земля є центральним символом повісті. Вона уособлює життя, працю, достаток, але водночас є джерелом конфліктів, жадібності та навіть смерті. Це символ, що керує долями героїв."
+            },
+            {
+                question: "Ольга Кобилянська у 'Землі' піднімала теми жіночої емансипації, що було характерно для європейського модернізму.",
+                correctAnswer: true,
+                explanation: "Правда. Кобилянська, як одна з перших українських модерністок та феміністок, через образи жіночих персонажів (зокрема Анни та Марійки) розкривала теми боротьби за гідність, право на власний вибір та самореалізацію, що було співзвучно з ідеями жіночої емансипації в європейській літературі того часу."
+            },
+            {
+                question: "Конфлікт між Михайлом і Савою був спричинений виключно особистою неприязню, а не впливом родини.",
+                correctAnswer: false,
+                explanation: "Міф. Хоча особиста неприязнь була, конфлікт між братами значною мірою був підживлений тиском родини, особливо матері Марійки, та боротьбою за землю, яка була джерелом багатства та статусу."
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+
+        // Get DOM elements globally
+        const questionTextElem = document.getElementById('question-text');
+        const trueButton = document.getElementById('true-button');
+        const falseButton = document.getElementById('false-button');
+        const feedbackArea = document.getElementById('feedback-area');
+        const nextButton = document.getElementById('next-button');
+        const restartButton = document.getElementById('restart-button');
+        const finalScoreElem = document.getElementById('final-score');
+        const choicesContainer = document.getElementById('choices-container'); // Global declaration
+
+        /**
+         * Renders the current quiz question.
+         * @param {number} index - The index of the question to render.
+         */
+        function renderQuestion(index) {
+            currentQuestionIndex = index;
+            const questionData = quizData[index];
+
+            if (!questionData) {
+                displayFinalResults();
+                return;
+            }
+
+            // Reset UI for a new question
+            questionTextElem.textContent = questionData.question;
+            feedbackArea.style.display = 'none';
+            feedbackArea.classList.remove('correct', 'incorrect');
+            nextButton.style.display = 'none';
+            restartButton.style.display = 'none';
+            finalScoreElem.classList.add('hidden');
+
+            // Enable buttons
+            trueButton.disabled = false;
+            falseButton.disabled = false;
+            trueButton.style.opacity = '1';
+            falseButton.style.opacity = '1';
+            trueButton.style.backgroundColor = '#4f46e5';
+            falseButton.style.backgroundColor = '#4f46e5';
+            trueButton.style.transform = 'translateY(0)';
+            falseButton.style.transform = 'translateY(0)';
+            trueButton.style.boxShadow = '0 4px 10px rgba(79, 70, 229, 0.3)';
+            falseButton.style.boxShadow = '0 4px 10px rgba(79, 70, 229, 0.3)';
+        }
+
+        /**
+         * Handles user's choice, provides feedback, and enables next/restart buttons.
+         * @param {boolean} userChoice - True if user clicked 'Правда', false if 'Міф'.
+         */
+        function handleChoice(userChoice) {
+            const questionData = quizData[currentQuestionIndex];
+            const isCorrect = (userChoice === questionData.correctAnswer);
+
+            // Disable buttons after selection
+            trueButton.disabled = true;
+            falseButton.disabled = true;
+            trueButton.style.opacity = '0.7';
+            falseButton.style.opacity = '0.7';
+
+            // Visual feedback for clicked button
+            if (userChoice) { // If "Правда" was clicked
+                trueButton.style.backgroundColor = isCorrect ? '#10b981' : '#ef4444';
+                trueButton.style.boxShadow = '0 6px 15px rgba(0, 0, 0, 0.2)';
+                trueButton.style.transform = 'translateY(-2px)';
+                if (!isCorrect) { // If "Правда" was chosen but it's incorrect, highlight "Міф" as correct
+                     falseButton.style.backgroundColor = '#10b981';
+                }
+            } else { // If "Міф" was clicked
+                falseButton.style.backgroundColor = isCorrect ? '#10b981' : '#ef4444';
+                falseButton.style.boxShadow = '0 6px 15px rgba(0, 0, 0, 0.2)';
+                falseButton.style.transform = 'translateY(-2px)';
+                if (!isCorrect) { // If "Міф" was chosen but it's incorrect, highlight "Правда" as correct
+                    trueButton.style.backgroundColor = '#10b981';
+                }
+            }
+
+
+            if (isCorrect) {
+                score++;
+                feedbackArea.classList.add('correct');
+                feedbackArea.classList.remove('incorrect');
+                feedbackArea.textContent = `Правильно! ${questionData.explanation}`;
+            } else {
+                feedbackArea.classList.add('incorrect');
+                feedbackArea.classList.remove('correct');
+                feedbackArea.textContent = `Неправильно. ${questionData.explanation}`;
+            }
+            feedbackArea.style.display = 'block';
+
+            // Show next question or restart button
+            if (currentQuestionIndex < quizData.length - 1) {
+                nextButton.style.display = 'block';
+            } else {
+                restartButton.style.display = 'block';
+                restartButton.classList.add('final');
+            }
+        }
+
+        /**
+         * Displays final results at the end of the quiz.
+         */
+        function displayFinalResults() {
+            questionTextElem.textContent = "Вітаємо! Ви пройшли тест.";
+            choicesContainer.style.display = 'none'; // Hide choice buttons
+            feedbackArea.style.display = 'none';
+            nextButton.style.display = 'none';
+            finalScoreElem.textContent = `Ваш рахунок: ${score} з ${quizData.length} правильних відповідей.`;
+            finalScoreElem.classList.remove('hidden');
+            restartButton.style.display = 'block';
+            restartButton.classList.add('final');
+        }
+
+        // Event listeners for choice buttons
+        trueButton.addEventListener('click', () => handleChoice(true));
+        falseButton.addEventListener('click', () => handleChoice(false));
+
+        // Event listener for navigation buttons
+        nextButton.addEventListener('click', () => renderQuestion(currentQuestionIndex + 1));
+        restartButton.addEventListener('click', () => {
+            score = 0;
+            choicesContainer.style.display = 'flex'; // Show choice buttons again
+            renderQuestion(0);
+        });
+
+        // Initial render when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            renderQuestion(0);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Колесо жіночої долі</title>
+    <!-- Tailwind CSS CDN for modern styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom CSS for the wheel infographic aesthetics and responsiveness */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5; /* Light gray background */
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Align to top for better content flow */
+            min-height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .infographic-container {
+            background-color: #ffffff;
+            border-radius: 15px; /* Rounded corners for the main container */
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); /* Soft shadow for depth */
+            padding: 30px;
+            max-width: 900px; /* Max width for readability */
+            width: 100%;
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .wheel-wrapper {
+            position: relative;
+            --wheel-size: 500px; /* Define as CSS variable for responsiveness */
+            width: var(--wheel-size);
+            height: var(--wheel-size);
+            border-radius: 50%;
+            border: 5px solid #4f46e5; /* Indigo border for the wheel */
+            box-shadow: 0 0 20px rgba(79, 70, 229, 0.4);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 30px;
+            overflow: hidden; /* Crucial for clipping rotated segments */
+        }
+        .wheel-center {
+            position: absolute;
+            width: 150px;
+            height: 150px;
+            background-color: #4f46e5; /* Indigo center */
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 1.2rem;
+            font-weight: bold;
+            text-align: center;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+            z-index: 10; /* Ensure it's above segments */
+        }
+        .wheel-segment {
+            position: absolute;
+            width: 100%; /* Full width of the wheel wrapper */
+            height: 100%; /* Full height of the wheel wrapper */
+            transform-origin: 50% 50%; /* Rotate around the center */
+            /* New clip-path to define a quadrant, which when rotated forms the segment */
+            clip-path: polygon(50% 50%, 100% 50%, 100% 0%, 50% 0%); /* Top-right quadrant */
+            
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden; /* Hide content outside segment shape */
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            color: #374151;
+            font-weight: 600;
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+            border: 1px solid rgba(0, 0, 0, 0.1); /* Subtle border between segments */
+        }
+        .wheel-segment:hover {
+            transform: scale(1.03) rotate(var(--initial-rotate)); /* Apply scale and keep initial rotation */
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+            z-index: 5; /* Bring hovered segment slightly forward */
+        }
+        .segment-content {
+            position: absolute;
+            /* Adjust positioning to push content outwards from the center of the wheel */
+            top: 25%; /* Move content towards the top of the segment's bounding box */
+            left: 75%; /* Move content towards the right of the segment's bounding box */
+            transform: translate(-50%, -50%) rotate(var(--rotate-back)); /* Center content and counter-rotate */
+            width: 80%; /* Adjust content width within segment */
+            font-size: 0.9rem;
+            line-height: 1.3;
+            display: flex; /* Use flexbox for image and text alignment */
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .segment-image {
+            width: 60px; /* Smaller image for better fit */
+            height: 60px;
+            object-fit: cover;
+            border-radius: 50%;
+            margin-bottom: 8px; /* Reduced margin */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        .segment-content p {
+            font-size: 0.85rem; /* Smaller font for segment text */
+            line-height: 1.2;
+        }
+
+
+        /* Specific segment styling */
+        .segment-1 { background-color: #ffe0b2; transform: rotate(0deg); --initial-rotate: 0deg; --rotate-back: 0deg; }
+        .segment-2 { background-color: #ffccbc; transform: rotate(45deg); --initial-rotate: 45deg; --rotate-back: -45deg; }
+        .segment-3 { background-color: #d1fae5; transform: rotate(90deg); --initial-rotate: 90deg; --rotate-back: -90deg; }
+        .segment-4 { background-color: #bbdefb; transform: rotate(135deg); --initial-rotate: 135deg; --rotate-back: -135deg; }
+        .segment-5 { background-color: #e1bee7; transform: rotate(180deg); --initial-rotate: 180deg; --rotate-back: -180deg; }
+        .segment-6 { background-color: #c5cae9; transform: rotate(225deg); --initial-rotate: 225deg; --rotate-back: -225deg; }
+        .segment-7 { background-color: #fff3e0; transform: rotate(270deg); --initial-rotate: 270deg; --rotate-back: -270deg; }
+        .segment-8 { background-color: #ffcdd2; transform: rotate(315deg); --initial-rotate: 315deg; --rotate-back: -315deg; }
+
+        /* Modal styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .modal-overlay.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+        .modal-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 600px;
+            width: 90%;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            position: relative;
+            transform: translateY(-20px);
+            opacity: 0;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+        .modal-overlay.visible .modal-content {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        .modal-close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #6b7280;
+            transition: color 0.2s ease;
+        }
+        .modal-close-btn:hover {
+            color: #ef4444;
+        }
+        .modal-title {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #4f46e5;
+            margin-bottom: 15px;
+        }
+        .modal-description {
+            font-size: 1rem;
+            line-height: 1.6;
+            color: #374151;
+            margin-bottom: 20px;
+        }
+        .modal-image {
+            width: 100%;
+            max-height: 200px;
+            object-fit: cover;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+
+        /* Responsive adjustments for smaller screens */
+        @media (max-width: 640px) {
+            .wheel-wrapper {
+                --wheel-size: 320px; /* Smaller wheel on mobile */
+            }
+            .wheel-center {
+                width: 100px;
+                height: 100px;
+                font-size: 1rem;
+            }
+            .segment-content {
+                font-size: 0.75rem;
+                /* Adjust positioning for smaller screens */
+                top: 20%;
+                left: 70%;
+            }
+            .segment-image {
+                width: 50px; /* Even smaller image for mobile */
+                height: 50px;
+            }
+            .segment-content p {
+                font-size: 0.7rem; /* Even smaller font for segment text on mobile */
+            }
+            .modal-title {
+                font-size: 1.5rem;
+            }
+            .modal-description {
+                font-size: 0.9rem;
+            }
+            .modal-content {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="infographic-container">
+        <h1 class="text-3xl md:text-4xl font-bold text-center mb-8 text-gray-800">Колесо жіночої долі</h1>
+        <p class="text-center text-gray-600 mb-6">Натисніть на кожен сектор колеса, щоб дізнатися більше про аспекти жіночої долі у повісті Ольги Кобилянської "Земля".</p>
+
+        <div class="wheel-wrapper">
+            <div class="wheel-center">
+                Жіноча Доля у "Землі"
+            </div>
+
+            <!-- Segments of the wheel -->
+            <div class="wheel-segment segment-1" data-segment="1">
+                <div class="segment-content">
+                    <img class="segment-image" src="https://placehold.co/80x80/ffe0b2/e65100?text=Тягар" alt="Тягар землі">
+                    <p>Земля як тягар</p>
+                </div>
+            </div>
+            <div class="wheel-segment segment-2" data-segment="2">
+                <div class="segment-content">
+                    <img class="segment-image" src="https://placehold.co/80x80/ffccbc/795548?text=Кохання" alt="Кохання vs. Розрахунок">
+                    <p>Кохання vs. Розрахунок</p>
+                </div>
+            </div>
+            <div class="wheel-segment segment-3" data-segment="3">
+                <div class="segment-content">
+                    <img class="segment-image" src="https://placehold.co/80x80/d1fae5/16a34a?text=Біль" alt="Материнський біль">
+                    <p>Материнський біль</p>
+                </div>
+            </div>
+            <div class="wheel-segment segment-4" data-segment="4">
+                <div class="segment-content">
+                    <img class="segment-image" src="https://placehold.co/80x80/bbdefb/1a237e?text=Гідність" alt="Боротьба за гідність">
+                    <p>Боротьба за гідність</p>
+                </div>
+            </div>
+            <div class="wheel-segment segment-5" data-segment="5">
+                <div class="segment-content">
+                    <img class="segment-image" src="https://placehold.co/80x80/e1bee7/4a148c?text=Вибір" alt="Ціна вибору">
+                    <p>Ціна вибору</p>
+                </div>
+            </div>
+            <div class="wheel-segment segment-6" data-segment="6">
+                <div class="segment-content">
+                    <img class="segment-image" src="https://placehold.co/80x80/c5cae9/3f51b5?text=Родина" alt="Родинні конфлікти">
+                    <p>Родинні конфлікти</p>
+                </div>
+            </div>
+            <div class="wheel-segment segment-7" data-segment="7">
+                <div class="segment-content">
+                    <img class="segment-image" src="https://placehold.co/80x80/fff3e0/e65100?text=Праця" alt="Виснажлива праця">
+                    <p>Виснажлива праця</p>
+                </div>
+            </div>
+            <div class="wheel-segment segment-8" data-segment="8">
+                <div class="segment-content">
+                    <img class="segment-image" src="https://placehold.co/80x80/ffcdd2/b71c1c?text=Свобода" alt="Прагнення свободи">
+                    <p>Прагнення свободи</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for displaying segment details -->
+    <div id="modal-overlay" class="modal-overlay">
+        <div class="modal-content">
+            <button id="modal-close-btn" class="modal-close-btn">&times;</button>
+            <h3 id="modal-title" class="modal-title"></h3>
+            <img id="modal-image" class="modal-image" src="" alt="Зображення">
+            <p id="modal-description" class="modal-description"></p>
+        </div>
+    </div>
+
+    <script>
+        // Data for each segment of the wheel
+        const segmentData = {
+            1: {
+                title: "Земля як тягар",
+                image: "https://placehold.co/600x200/ffe0b2/e65100?text=Тягар+землі",
+                description: "Для багатьох героїв повісті земля є не лише джерелом життя, а й важким тягарем. Вона приковує їх до виснажливої праці, стає причиною конфліктів та обмежує їхні прагнення. Земля диктує їхні долі, часто призводячи до трагічних наслідків."
+            },
+            2: {
+                title: "Кохання vs. Розрахунок",
+                image: "https://placehold.co/600x200/ffccbc/795548?text=Кохання+чи+гроші",
+                description: "Жінкам часто доводиться обирати між почуттями та матеріальним добробутом. Шлюби за розрахунком, нав'язані батьками, стають нормою, що призводить до нещасливих доль та внутрішніх страждань, як це сталося з Анною."
+            },
+            3: {
+                title: "Материнський біль",
+                image: "https://placehold.co/600x200/d1fae5/16a34a?text=Материнське+горе",
+                description: "Образ Марійки Федорчук яскраво демонструє глибину материнського болю. Вона переживає трагедію своїх синів, що руйнує її душу. Її страждання – це універсальний символ горя матері, яка втрачає своїх дітей через жорстокість світу."
+            },
+            4: {
+                title: "Боротьба за гідність",
+                image: "https://placehold.co/600x200/bbdefb/1a237e?text=Боротьба+за+себе",
+                description: "Попри патріархальний тиск та суспільні упередження, жінки у повісті намагаються відстояти свою гідність. Це проявляється у прагненні до справедливості, захисті своїх дітей та відмові підкорятися несправедливим обставинам."
+            },
+            5: {
+                title: "Ціна вибору",
+                image: "https://placehold.co/600x200/e1bee7/4a148c?text=Важкий+вибір",
+                description: "Кожен вибір, який роблять жінки у повісті, має свою ціну. Чи то вибір кохання, чи то підкорення обставинам, чи то боротьба за спадок – усі ці рішення призводять до незворотних наслідків, що формують їхню долю."
+            },
+            6: {
+                title: "Родинні конфлікти",
+                image: "https://placehold.co/600x200/c5cae9/3f51b5?text=Сімейні+драми",
+                description: "Жіночі долі часто стають заручниками родинних чвар та конфліктів, особливо тих, що пов'язані із землею та спадком. Ці конфлікти руйнують стосунки, призводять до трагедій та роз'єднують сім'ї."
+            },
+            7: {
+                title: "Виснажлива праця",
+                image: "https://placehold.co/600x200/fff3e0/e65100?text=Тяжка+праця",
+                description: "Життя селянської жінки у повісті сповнене важкої, виснажливої фізичної праці. Це не лише робота на землі, а й постійні домашні обов'язки, що забирають усі сили та час, залишаючи мало місця для особистих прагнень."
+            },
+            8: {
+                title: "Прагнення свободи",
+                image: "https://placehold.co/600x200/ffcdd2/b71c1c?text=Прагнення+волі",
+                description: "Навіть у найжорстокіших умовах жінки зберігають внутрішнє прагнення до свободи – свободи вибору, свободи від патріархального тиску, свободи бути собою. Це прагнення є рушійною силою для їхньої боротьби."
+            }
+        };
+
+        const modalOverlay = document.getElementById('modal-overlay');
+        const modalTitle = document.getElementById('modal-title');
+        const modalImage = document.getElementById('modal-image');
+        const modalDescription = document.getElementById('modal-description');
+        const modalCloseBtn = document.getElementById('modal-close-btn');
+
+        // Get all segment elements
+        const segments = document.querySelectorAll('.wheel-segment');
+
+        // Add click event listener to each segment
+        segments.forEach(segment => {
+            segment.addEventListener('click', () => {
+                const segmentId = segment.dataset.segment;
+                const data = segmentData[segmentId];
+
+                if (data) {
+                    modalTitle.textContent = data.title;
+                    modalImage.src = data.image;
+                    modalImage.alt = data.title;
+                    modalDescription.textContent = data.description;
+                    modalOverlay.classList.add('visible');
+                }
+            });
+        });
+
+        // Close modal when close button is clicked or outside modal is clicked
+        modalCloseBtn.addEventListener('click', () => {
+            modalOverlay.classList.remove('visible');
+        });
+
+        modalOverlay.addEventListener('click', (e) => {
+            if (e.target === modalOverlay) {
+                modalOverlay.classList.remove('visible');
+            }
+        });
+    </script>
+</body>
+</html>

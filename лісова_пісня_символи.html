@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Символіка у 'Лісовій пісні'</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for the game */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Align to top for better scrolling */
+            min-height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .game-container {
+            background-color: #ffffff;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            max-width: 900px;
+            width: 100%;
+            margin-top: 20px;
+        }
+        .symbols-pool, .characters-grid {
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+        .symbols-pool {
+            background-color: #f9fafb;
+        }
+        .characters-grid {
+            background-color: #e0f2fe; /* Light blue for character areas */
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+        }
+        .character-card {
+            background-color: #bbdefb; /* Slightly darker blue */
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            font-weight: 600;
+            color: #1a237e; /* Dark blue text */
+            min-height: 180px; /* Ensure drop target is visible and has space */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start; /* Align content to top */
+            gap: 10px;
+            border: 2px solid transparent; /* For feedback border */
+        }
+        .drop-zone {
+            min-height: 100px; /* Area for dropped symbols */
+            border: 2px dashed #90a4ae; /* blue-grey */
+            border-radius: 8px;
+            width: 95%;
+            padding: 8px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-start;
+            justify-content: center;
+            gap: 5px;
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+            margin-top: 10px;
+        }
+        .drop-zone.hovered {
+            background-color: #e8f5e9; /* light green */
+            border-color: #66bb6a; /* green */
+        }
+        .symbol-item {
+            background-color: #fff3e0; /* light orange */
+            border-radius: 8px;
+            padding: 10px 15px;
+            margin: 5px;
+            border: 1px solid #ffcc80;
+            cursor: grab;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #e65100; /* dark orange */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s ease, opacity 0.2s ease;
+            text-align: center;
+        }
+        .symbol-item:active {
+            cursor: grabbing;
+            transform: scale(1.05);
+        }
+        .symbol-item.dragging {
+            opacity: 0.6;
+        }
+        .check-button, .reset-button {
+            background-color: #4f46e5; /* indigo-600 */
+            color: white;
+            padding: 12px 25px;
+            border-radius: 10px;
+            font-size: 1.125rem; /* text-lg */
+            font-weight: 700; /* font-bold */
+            cursor: pointer;
+            border: none;
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+            width: 100%;
+            box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3);
+        }
+        .check-button:hover, .reset-button:hover {
+            background-color: #4338ca; /* indigo-700 */
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(79, 70, 229, 0.4);
+        }
+        .reset-button {
+            background-color: #ef4444; /* red-500 */
+            box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3);
+        }
+        .reset-button:hover {
+            background-color: #dc2626; /* red-600 */
+        }
+        .results-summary {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #e0f2fe; /* light blue */
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            text-align: center;
+            color: #0c4a6e;
+            border: 1px solid #90cdf4;
+            display: none; /* Hidden by default */
+        }
+        .character-card.correct-feedback {
+            border-color: #34d399; /* green-400 */
+            background-color: #e8f5e9; /* light green */
+        }
+        .character-card.incorrect-feedback {
+            border-color: #ef4444; /* red-500 */
+            background-color: #ffebee; /* light red */
+        }
+        .symbol-item.correct {
+            background-color: #a7f3d0; /* green-200 */
+            border-color: #34d399; /* green-400 */
+        }
+        .symbol-item.incorrect {
+            background-color: #fecaca; /* red-200 */
+            border-color: #ef4444; /* red-500 */
+        }
+        .correct-answer-hint {
+            font-size: 0.85rem;
+            color: #16a34a;
+            margin-top: 5px;
+            display: none; /* Hidden by default */
+        }
+        .symbol-item.incorrect + .correct-answer-hint {
+            display: block; /* Show hint if symbol is incorrect */
+        }
+        .hidden-item {
+            display: none !important;
+        }
+
+        @media (max-width: 640px) {
+            .game-container {
+                padding: 20px;
+            }
+            .symbols-pool, .characters-grid {
+                padding: 15px;
+            }
+            .character-card {
+                min-height: 150px;
+            }
+            .symbol-item {
+                font-size: 0.85rem;
+                padding: 8px 12px;
+            }
+            .check-button, .reset-button {
+                font-size: 1rem;
+                padding: 10px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1 class="text-3xl md:text-4xl font-bold text-center mb-8 text-gray-800">Символіка у "Лісовій пісні"</h1>
+        <p class="text-center text-gray-600 mb-6">Перетягніть символічні значення та риси до відповідних персонажів з "Лісової пісні".</p>
+
+        <div id="symbols-pool" class="symbols-pool">
+            <h2 class="text-xl font-semibold text-gray-700 w-full text-center mb-4">Символи та Риси:</h2>
+            <div class="flex flex-wrap justify-center gap-4" id="draggable-symbols">
+                <!-- Draggable symbols will be loaded here by JavaScript -->
+            </div>
+        </div>
+
+        <div id="characters-grid" class="characters-grid">
+            <!-- Character drop zones will be loaded here by JavaScript -->
+        </div>
+
+        <div class="flex flex-col md:flex-row gap-4 w-full">
+            <button id="check-answers-btn" class="check-button">Перевірити відповіді</button>
+            <button id="reset-game-btn" class="reset-button">Скинути гру</button>
+        </div>
+
+        <div id="game-results" class="results-summary">
+            <!-- Results will be displayed here -->
+        </div>
+    </div>
+
+    <script>
+        // Data for characters and their correct symbolic traits/meanings
+        const gameData = [
+            {
+                character: "Мавка",
+                symbols: [
+                    "Мрія",
+                    "Природа",
+                    "Вічна краса",
+                    "Ідеал кохання",
+                    "Жертовність",
+                    "Душа лісу"
+                ]
+            },
+            {
+                character: "Лукаш",
+                symbols: [
+                    "Творча душа",
+                    "Внутрішній конфлікт",
+                    "Зрада мрії",
+                    "Буденність",
+                    "Залежність від матері",
+                    "Людська слабкість"
+                ]
+            },
+            {
+                character: "Килина",
+                symbols: [
+                    "Прагматизм",
+                    "Матеріалізм",
+                    "Буденність",
+                    "Грубість",
+                    "Руйнівна сила",
+                    "Земне начало"
+                ]
+            },
+            {
+                character: "Дядько Лев",
+                symbols: [
+                    "Мудрість",
+                    "Гармонія з природою",
+                    "Захисник лісу",
+                    "Старі традиції",
+                    "Повага до життя"
+                ]
+            },
+            {
+                character: "Перелесник",
+                symbols: [
+                    "Пристрасть",
+                    "Непостійність",
+                    "Стихія вогню",
+                    "Спокуса"
+                ]
+            },
+            {
+                character: "Водяник",
+                symbols: [
+                    "Спокій",
+                    "Байдужість",
+                    "Стихія води",
+                    "Вічність"
+                ]
+            },
+            {
+                character: "Русалка Польова",
+                symbols: [
+                    "Смуток",
+                    "Туга",
+                    "Загибель від людської праці",
+                    "Жертва цивілізації"
+                ]
+            }
+        ];
+
+        let allSymbols = [];
+        gameData.forEach(item => {
+            item.symbols.forEach(symbolText => {
+                allSymbols.push({ text: symbolText, character: item.character });
+            });
+        });
+
+        // Shuffle symbols for random placement in the pool
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+        shuffleArray(allSymbols);
+
+        const draggableSymbolsContainer = document.getElementById('draggable-symbols');
+        const charactersGrid = document.getElementById('characters-grid');
+        const checkAnswersBtn = document.getElementById('check-answers-btn');
+        const resetGameBtn = document.getElementById('reset-game-btn');
+        const gameResultsDiv = document.getElementById('game-results');
+
+        // Function to render the game
+        function renderGame() {
+            draggableSymbolsContainer.innerHTML = '';
+            charactersGrid.innerHTML = '';
+            gameResultsDiv.classList.add('hidden');
+            gameResultsDiv.textContent = '';
+
+            // Render draggable symbols
+            allSymbols.forEach((symbol, index) => {
+                const symbolItem = document.createElement('div');
+                symbolItem.className = 'symbol-item';
+                symbolItem.textContent = symbol.text;
+                symbolItem.setAttribute('draggable', true);
+                symbolItem.dataset.originalCharacter = symbol.character; // Store correct character
+                symbolItem.id = `symbol-${index}`; // Unique ID for dataTransfer
+                draggableSymbolsContainer.appendChild(symbolItem);
+
+                symbolItem.addEventListener('dragstart', (e) => {
+                    e.dataTransfer.setData('text/plain', e.target.id);
+                    setTimeout(() => {
+                        e.target.classList.add('dragging');
+                    }, 0);
+                });
+
+                symbolItem.addEventListener('dragend', (e) => {
+                    e.target.classList.remove('dragging');
+                });
+            });
+
+            // Render character drop zones
+            gameData.forEach((charData) => {
+                const characterCard = document.createElement('div');
+                characterCard.className = 'character-card';
+                characterCard.innerHTML = `
+                    <h3 class="text-xl font-bold">${charData.character}</h3>
+                    <div class="drop-zone" data-character="${charData.character}"></div>
+                `;
+                charactersGrid.appendChild(characterCard);
+
+                const dropZone = characterCard.querySelector('.drop-zone');
+
+                dropZone.addEventListener('dragover', (e) => {
+                    e.preventDefault(); // Allow drop
+                    dropZone.classList.add('hovered');
+                });
+
+                dropZone.addEventListener('dragleave', () => {
+                    dropZone.classList.remove('hovered');
+                });
+
+                dropZone.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    dropZone.classList.remove('hovered');
+                    const data = e.dataTransfer.getData('text/plain');
+                    const draggedItem = document.getElementById(data);
+
+                    if (draggedItem) {
+                        // Check if the item is already in a drop zone (to prevent duplicates if re-dropping)
+                        if (draggedItem.parentNode && draggedItem.parentNode.classList.contains('drop-zone')) {
+                            // If it's being moved from one drop zone to another, remove from previous
+                            draggedItem.parentNode.removeChild(draggedItem);
+                        } else if (draggedItem.parentNode === draggableSymbolsContainer) {
+                            // If moving from initial pool, remove it visually from there
+                            draggedItem.classList.add('hidden-item'); // Temporarily hide from pool
+                        }
+                        dropZone.appendChild(draggedItem);
+                        draggedItem.classList.remove('correct', 'incorrect', 'hidden-item'); // Clear previous feedback and unhide
+                    }
+                });
+            });
+        }
+
+        // Function to check answers
+        function checkAnswers() {
+            let correctCount = 0;
+            let totalSymbols = allSymbols.length;
+
+            // Clear previous feedback
+            document.querySelectorAll('.symbol-item').forEach(item => {
+                item.classList.remove('correct', 'incorrect');
+                const hint = item.nextElementSibling;
+                if (hint && hint.classList.contains('correct-answer-hint')) {
+                    hint.remove(); // Remove existing hints
+                }
+            });
+            document.querySelectorAll('.character-card').forEach(card => {
+                card.classList.remove('correct-feedback', 'incorrect-feedback');
+            });
+
+            gameData.forEach(charData => {
+                const dropZone = document.querySelector(`.drop-zone[data-character="${charData.character}"]`);
+                const characterCard = dropZone.closest('.character-card');
+                const droppedSymbols = Array.from(dropZone.children);
+                let charCardCorrect = true; // Flag for character card feedback
+
+                // Collect correct symbols for this character to check if all are present
+                const correctSymbolsForChar = new Set(charData.symbols);
+                let foundCorrectSymbols = new Set(); // To track which correct symbols have been dropped
+
+                droppedSymbols.forEach(symbolItem => {
+                    const originalCharacter = symbolItem.dataset.originalCharacter;
+                    if (originalCharacter === charData.character) {
+                        symbolItem.classList.add('correct');
+                        correctCount++;
+                        foundCorrectSymbols.add(symbolItem.textContent);
+                    } else {
+                        symbolItem.classList.add('incorrect');
+                        charCardCorrect = false;
+                        // Add hint for incorrect placement
+                        let hint = document.createElement('p');
+                        hint.className = 'correct-answer-hint';
+                        hint.textContent = `Правильно: ${originalCharacter}`;
+                        symbolItem.parentNode.insertBefore(hint, symbolItem.nextSibling); // Insert after the symbol item
+                        hint.classList.remove('hidden');
+                    }
+                });
+
+                // Check if all *expected* symbols for this character are in the drop zone
+                const allExpectedSymbolsPresent = charData.symbols.every(expectedSymbol =>
+                    foundCorrectSymbols.has(expectedSymbol)
+                );
+
+                // If any incorrect symbols were dropped OR not all expected symbols were dropped
+                if (!allExpectedSymbolsPresent || droppedSymbols.some(item => item.dataset.originalCharacter !== charData.character)) {
+                    charCardCorrect = false;
+                }
+
+                if (charCardCorrect) {
+                    characterCard.classList.add('correct-feedback');
+                } else {
+                    characterCard.classList.add('incorrect-feedback');
+                }
+            });
+
+            gameResultsDiv.textContent = `Ви правильно зіставили ${correctCount} з ${totalSymbols} символів!`;
+            gameResultsDiv.classList.remove('hidden');
+        }
+
+        // Event listeners
+        checkAnswersBtn.addEventListener('click', checkAnswers);
+        resetGameBtn.addEventListener('click', renderGame); // Simply re-render the game to reset
+
+        // Initial render
+        window.onload = renderGame;
+    </script>
+</body>
+</html>

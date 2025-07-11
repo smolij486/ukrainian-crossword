@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Чому влада боялася митців?</title>
+    <!-- Tailwind CSS CDN для сучасного стилю -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Загальні стилі для тіла сторінки */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5; /* Світло-сірий фон */
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Вирівнювання до верху для кращого потоку контенту */
+            min-height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        /* Контейнер для всієї ментальної карти */
+        .mind-map-container {
+            background-color: #ffffff;
+            border-radius: 15px; /* Заокруглені кути */
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); /* М'яка тінь для глибини */
+            padding: 30px;
+            max-width: 1000px; /* Максимальна ширина для читабельності */
+            width: 100%;
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px; /* Простір між основними блоками */
+        }
+
+        /* Стилі для основного (кореневого) вузла */
+        .node-root {
+            background-color: #4f46e5; /* Темно-синій */
+            color: white;
+            padding: 15px 25px;
+            border-radius: 12px;
+            font-size: 1.5rem; /* Великий шрифт */
+            font-weight: 700; /* Жирний шрифт */
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(79, 70, 229, 0.4);
+            position: relative;
+            z-index: 10; /* Щоб був над лініями */
+        }
+
+        /* Контейнер для основних гілок (прямих нащадків кореня) */
+        .main-branches {
+            display: flex;
+            flex-wrap: wrap; /* Дозволяє гілкам переноситися на новий рядок */
+            justify-content: center;
+            gap: 20px; /* Простір між основними гілками */
+            width: 100%;
+        }
+
+        /* Стилі для картки основної гілки */
+        .branch-card {
+            background-color: #818cf8; /* Середньо-синій */
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 1.15rem;
+            font-weight: 600;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            flex: 1 1 calc(33% - 20px); /* 3 елементи в рядку на великих екранах */
+            min-width: 250px; /* Мінімальна ширина для адаптивності */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            position: relative;
+            z-index: 5;
+        }
+
+        /* Контейнер для підгілок */
+        .sub-branches-container {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start; /* Вирівнювання підгілок по лівому краю */
+            gap: 8px; /* Простір між підгілками */
+            margin-top: 15px;
+            width: 100%;
+            padding-left: 10px; /* Невеликий відступ для візуальної ієрархії */
+            border-left: 2px solid #a78bfa; /* Лінія для візуалізації зв'язку */
+        }
+
+        /* Стилі для картки підгілки */
+        .sub-branch-item {
+            background-color: #e0e7ff; /* Світло-фіолетовий */
+            color: #3730a3; /* Темно-фіолетовий текст */
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            text-align: left;
+            width: 100%; /* Займає всю доступну ширину */
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+        }
+
+        /* Адаптивність для менших екранів */
+        @media (max-width: 768px) {
+            .mind-map-container {
+                padding: 20px;
+            }
+            .node-root {
+                font-size: 1.25rem;
+                padding: 12px 20px;
+            }
+            .branch-card {
+                font-size: 1rem;
+                padding: 12px;
+                flex: 1 1 100%; /* Один елемент в рядку на мобільних */
+                min-width: unset;
+            }
+            .sub-branch-item {
+                font-size: 0.85rem;
+                padding: 6px 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="mind-map-container">
+        <h1 class="text-3xl md:text-4xl font-bold text-center mb-8 text-gray-800">Чому влада боялася митців?</h1>
+
+        <!-- Центральний вузол -->
+        <div class="node-root">Чому влада боялася митців?</div>
+
+        <!-- Контейнер для основних гілок -->
+        <div class="main-branches">
+            <!-- Гілка: Незручна правда -->
+            <div class="branch-card">
+                <p>Незручна правда</p>
+                <div class="sub-branches-container">
+                    <div class="sub-branch-item">Бачать світ глибше</div>
+                    <div class="sub-branch-item">Ставлять незручні питання</div>
+                    <div class="sub-branch-item">Викривають недоліки системи</div>
+                    <div class="sub-branch-item">Як 'баг' у системі</div>
+                </div>
+            </div>
+
+            <!-- Гілка: Незалежність думки -->
+            <div class="branch-card">
+                <p>Незалежність думки</p>
+                <div class="sub-branches-container">
+                    <div class="sub-branch-item">Вільна людина</div>
+                    <div class="sub-branch-item">Думки не можна контролювати</div>
+                    <div class="sub-branch-item">Творять за покликом серця</div>
+                    <div class="sub-branch-item">Як некерований штучний інтелект</div>
+                </div>
+            </div>
+
+            <!-- Гілка: Вплив на маси -->
+            <div class="branch-card">
+                <p>Вплив на маси</p>
+                <div class="sub-branches-container">
+                    <div class="sub-branch-item">Неймовірна сила впливу</div>
+                    <div class="sub-branch-item">Формують світогляд</div>
+                    <div class="sub-branch-item">Надихають, об'єднують</div>
+                    <div class="sub-branch-item">Як Хвильовий на YouTube</div>
+                </div>
+            </div>
+
+            <!-- Гілка: Національна ідентичність -->
+            <div class="branch-card">
+                <p>Національна ідентичність</p>
+                <div class="sub-branches-container">
+                    <div class="sub-branch-item">Прагнення створити самобутню культуру</div>
+                    <div class="sub-branch-item">Підкреслювали унікальність нації</div>
+                    <div class="sub-branch-item">Як 'вірус свободи' для імперії</div>
+                </div>
+            </div>
+
+            <!-- Гілка: Некерований контент -->
+            <div class="branch-card">
+                <p>Некерований контент</p>
+                <div class="sub-branches-container">
+                    <div class="sub-branch-item">Публікують контент, що не вписується</div>
+                    <div class="sub-branch-item">Занадто розумний, вільний, український</div>
+                    <div class="sub-branch-item">Адміністратор 'банить'</div>
+                    <div class="sub-branch-item">Реальний 'бан' (арешти, розстріли)</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Літературний детектив: розшифруй твір</title>
+    <!-- Tailwind CSS CDN for modern styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom CSS for game aesthetics and responsiveness */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5; /* Light gray background */
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Align to top for better content flow */
+            min-height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .game-container {
+            background-color: #ffffff;
+            border-radius: 15px; /* Rounded corners for the main container */
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); /* Soft shadow for depth */
+            padding: 30px;
+            max-width: 900px; /* Max width for readability */
+            width: 100%;
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .case-image {
+            width: 100%;
+            max-height: 300px;
+            object-fit: cover; /* Ensures image covers the area without distortion */
+            border-radius: 10px; /* Rounded corners for images */
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1); /* Subtle shadow for images */
+        }
+        .case-text {
+            font-size: 1.15rem; /* text-lg equivalent */
+            line-height: 1.6; /* Improved readability */
+            text-align: center;
+            margin-bottom: 25px;
+            color: #374151; /* Dark gray text for contrast */
+            font-style: italic;
+        }
+        .choices-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px; /* Space between choice buttons */
+            width: 100%;
+        }
+        .choice-button {
+            background-color: #4f46e5; /* Indigo-600 for primary actions */
+            color: white;
+            padding: 14px 20px;
+            border-radius: 10px; /* Rounded buttons */
+            font-size: 1.05rem; /* text-lg equivalent */
+            font-weight: 600; /* font-semibold */
+            cursor: pointer;
+            border: none;
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease; /* Smooth transitions for interactivity */
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3); /* Button shadow */
+        }
+        .choice-button:hover {
+            background-color: #4338ca; /* Darker indigo on hover */
+            transform: translateY(-2px); /* Slight lift effect on hover */
+            box-shadow: 0 6px 15px rgba(79, 70, 229, 0.4); /* Enhanced shadow on hover */
+        }
+        .choice-button:active {
+            transform: translateY(0); /* Press-down effect on click */
+            box-shadow: 0 2px 5px rgba(79, 70, 229, 0.2); /* Reduced shadow on active */
+        }
+        .feedback-area {
+            margin-top: 25px;
+            padding: 20px;
+            border-radius: 10px;
+            width: 100%;
+            text-align: center;
+            font-size: 1rem;
+            line-height: 1.5;
+            display: none; /* Hidden by default */
+        }
+        .feedback-area.correct {
+            background-color: #d1fae5; /* green-100 */
+            border: 1px solid #34d399; /* green-400 */
+            color: #16a34a; /* green-700 */
+        }
+        .feedback-area.incorrect {
+            background-color: #fee2e2; /* red-100 */
+            border: 1px solid #ef4444; /* red-500 */
+            color: #dc2626; /* red-600 */
+        }
+        .next-case-button, .restart-button {
+            background-color: #10b981; /* emerald-500 */
+            color: white;
+            padding: 12px 25px;
+            border-radius: 10px;
+            font-size: 1.05rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            margin-top: 20px;
+            box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);
+            display: none; /* Hidden by default */
+        }
+        .next-case-button:hover, .restart-button:hover {
+            background-color: #059669; /* emerald-600 */
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(16, 185, 129, 0.4);
+        }
+        .restart-button.final {
+            background-color: #ef4444; /* red-500 */
+            box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3);
+        }
+        .restart-button.final:hover {
+            background-color: #dc2626; /* red-600 */
+            box-shadow: 0 6px 15px rgba(239, 68, 68, 0.4);
+        }
+
+        /* Responsive adjustments for smaller screens */
+        @media (max-width: 640px) {
+            .game-container {
+                padding: 20px;
+            }
+            .case-text {
+                font-size: 1rem;
+            }
+            .choice-button {
+                font-size: 0.95rem;
+                padding: 12px 15px;
+            }
+            .feedback-area {
+                font-size: 0.9rem;
+            }
+            .next-case-button, .restart-button {
+                font-size: 1rem;
+                padding: 10px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1 class="text-3xl md:text-4xl font-bold text-center mb-8 text-gray-800">Літературний детектив: розшифруй твір</h1>
+        <p class="text-center text-gray-600 mb-6">Ви - літературний детектив. Ваше завдання - визначити літературний напрям за уривком тексту.</p>
+
+        <!-- Image for the current case -->
+        <img id="case-img" class="case-image" src="https://placehold.co/800x300/e0f2fe/0c4a6e?text=Літературний+Детектив" alt="Ілюстрація до літературного уривку">
+
+        <!-- Text of the current case (excerpt) -->
+        <p id="case-text" class="case-text">
+            Повітря було наповнене запахом дощу і туги. Він стояв на краю прірви, дивлячись у бездонну темряву, і відчував, як його душа розривається між величчю природи та незбагненною глибиною власного 'Я'. Ніхто не міг зрозуміти його самотності, крім вітру, що шепотів таємниці.
+        </p>
+
+        <!-- Container for choice buttons (literary movements) -->
+        <div id="choices-container" class="choices-container">
+            <!-- Choice buttons will be dynamically inserted here by JavaScript -->
+        </div>
+
+        <!-- Feedback area for correct/incorrect answers and explanations -->
+        <div id="feedback-area" class="feedback-area">
+            <!-- Feedback text will be displayed here -->
+        </div>
+
+        <!-- Buttons for navigating between cases or restarting -->
+        <button id="next-case-btn" class="next-case-button">Наступна справа</button>
+        <button id="restart-btn" class="restart-button final">Почати знову</button>
+    </div>
+
+    <script>
+        // Data for each literary case (excerpt, image, options, correct answer, explanation)
+        const cases = [
+            {
+                excerpt: "Повітря було наповнене запахом дощу і туги. Він стояв на краю прірви, дивлячись у бездонну темряву, і відчував, як його душа розривається між величчю природи та незбагненною глибиною власного 'Я'. Ніхто не міг зрозуміти його самотності, крім вітру, що шепотів таємниці.",
+                image: "https://placehold.co/800x300/a7d9f7/003366?text=Природа+і+душа",
+                options: [
+                    { text: "Реалізм", isCorrect: false },
+                    { text: "Романтизм", isCorrect: true },
+                    { text: "Класицизм", isCorrect: false },
+                    { text: "Символізм", isCorrect: false },
+                    { text: "Бароко", isCorrect: false }
+                ],
+                explanation: "Цей уривок з яскраво вираженими емоціями, піднесенням природи, фокусом на унікальній самотності героя та ідеалізацією внутрішнього світу є типовим для **Романтизму**."
+            },
+            {
+                excerpt: "На вулиці було брудно, як завжди. Старий двірник підмітав опале листя, його обличчя було виснаженим і сірим, як і будинки навколо. Життя текло повільно, без яскравих подій, сповнене щоденної праці та дрібних турбот. Кожен рух був передбачуваним, кожен день схожий на попередній.",
+                image: "https://placehold.co/800x300/c8e6c9/1b5e20?text=Звичайний+день",
+                options: [
+                    { text: "Романтизм", isCorrect: false },
+                    { text: "Класицизм", isCorrect: false },
+                    { text: "Реалізм", isCorrect: true },
+                    { text: "Експресіонізм", isCorrect: false },
+                    { text: "Бароко", isCorrect: false }
+                ],
+                explanation: "Опис буденності, увага до деталей повсякденного життя, соціальні аспекти та відсутність ідеалізації характерні для **Реалізму**."
+            },
+            {
+                excerpt: "За туманом слів ховався шепіт незбагненних істин. Душа, наче крихкий метелик, билася об стіни свідомості, шукаючи вихід у безмежність. Кожен символ був ключем до таємних дверей, що вели у глибини підсвідомості, де реальність перепліталася з міфом, а звичайне ставало знаком.",
+                image: "https://placehold.co/800x300/e1bee7/4a148c?text=Приховані+смисли",
+                options: [
+                    { text: "Реалізм", isCorrect: false },
+                    { text: "Класицизм", isCorrect: false },
+                    { text: "Романтизм", isCorrect: false },
+                    { text: "Символізм / Модернізм", isCorrect: true },
+                    { text: "Бароко", isCorrect: false }
+                ],
+                explanation: "Цей уривок, що фокусується на підсвідомості, використанні символів для передачі прихованих смислів, багатозначності та відході від прямого зображення дійсності, є характерним для **Символізму** та загалом для **Модернізму**."
+            },
+            {
+                excerpt: "Герой, сповнений чеснот, мужньо протистояв злу. Його вчинки були продиктовані розумом і обов'язком перед державою. Все було підпорядковано строгим правилам, гармонії та логіці. Емоції були приборкані, а форма – досконала.",
+                image: "https://placehold.co/800x300/c5cae9/3f51b5?text=Порядок+і+розум",
+                options: [
+                    { text: "Романтизм", isCorrect: false },
+                    { text: "Класицизм", isCorrect: true },
+                    { text: "Реалізм", isCorrect: false },
+                    { text: "Футуризм", isCorrect: false },
+                    { text: "Бароко", isCorrect: false }
+                ],
+                explanation: "Цей уривок, що підкреслює розум, обов'язок, строгі правила, гармонію та ідеалізацію, є типовим для **Класицизму**."
+            },
+            {
+                excerpt: "Світ, наче розкішний театр, де тіні й світло ведуть одвічну гру. Душа, розірвана між небесним сяйвом і земним брудом, шукає спасіння у вихорі пристрастей. Кожна мить – це танець життя і смерті, величі й нікчемності, де пишні форми приховують глибоку тривогу буття.",
+                image: "https://placehold.co/800x300/e6c9a7/663300?text=Контрасти+та+пишність", // Image for Baroque
+                options: [
+                    { text: "Реалізм", isCorrect: false },
+                    { text: "Бароко", isCorrect: true },
+                    { text: "Романтизм", isCorrect: false },
+                    { text: "Класицизм", isCorrect: false },
+                    { text: "Символізм", isCorrect: false }
+                ],
+                explanation: "Цей уривок характеризується використанням контрастів (світло/тінь, небесне/земне), динамізмом, пишністю мови, філософськими роздумами про життя і смерть, що є ключовими рисами **Бароко**."
+            }
+        ];
+
+        let currentCaseIndex = 0; // Start with the first case
+        let selectedChoice = null; // To store the currently selected choice button
+
+        // Get DOM elements
+        const caseImgElement = document.getElementById('case-img');
+        const caseTextElement = document.getElementById('case-text');
+        const choicesContainer = document.getElementById('choices-container');
+        const feedbackArea = document.getElementById('feedback-area');
+        const nextCaseBtn = document.getElementById('next-case-btn');
+        const restartBtn = document.getElementById('restart-btn');
+
+        /**
+         * Renders the current literary case on the screen.
+         * @param {number} index - The index of the case to render.
+         */
+        function renderCase(index) {
+            const currentCase = cases[index];
+            if (!currentCase) {
+                // All cases completed
+                displayFinalMessage();
+                return;
+            }
+
+            // Reset UI for a new case
+            feedbackArea.style.display = 'none';
+            feedbackArea.classList.remove('correct', 'incorrect');
+            nextCaseBtn.style.display = 'none';
+            restartBtn.style.display = 'none';
+            choicesContainer.innerHTML = ''; // Clear previous choices
+            selectedChoice = null; // Reset selected choice
+
+            caseImgElement.src = currentCase.image;
+            caseImgElement.alt = `Ілюстрація: ${currentCase.excerpt.substring(0, Math.min(currentCase.excerpt.length, 50))}...`;
+            caseTextElement.textContent = currentCase.excerpt;
+
+            // Create choice buttons
+            currentCase.options.forEach((option, optIndex) => {
+                const button = document.createElement('button');
+                button.textContent = option.text;
+                button.classList.add('choice-button');
+                button.dataset.index = optIndex; // Store index to identify choice
+                button.addEventListener('click', () => handleChoice(button, option.isCorrect, currentCase.explanation));
+                choicesContainer.appendChild(button);
+            });
+        }
+
+        /**
+         * Handles user's choice, provides feedback, and enables next/restart buttons.
+         * @param {HTMLElement} clickedButton - The button element that was clicked.
+         * @param {boolean} isCorrect - True if the selected choice is correct.
+         * @param {string} explanation - The explanation for the answer.
+         */
+        function handleChoice(clickedButton, isCorrect, explanation) {
+            // Disable all choice buttons after a selection
+            Array.from(choicesContainer.children).forEach(button => {
+                button.disabled = true;
+                button.style.opacity = '0.7'; // Visual feedback for disabled
+            });
+
+            // Highlight selected button
+            clickedButton.style.backgroundColor = isCorrect ? '#10b981' : '#ef4444'; // Green for correct, red for incorrect
+            clickedButton.style.boxShadow = '0 6px 15px rgba(0, 0, 0, 0.2)';
+            clickedButton.style.transform = 'translateY(-2px)';
+
+            // Display feedback
+            feedbackArea.textContent = explanation;
+            feedbackArea.classList.add(isCorrect ? 'correct' : 'incorrect');
+            feedbackArea.style.display = 'block';
+
+            // Show next case or restart button
+            if (currentCaseIndex < cases.length - 1) {
+                nextCaseBtn.style.display = 'block';
+            } else {
+                restartBtn.style.display = 'block'; // Show restart button at the end
+                restartBtn.classList.add('final'); // Add specific styling for final restart
+            }
+        }
+
+        /**
+         * Moves to the next case or displays final message.
+         */
+        function goToNextCase() {
+            currentCaseIndex++;
+            renderCase(currentCaseIndex);
+        }
+
+        /**
+         * Restarts the game from the beginning.
+         */
+        function restartGame() {
+            currentCaseIndex = 0;
+            renderCase(currentCaseIndex);
+        }
+
+        /**
+         * Displays a final message when all cases are completed.
+         */
+        function displayFinalMessage() {
+            caseImgElement.src = "https://placehold.co/800x300/a5d6a7/1b5e20?text=Вітаємо!+Ви+пройшли+гру!";
+            caseImgElement.alt = "Гра завершена";
+            caseTextElement.textContent = "Вітаємо, Літературний Детективе! Ви успішно розгадали всі справи та продемонстрували глибоке розуміння літературних напрямів. Ваші навички аналізу вражають!";
+            choicesContainer.innerHTML = ''; // Clear choices
+            feedbackArea.style.display = 'none';
+            nextCaseBtn.style.display = 'none';
+            restartBtn.style.display = 'block'; // Show restart button
+            restartBtn.classList.add('final');
+        }
+
+        // Add event listeners to navigation buttons
+        nextCaseBtn.addEventListener('click', goToNextCase);
+        restartBtn.addEventListener('click', restartGame);
+
+        // Initial render when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            renderCase(currentCaseIndex);
+        });
+    </script>
+</body>
+</html>

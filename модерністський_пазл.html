@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Модерністський пазл свідомості</title>
+    <!-- Tailwind CSS CDN for modern styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom CSS for game aesthetics and responsiveness */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5; /* Light gray background */
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Align to top for better content flow */
+            min-height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .game-container {
+            background-color: #ffffff;
+            border-radius: 15px; /* Rounded corners for the main container */
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); /* Soft shadow for depth */
+            padding: 30px;
+            max-width: 1000px; /* Max width for readability */
+            width: 100%;
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .puzzle-header {
+            font-size: 1.25rem; /* text-xl */
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .drag-items-pool {
+            background-color: #f9fafb;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 25px;
+            border: 1px solid #e5e7eb;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            min-height: 120px; /* Ensure visible area */
+        }
+        .draggable-item {
+            background-color: #bbdefb; /* Light blue for draggable items */
+            color: #1a237e; /* Dark blue text */
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: grab;
+            border: 1px solid #90caf9;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+            transition: transform 0.2s ease, opacity 0.2s ease;
+            text-align: center;
+        }
+        .draggable-item:active {
+            cursor: grabbing;
+            transform: scale(1.05);
+        }
+        .draggable-item.dragging {
+            opacity: 0.6;
+        }
+        .drop-zones-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* Responsive grid for drop zones */
+            gap: 25px;
+            width: 100%;
+        }
+        .drop-zone-card {
+            background-color: #d1fae5; /* Light green for drop zones */
+            border-radius: 15px;
+            padding: 20px;
+            min-height: 250px; /* Ensure enough space for dropped items */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            border: 2px dashed #34d399; /* Dashed border for drop area */
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+        }
+        .drop-zone-card.hovered {
+            background-color: #a7f3d0; /* Darker green on hover */
+            border-color: #10b981;
+        }
+        .drop-zone-title {
+            font-size: 1.5rem; /* text-2xl */
+            font-weight: 700;
+            color: #16a34a; /* Dark green text */
+            margin-bottom: 15px;
+        }
+        .dropped-items-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            flex-grow: 1; /* Allow container to grow */
+            align-content: flex-start; /* Align dropped items to the top */
+        }
+        .check-button, .reset-button {
+            background-color: #4f46e5; /* indigo-600 */
+            color: white;
+            padding: 14px 25px;
+            border-radius: 10px;
+            font-size: 1.125rem; /* text-lg */
+            font-weight: 700; /* font-bold */
+            cursor: pointer;
+            border: none;
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+            width: 100%;
+            margin-top: 30px;
+            box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3);
+        }
+        .check-button:hover, .reset-button:hover {
+            background-color: #4338ca; /* indigo-700 */
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(79, 70, 229, 0.4);
+        }
+        .reset-button {
+            background-color: #ef4444; /* red-500 */
+            box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3);
+            margin-top: 15px; /* Separate from check button */
+        }
+        .reset-button:hover {
+            background-color: #dc2626; /* red-600 */
+            box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3);
+        }
+        .results-summary {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #e0f2fe; /* light blue */
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            text-align: center;
+            color: #0c4a6e;
+            border: 1px solid #90cdf4;
+            display: none; /* Hidden by default */
+        }
+        .draggable-item.correct {
+            background-color: #a7f3d0; /* green-200 */
+            border-color: #34d399; /* green-400 */
+        }
+        .draggable-item.incorrect {
+            background-color: #fecaca; /* red-200 */
+            border-color: #ef4444; /* red-500 */
+        }
+        .correct-hint {
+            font-size: 0.8rem;
+            color: #16a34a;
+            margin-top: 5px;
+            display: none; /* Hidden by default */
+        }
+        .draggable-item.incorrect + .correct-hint {
+            display: block; /* Show hint if item is incorrect */
+        }
+        .hidden-item {
+            display: none !important;
+        }
+
+        /* Responsive adjustments for smaller screens */
+        @media (max-width: 768px) {
+            .game-container {
+                padding: 20px;
+            }
+            .puzzle-header {
+                font-size: 1.1rem;
+            }
+            .draggable-item {
+                font-size: 0.85rem;
+                padding: 10px 15px;
+            }
+            .drop-zone-title {
+                font-size: 1.25rem;
+            }
+            .drop-zone-card {
+                min-height: 200px;
+            }
+            .check-button, .reset-button {
+                font-size: 1rem;
+                padding: 12px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1 class="text-3xl md:text-4xl font-bold text-center mb-8 text-gray-800">Модерністський пазл свідомості</h1>
+        <p class="text-center text-gray-600 mb-6">Перетягніть фрагменти ідей та цитат до відповідних категорій.</p>
+
+        <p class="puzzle-header">Фрагменти для зіставлення:</p>
+        <div id="drag-items-pool" class="drag-items-pool">
+            <!-- Draggable items will be loaded here by JavaScript -->
+        </div>
+
+        <p class="puzzle-header">Категорії:</p>
+        <div id="drop-zones-grid" class="drop-zones-grid">
+            <!-- Drop zones for categories will be loaded here by JavaScript -->
+        </div>
+
+        <button id="check-answers-btn" class="check-button">Перевірити відповіді</button>
+        <button id="reset-game-btn" class="reset-button">Скинути гру</button>
+
+        <div id="game-results" class="results-summary">
+            <!-- Results will be displayed here -->
+        </div>
+    </div>
+
+    <script>
+        // Data for draggable items and their correct categories
+        const puzzleData = [
+            { text: "Відчуження", category: "Франц Кафка" },
+            { text: "Абсурд буття", category: "Франц Кафка" },
+            { text: "Перетворення", category: "Франц Кафка" },
+            { text: "Дегуманізація", category: "Франц Кафка" },
+            { text: "Магія лісу", category: "Леся Українка" },
+            { text: "Конфлікт матеріального і духовного", category: "Леся Українка" },
+            { text: "Драма-феєрія", category: "Леся Українка" },
+            { text: "Зрада мрії", category: "Леся Українка" },
+            { text: "Потік свідомості", category: "Загальний Модернізм" },
+            { text: "Фрагментарність", category: "Загальний Модернізм" },
+            { text: "Суб'єктивність", category: "Загальний Модернізм" },
+            { text: "Експерименти з формою", category: "Загальний Модернізм" }
+        ];
+
+        // Define categories for drop zones
+        const categories = ["Франц Кафка", "Леся Українка", "Загальний Модернізм"];
+
+        // Shuffle puzzle data for random order of draggable items
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        const dragItemsPool = document.getElementById('drag-items-pool');
+        const dropZonesGrid = document.getElementById('drop-zones-grid');
+        const checkAnswersBtn = document.getElementById('check-answers-btn');
+        const resetGameBtn = document.getElementById('reset-game-btn');
+        const gameResultsDiv = document.getElementById('game-results');
+
+        // Function to render the game
+        function renderGame() {
+            dragItemsPool.innerHTML = ''; // Clear previous items
+            dropZonesGrid.innerHTML = ''; // Clear previous drop zones
+            gameResultsDiv.classList.add('hidden');
+            gameResultsDiv.textContent = '';
+
+            shuffleArray(puzzleData); // Shuffle items each time game renders
+
+            // Render draggable items
+            puzzleData.forEach((item, index) => {
+                const draggableItem = document.createElement('div');
+                draggableItem.className = 'draggable-item';
+                draggableItem.textContent = item.text;
+                draggableItem.setAttribute('draggable', true);
+                draggableItem.dataset.correctCategory = item.category; // Store correct category
+                draggableItem.id = `item-${index}`; // Unique ID for dataTransfer
+                dragItemsPool.appendChild(draggableItem);
+
+                draggableItem.addEventListener('dragstart', (e) => {
+                    e.dataTransfer.setData('text/plain', e.target.id);
+                    setTimeout(() => {
+                        e.target.classList.add('dragging');
+                    }, 0);
+                });
+
+                draggableItem.addEventListener('dragend', (e) => {
+                    e.target.classList.remove('dragging');
+                });
+            });
+
+            // Render drop zones
+            categories.forEach(categoryName => {
+                const dropZoneCard = document.createElement('div');
+                dropZoneCard.className = 'drop-zone-card';
+                dropZoneCard.innerHTML = `
+                    <h3 class="drop-zone-title">${categoryName}</h3>
+                    <div class="dropped-items-container" data-category="${categoryName}"></div>
+                `;
+                dropZonesGrid.appendChild(dropZoneCard);
+
+                const droppedItemsContainer = dropZoneCard.querySelector('.dropped-items-container');
+
+                droppedItemsContainer.addEventListener('dragover', (e) => {
+                    e.preventDefault(); // Allow drop
+                    droppedItemsContainer.classList.add('hovered');
+                });
+
+                droppedItemsContainer.addEventListener('dragleave', () => {
+                    droppedItemsContainer.classList.remove('hovered');
+                });
+
+                droppedItemsContainer.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    droppedItemsContainer.classList.remove('hovered');
+                    const data = e.dataTransfer.getData('text/plain');
+                    const draggedItem = document.getElementById(data);
+
+                    if (draggedItem) {
+                        // If item is moved from another drop zone, remove it from there
+                        if (draggedItem.parentNode && draggedItem.parentNode.classList.contains('dropped-items-container')) {
+                            draggedItem.parentNode.removeChild(draggedItem);
+                        } else if (draggedItem.parentNode === dragItemsPool) {
+                            // If moving from initial pool, hide it from there
+                            draggedItem.classList.add('hidden-item');
+                        }
+                        droppedItemsContainer.appendChild(draggedItem);
+                        draggedItem.classList.remove('correct', 'incorrect', 'hidden-item'); // Clear feedback and unhide
+                        if (draggedItem.nextElementSibling && draggedItem.nextElementSibling.classList.contains('correct-hint')) {
+                            draggedItem.nextElementSibling.remove(); // Remove old hint if exists
+                        }
+                    }
+                });
+            });
+        }
+
+        // Function to check answers
+        function checkAnswers() {
+            let correctCount = 0;
+            let totalItems = puzzleData.length;
+
+            // Clear previous feedback
+            document.querySelectorAll('.draggable-item').forEach(item => {
+                item.classList.remove('correct', 'incorrect');
+                if (item.nextElementSibling && item.nextElementSibling.classList.contains('correct-hint')) {
+                    item.nextElementSibling.remove(); // Remove old hint
+                }
+            });
+
+            categories.forEach(categoryName => {
+                const droppedItemsContainer = document.querySelector(`.dropped-items-container[data-category="${categoryName}"]`);
+                const droppedItems = Array.from(droppedItemsContainer.children);
+
+                droppedItems.forEach(item => {
+                    if (item.dataset.correctCategory === categoryName) {
+                        item.classList.add('correct');
+                        correctCount++;
+                    } else {
+                        item.classList.add('incorrect');
+                        // Add hint for incorrect placement
+                        const hint = document.createElement('p');
+                        hint.className = 'correct-hint';
+                        hint.textContent = `Правильно: ${item.dataset.correctCategory}`;
+                        item.parentNode.insertBefore(hint, item.nextSibling); // Insert after the item
+                    }
+                });
+            });
+
+            gameResultsDiv.textContent = `Ви правильно зіставили ${correctCount} з ${totalItems} фрагментів!`;
+            gameResultsDiv.classList.remove('hidden');
+        }
+
+        // Event listeners
+        checkAnswersBtn.addEventListener('click', checkAnswers);
+        resetGameBtn.addEventListener('click', renderGame); // Simply re-render the game to reset
+
+        // Initial render
+        window.addEventListener('load', renderGame);
+    </script>
+</body>
+</html>

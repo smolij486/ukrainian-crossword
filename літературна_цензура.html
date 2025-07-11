@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Літературна Цензура: Знайди Небезпечні Думки</title>
+    <!-- Tailwind CSS CDN для сучасного стилю -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Загальні стилі для тіла сторінки */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5; /* Світло-сірий фон */
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Вирівнювання до верху для кращого потоку контенту */
+            min-height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        /* Контейнер для всієї гри */
+        .game-container {
+            background-color: #ffffff;
+            border-radius: 15px; /* Заокруглені кути */
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); /* М'яка тінь для глибини */
+            padding: 30px;
+            max-width: 800px; /* Максимальна ширина для читабельності */
+            width: 100%;
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Стилі для зображення сценарію */
+        .scenario-image {
+            width: 100%;
+            max-height: 300px;
+            object-fit: cover; /* Зображення покриває область без спотворень */
+            border-radius: 10px; /* Заокруглені кути для зображень */
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1); /* Легка тінь */
+        }
+
+        /* Стилі для тексту сценарію/уривка */
+        .scenario-text {
+            font-size: 1.15rem; /* Еквівалент text-lg */
+            line-height: 1.6; /* Покращена читабельність */
+            text-align: center;
+            margin-bottom: 25px;
+            color: #374151; /* Темно-сірий текст */
+            font-style: italic; /* Курсив для уривків */
+        }
+
+        /* Контейнер для кнопок вибору */
+        .choices-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px; /* Простір між кнопками */
+            width: 100%;
+        }
+
+        /* Стилі для кнопок вибору */
+        .choice-button {
+            background-color: #4f46e5; /* Indigo-600 */
+            color: white;
+            padding: 14px 20px;
+            border-radius: 10px; /* Заокруглені кнопки */
+            font-size: 1.05rem; /* Еквівалент text-lg */
+            font-weight: 600; /* font-semibold */
+            cursor: pointer;
+            border: none;
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease; /* Плавні переходи */
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3); /* Тінь кнопки */
+        }
+        .choice-button:hover {
+            background-color: #4338ca; /* Темніший indigo на наведенні */
+            transform: translateY(-2px); /* Ефект легкого підняття */
+            box-shadow: 0 6px 15px rgba(79, 70, 229, 0.4); /* Покращена тінь */
+        }
+        .choice-button:active {
+            transform: translateY(0); /* Ефект натискання */
+            box-shadow: 0 2px 5px rgba(79, 70, 229, 0.2); /* Зменшена тінь */
+        }
+
+        /* Стилі для області зворотного зв'язку */
+        .feedback-area {
+            margin-top: 25px;
+            padding: 20px;
+            border-radius: 10px;
+            width: 100%;
+            text-align: center;
+            font-size: 1rem;
+            line-height: 1.5;
+            display: none; /* Приховано за замовчуванням */
+        }
+        .feedback-area.correct {
+            background-color: #d1fae5; /* green-100 */
+            border: 1px solid #34d399; /* green-400 */
+            color: #16a34a; /* green-700 */
+        }
+        .feedback-area.incorrect {
+            background-color: #fee2e2; /* red-100 */
+            border: 1px solid #ef4444; /* red-500 */
+            color: #dc2626; /* red-600 */
+        }
+
+        /* Стилі для кнопок навігації/перезапуску */
+        .next-button, .restart-button {
+            background-color: #10b981; /* emerald-500 */
+            color: white;
+            padding: 12px 25px;
+            border-radius: 10px;
+            font-size: 1.05rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            margin-top: 20px;
+            box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);
+            display: none; /* Приховано за замовчуванням */
+        }
+        .next-button:hover, .restart-button:hover {
+            background-color: #059669; /* emerald-600 */
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(16, 185, 129, 0.4);
+        }
+        .restart-button.final {
+            background-color: #ef4444; /* red-500 */
+            box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3);
+        }
+        .restart-button.final:hover {
+            background-color: #dc2626; /* red-600 */
+            box-shadow: 0 6px 15px rgba(239, 68, 68, 0.4);
+        }
+
+        /* Адаптивні налаштування для менших екранів */
+        @media (max-width: 640px) {
+            .game-container {
+                padding: 20px;
+            }
+            .scenario-text {
+                font-size: 1rem;
+            }
+            .choice-button {
+                font-size: 0.95rem;
+                padding: 12px 15px;
+            }
+            .feedback-area {
+                font-size: 0.9rem;
+            }
+            .next-button, .restart-button {
+                font-size: 1rem;
+                padding: 10px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1 class="text-3xl md:text-4xl font-bold text-center mb-8 text-gray-800">Літературна Цензура: Знайди Небезпечні Думки</h1>
+        <p class="text-center text-gray-600 mb-6">Ви - цензор 1930-х років. Прочитайте уривок і визначте, чому влада могла б його заборонити.</p>
+
+        <!-- Зображення для поточного сценарію (заглушка) -->
+        <img id="scenario-img" class="scenario-image" src="https://placehold.co/800x300/e0f2fe/0c4a6e?text=Цензура" alt="Ілюстрація до цензури">
+
+        <!-- Текст сценарію/уривка -->
+        <p id="scenario-text" class="scenario-text">
+            "Моя душа прагне свободи, як птах неба. Я не можу творити за наказом, бо мистецтво - це голос серця, а не рупор пропаганди."
+        </p>
+
+        <!-- Контейнер для кнопок вибору (причин цензури) -->
+        <div id="choices-container" class="choices-container">
+            <!-- Кнопки вибору будуть динамічно вставлені сюди JavaScript'ом -->
+        </div>
+
+        <!-- Область зворотного зв'язку для правильних/неправильних відповідей та пояснень -->
+        <div id="feedback-area" class="feedback-area">
+            <!-- Текст зворотного зв'язку буде відображатися тут -->
+        </div>
+
+        <!-- Кнопки для навігації між сценаріями або перезапуску -->
+        <button id="next-button" class="next-button">Наступний уривок</button>
+        <button id="restart-button" class="restart-button final">Почати знову</button>
+    </div>
+
+    <script>
+        // Дані для кожного сценарію цензури
+        const censorData = [
+            {
+                scenario: "Моя душа прагне свободи, як птах неба. Я не можу творити за наказом, бо мистецтво - це голос серця, а не рупор пропаганди.",
+                image: "https://placehold.co/800x300/f8bbd0/ad1457?text=Свобода+творчості",
+                options: [
+                    { text: "Пропаганда націоналізму", isCorrect: false },
+                    { text: "Відрив від колективізму та ідеологічна диверсія", isCorrect: true },
+                    { text: "Зайвий песимізм", isCorrect: false },
+                    { text: "Буржуазний формалізм", isCorrect: false }
+                ],
+                explanation: "Цей уривок містить прямий заклик до індивідуальної свободи творчості, що суперечило принципам колективізму та підконтрольності мистецтва партії. Це розцінювалося як ідеологічна диверсія."
+            },
+            {
+                scenario: "Український народ має свою унікальну історію, свої традиції, що відрізняють його від інших. Наша культура не є молодшою сестрою, а самобутньою та величною.",
+                image: "https://placehold.co/800x300/a7f3d0/059669?text=Національна+ідентичність",
+                options: [
+                    { text: "Відсутність оптимізму щодо майбутнього", isCorrect: false },
+                    { text: "Пропаганда буржуазного націоналізму", isCorrect: true },
+                    { text: "Занадто складний стиль", isCorrect: false },
+                    { text: "Відчуження від пролетаріату", isCorrect: false }
+                ],
+                explanation: "Будь-яке підкреслення унікальності та величі української нації, її історії та мови, що не вписувалося в концепцію 'дружби народів' під керівництвом Москви, розцінювалося як 'буржуазний націоналізм' та загроза національній ідентичності і було суворо заборонено."
+            },
+            {
+                scenario: "Світ, що нас оточує, сповнений страждань і безвиході. Людська доля - це низка розчарувань, а надія - лише ілюзія.",
+                image: "https://placehold.co/800x300/ffcdd2/b71c1c?text=Песимізм",
+                options: [
+                    { text: "Заклики до повстання", isCorrect: false },
+                    { text: "Відсутність класової боротьби", isCorrect: false },
+                    { text: "Пропаганда песимізму та декадентства", isCorrect: true },
+                    { text: "Занадто реалістичний опис", isCorrect: false }
+                ],
+                explanation: "Радянська ідеологія вимагала оптимізму та віри у світле майбутнє комунізму. Зображення страждань, розчарувань або безвиході розцінювалося як 'декадентство' та 'песимізм', що підривало віру в систему."
+            },
+            {
+                scenario: "Мистецтво має бути вільним від будь-яких рамок. Форма важливіша за зміст, а експеримент - це шлях до істини, навіть якщо він незрозумілий масам.",
+                image: "https://placehold.co/800x300/bbdefb/1a237e?text=Формалізм",
+                options: [
+                    { text: "Занадто простий сюжет", isCorrect: false },
+                    { text: "Недостатньо героїчних образів", isCorrect: false },
+                    { text: "Буржуазний формалізм та відрив від народу", isCorrect: true },
+                    { text: "Пропаганда релігії", isCorrect: false }
+                ],
+                explanation: "Експерименти з формою, відхід від реалістичного зображення та складність для розуміння 'простим народом' розцінювалися як 'формалізм' та 'відрив від народу'. Це суперечило принципам 'соціалістичного реалізму', який вимагав простоти та ідеологічної зрозумілості."
+            },
+            {
+                scenario: "Я бачив, як люди живуть у злиднях, як їхні мрії розбиваються об стіни байдужості. І я не можу мовчати про це, навіть якщо моя правда комусь не до вподоби.",
+                image: "https://placehold.co/800x300/ffecb3/e65100?text=Викриття+несправедливості",
+                options: [
+                    { text: "Пропаганда анархії", isCorrect: false },
+                    { text: "Дискредитація радянської дійсності", isCorrect: true },
+                    { text: "Відсутність позитивних героїв", isCorrect: false },
+                    { text: "Заклики до індивідуалізму", isCorrect: false }
+                ],
+                explanation: "Зображення злиднів, несправедливості або будь-яких негативних аспектів життя в СРСР розцінювалося як 'дискредитація радянської дійсності' та 'наклеп на радянський лад', що було суворо карано."
+            }
+        ];
+
+        let currentScenarioIndex = 0; // Починаємо з першого сценарію
+
+        // Отримуємо елементи DOM
+        const scenarioImgElem = document.getElementById('scenario-img');
+        const scenarioTextElem = document.getElementById('scenario-text');
+        const choicesContainerElem = document.getElementById('choices-container');
+        const feedbackArea = document.getElementById('feedback-area');
+        const nextButton = document.getElementById('next-button');
+        const restartButton = document.getElementById('restart-button');
+
+        /**
+         * Відображає поточний сценарій цензури.
+         * @param {number} index - Індекс сценарію для відображення.
+         */
+        function renderScenario(index) {
+            currentScenarioIndex = index;
+            const scenarioData = censorData[index];
+
+            if (!scenarioData) {
+                displayFinalMessage();
+                return;
+            }
+
+            // Скидаємо UI для нового сценарію
+            feedbackArea.style.display = 'none';
+            feedbackArea.classList.remove('correct', 'incorrect');
+            nextButton.style.display = 'none';
+            restartButton.style.display = 'none';
+            choicesContainerElem.innerHTML = ''; // Очищаємо попередні вибори
+
+            scenarioImgElem.src = scenarioData.image;
+            scenarioImgElem.alt = scenarioData.scenario.substring(0, Math.min(scenarioData.scenario.length, 50)) + "...";
+            scenarioTextElem.textContent = scenarioData.scenario;
+
+            // Створюємо кнопки вибору
+            scenarioData.options.forEach((option, optIndex) => {
+                const button = document.createElement('button');
+                button.textContent = option.text;
+                button.classList.add('choice-button');
+                button.addEventListener('click', () => handleChoice(button, option.isCorrect, scenarioData.explanation));
+                choicesContainerElem.appendChild(button);
+            });
+        }
+
+        /**
+         * Обробляє вибір користувача, надає зворотний зв'язок та вмикає кнопки навігації/перезапуску.
+         * @param {HTMLElement} clickedButton - Елемент кнопки, на яку було натиснуто.
+         * @param {boolean} isCorrect - True, якщо обраний варіант правильний.
+         * @param {string} explanation - Пояснення до відповіді.
+         */
+        function handleChoice(clickedButton, isCorrect, explanation) {
+            // Вимикаємо всі кнопки вибору після вибору
+            Array.from(choicesContainerElem.children).forEach(button => {
+                button.disabled = true;
+                button.style.opacity = '0.7'; // Візуальний зворотний зв'язок для вимкнених кнопок
+            });
+
+            // Виділяємо обрану кнопку та надаємо зворотний зв'язок
+            clickedButton.style.backgroundColor = isCorrect ? '#10b981' : '#ef4444'; // Зелений для правильного, червоний для неправильного
+            clickedButton.style.boxShadow = '0 6px 15px rgba(0, 0, 0, 0.2)';
+            clickedButton.style.transform = 'translateY(-2px)';
+
+            feedbackArea.textContent = explanation;
+            feedbackArea.classList.add(isCorrect ? 'correct' : 'incorrect');
+            feedbackArea.style.display = 'block';
+
+            // Показуємо кнопку наступного сценарію або перезапуску
+            if (currentScenarioIndex < censorData.length - 1) {
+                nextButton.style.display = 'block';
+            } else {
+                restartButton.style.display = 'block'; // Показуємо кнопку перезапуску в кінці
+                restartButton.classList.add('final'); // Додаємо специфічний стиль для фінального перезапуску
+            }
+        }
+
+        /**
+         * Переходить до наступного сценарію.
+         */
+        function goToNextScenario() {
+            renderScenario(currentScenarioIndex + 1);
+        }
+
+        /**
+         * Перезапускає гру з початку.
+         */
+        function restartGame() {
+            renderScenario(0);
+        }
+
+        /**
+         * Відображає фінальне повідомлення після завершення всіх сценаріїв.
+         */
+        function displayFinalMessage() {
+            scenarioImgElem.src = "https://placehold.co/800x300/a5d6a7/1b5e20?text=Вітаємо!+Ви+пройшли+гру!";
+            scenarioImgElem.alt = "Гра завершена";
+            scenarioTextElem.textContent = "Вітаємо, ви успішно пройшли курс молодого цензора! Тепер ви знаєте, як 'небезпечні думки' могли коштувати митцям свободи і життя. Ваші знання вражають!";
+            choicesContainerElem.innerHTML = ''; // Очищаємо вибори
+            feedbackArea.style.display = 'none';
+            nextButton.style.display = 'none';
+            restartButton.style.display = 'block'; // Показуємо кнопку перезапуску
+            restartButton.classList.add('final');
+        }
+
+        // Додаємо слухачів подій до кнопок навігації
+        nextButton.addEventListener('click', goToNextScenario);
+        restartButton.addEventListener('click', restartGame);
+
+        // Початкове відображення при завантаженні сторінки
+        document.addEventListener('DOMContentLoaded', () => {
+            renderScenario(0);
+        });
+    </script>
+</body>
+</html>

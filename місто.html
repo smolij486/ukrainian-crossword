@@ -1,0 +1,266 @@
+import React, { useState, useEffect } from 'react';
+
+// Main App component for the game
+const App = () => {
+  // State variables for Stepan's attributes
+  const [intellect, setIntellect] = useState(50); // Represents Stepan's intellectual development
+  const [morality, setMorality] = useState(50);   // Represents Stepan's moral compass
+  const [influence, setInfluence] = useState(50); // Represents Stepan's social standing and power in the city
+  const [stepanProgress, setStepanProgress] = useState(0); // Represents Stepan's overall progress/intellect for the bar
+  
+  // Game flow state
+  const [currentScenarioIndex, setCurrentScenarioIndex] = useState(0); // Index of the current scenario
+  const [message, setMessage] = useState(''); // Feedback message after a choice
+  const [gameOver, setGameOver] = useState(false); // Game over state
+
+  // Define game scenarios and their effects on Stepan's attributes
+  const scenarios = [
+    {
+      id: 'start',
+      text: "Ви - Степан Радченко, молодий сільський парубок, який прибув до Києва, сповнений амбіцій. Місто зустрічає вас шумом і метушнею. Що ви зробите першим?",
+      options: [
+        { text: "Знайти роботу, щоб вижити.", effects: { influence: 10, morality: -5, intellect: -5 }, feedback: "Важка праця дає змогу вижити, але забирає час та сили." },
+        { text: "Піти до бібліотеки, щоб вчитися.", effects: { intellect: 15, influence: -5, progress: 15 }, feedback: "Ви поглинаєте знання, але поки без грошей." },
+        { text: "Дослідити місто, шукаючи натхнення.", effects: { intellect: 5, morality: 5, influence: -5 }, feedback: "Місто відкриває вам свої таємниці, але й показує жорстокість." },
+      ],
+    },
+    {
+      id: 'nadia',
+      text: "Ви зустрічаєте Надійку, просту дівчину з села, яка нагадує вам про дім. Як ви до неї поставитеся?",
+      options: [
+        { text: "Відчути теплоту і підтримку, провести час разом.", effects: { morality: 10, influence: -5 }, feedback: "Вона приносить спокій, але відволікає від кар'єри." },
+        { text: "Використати її для власного комфорту, не думаючи про її почуття.", effects: { morality: -10, influence: 5 }, feedback: "Ви досягаєте свого, але відчуваєте внутрішній дискомфорт." },
+        { text: "Триматися на відстані, зосередившись на своїх амбіціях.", effects: { morality: -5, intellect: 5 }, feedback: "Ви зосереджені на собі, але втрачаєте людське тепло." },
+      ],
+    },
+    {
+      id: 'first_story',
+      text: "Ви написали своє перше оповідання. Що ви з ним зробите?",
+      options: [
+        { text: "Надіслати до відомого журналу, ризикуючи відмовою.", effects: { intellect: 15, influence: 10 }, feedback: "Сміливий крок! Можливо, вас помітять." },
+        { text: "Показати лише близьким друзям, щоб отримати чесний відгук.", effects: { intellect: 5, morality: 5 }, feedback: "Цінна критика допомагає вам рости." },
+        { text: "Відкласти, вважаючи, що воно недостатньо добре.", effects: { intellect: -5, influence: -5 }, feedback: "Невпевненість гальмує ваш розвиток." },
+      ],
+    },
+    {
+      id: 'financial_troubles',
+      text: "Грошей обмаль, ви ледве зводите кінці з кінцями. Що ви зробите?",
+      options: [
+        { text: "Взяти сумнівну роботу, яка обіцяє швидкий заробіток.", effects: { influence: 10, morality: -10 }, feedback: "Гроші є, але ціна висока." },
+        { text: "Затягнути пасок, але продовжувати навчання/творчість.", effects: { intellect: 5, morality: 5 }, feedback: "Ви залишаєтеся вірним собі, незважаючи на труднощі." },
+        { text: "Попросити допомоги у знайомих, ризикуючи своєю гордістю.", effects: { influence: -5, morality: 5 }, feedback: "Допомога приходить, але ви відчуваєте себе вразливим." },
+      ],
+    },
+    {
+      id: 'elite_party',
+      text: "Вас запросили на літературний вечір до впливових людей Києва. Як ви себе поведете?",
+      options: [
+        { text: "Бути собою, висловлювати свої думки відверто.", effects: { morality: 10, intellect: 5 }, feedback: "Ваша щирість може вразити або відштовхнути." },
+        { text: "Намагатися догодити, приховуючи свої справжні погляди.", effects: { morality: -5, influence: 10 }, feedback: "Ви завойовуєте прихильність, але втрачаєте частину себе." },
+        { text: "Спостерігати та аналізувати, мінімально втручаючись.", effects: { intellect: 10 }, feedback: "Ви збираєте інформацію, залишаючись у тіні." },
+      ],
+    },
+    {
+      id: 'love_interest_zina',
+      text: "Ви зустрічаєте Зину, витончену та освічену жінку, яка вас приваблює. Які ваші дії?",
+      options: [
+        { text: "Намагатися справити враження своїм інтелектом та амбіціями.", effects: { intellect: 10, influence: 5 }, feedback: "Ви прагнете її уваги, демонструючи свої найкращі якості." },
+        { text: "Бути щирим та відкритим, не приховуючи свого походження.", effects: { morality: 10, influence: -5 }, feedback: "Ваша простота може бути як перевагою, так і недоліком." },
+        { text: "Використовувати її зв'язки для просування власної кар'єри.", effects: { morality: -15, influence: 15 }, feedback: "Шлях до успіху може бути жорстоким." },
+      ],
+    },
+    {
+      id: 'literary_success',
+      text: "Ваше оповідання опубліковано і викликало резонанс! Що далі?",
+      options: [
+        { text: "Почати роботу над романом, присвятивши себе творчості.", effects: { intellect: 20, influence: 10 }, feedback: "Ви відчуваєте покликання до великого твору." },
+        { text: "Використовувати свою популярність для входження в елітні кола.", effects: { influence: 20, morality: -5 }, feedback: "Слава відкриває двері, але вимагає жертв." },
+        { text: "Залишитися скромним, продовжуючи вчитися та розвиватися.", effects: { intellect: 10, morality: 10 }, feedback: "Ви цінуєте внутрішній ріст більше за зовнішній блиск." },
+      ],
+    },
+    {
+      id: 'moral_compromise',
+      text: "Вам пропонують вигідну, але сумнівну угоду, яка може принести великий вплив. Ваше рішення?",
+      options: [
+        { text: "Відмовитися, зберігаючи свою честь.", effects: { morality: 20, influence: -10 }, feedback: "Ви залишаєтеся чистим, але втрачаєте можливість." },
+        { text: "Погодитися, виправдовуючи це необхідністю для досягнення мети.", effects: { influence: 20, morality: -20 }, feedback: "Влада у ваших руках, але ціна висока." },
+        { text: "Спробувати знайти компроміс, який не заплямує репутацію.", effects: { intellect: 5, morality: 5, influence: 5 }, feedback: "Ви шукаєте золоту середину, але ризикуєте." },
+      ],
+    },
+    {
+      id: 'reflection',
+      text: "Після всіх подій ви зупиняєтеся, щоб обміркувати свій шлях. Що ви відчуваєте?",
+      options: [
+        { text: "Пишаєтеся своїми досягненнями, незважаючи на труднощі.", effects: { intellect: 5, influence: 5 }, feedback: "Ви задоволені своїм прогресом." },
+        { text: "Відчуваєте внутрішню порожнечу, незважаючи на зовнішній успіх.", effects: { morality: -10 }, feedback: "Ціна успіху може бути надто високою." },
+        { text: "Бажаєте повернутися до витоків, до простоти сільського життя.", effects: { morality: 10, influence: -10 }, feedback: "Ностальгія за минулим." },
+      ],
+    },
+    // Final scenario to trigger game end and display conclusion
+    {
+      id: 'final_choice',
+      text: "Ваш шлях у Києві добігає кінця. Як ви бачите своє майбутнє?",
+      options: [
+        { text: "Продовжувати підкорювати місто, прагнучи абсолютної влади.", effects: { influence: 20, morality: -10 }, feedback: "Ви стаєте безжальним володарем Києва." },
+        { text: "Присвятити себе мистецтву та інтелектуальному розвитку.", effects: { intellect: 20, morality: 5 }, feedback: "Ви стаєте визнаним генієм, який змінює світ словом." },
+        { text: "Знайти внутрішній спокій, відмовившись від гонитви за славою.", effects: { morality: 20, intellect: -5, influence: -5 }, feedback: "Ви знаходите гармонію, але відходите від міської суєти." },
+      ],
+    },
+  ];
+
+  // Total number of scenarios
+  const maxScenarios = scenarios.length;
+
+  // Function to handle a player's choice
+  const handleChoice = (option) => {
+    // If the game is already over, prevent further choices
+    if (gameOver) return;
+
+    // Update Stepan's attributes based on the chosen option's effects
+    // Ensure attributes stay within the 0-100 range
+    setIntellect(prev => Math.max(0, Math.min(100, prev + (option.effects.intellect || 0))));
+    setMorality(prev => Math.max(0, Math.min(100, prev + (option.effects.morality || 0))));
+    setInfluence(prev => Math.max(0, Math.min(100, prev + (option.effects.influence || 0))));
+
+    // Update overall progress for the bar (e.g., average of attributes)
+    // Using a simple average of current attributes for the progress bar
+    setStepanProgress(prev => {
+        const newProgress = Math.round((intellect + morality + influence) / 3);
+        return Math.min(100, Math.max(0, newProgress));
+    });
+
+    // Display feedback message for the chosen action
+    setMessage(option.feedback);
+
+    // Move to the next scenario or end the game if all scenarios are completed
+    if (currentScenarioIndex < maxScenarios - 1) {
+      setCurrentScenarioIndex(prev => prev + 1);
+    } else {
+      setGameOver(true); // End the game
+    }
+  };
+
+  // Function to restart the game to its initial state
+  const restartGame = () => {
+    setIntellect(50);
+    setMorality(50);
+    setInfluence(50);
+    setStepanProgress(0); // Reset progress bar
+    setCurrentScenarioIndex(0);
+    setMessage('');
+    setGameOver(false);
+  };
+
+  // Get the current scenario data based on the current index
+  const currentScenario = scenarios[currentScenarioIndex];
+
+  // Function to determine the game ending based on final attribute values
+  const getEnding = () => {
+    if (intellect >= 80 && morality >= 70 && influence >= 60) {
+      return "Ви стали визнаним інтелектуалом, моральним авторитетом та впливовою фігурою, яка збагатила українську культуру. Київ підкорено словом, духом і розумом.";
+    } else if (influence >= 80 && morality <= 30) {
+      return "Ви досягли вершини влади та впливу в Києві, але втратили свою мораль та внутрішню сутність. Місто поглинуло вас, зробивши своїм безжальним володарем.";
+    } else if (intellect >= 70 && influence >= 70 && morality >= 50) {
+      return "Ви успішно підкорили Київ, поєднавши інтелект, вплив та збереження своєї моралі. Ви стали справжнім господарем міста, не втративши себе.";
+    } else if (morality >= 80 && intellect <= 40 && influence <= 40) {
+      return "Ви зберегли свою душу та моральні принципи, але не змогли повністю реалізувати себе в місті. Ви знайшли внутрішній спокій, але Київ залишився непідкореним у матеріальному плані.";
+    } else if (intellect <= 30 && morality <= 30 && influence <= 30) {
+      return "Ви не змогли знайти своє місце в Києві. Місто виявилося занадто жорстоким, і ви повернулися до витоків, розчарований та спустошений.";
+    } else {
+      return "Ваш шлях у Києві був складним та неоднозначним. Ви досягли певних успіхів, але й зазнали втрат. Місто залишило на вас свій відбиток, і ваша історія продовжується...";
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-indigo-100 to-purple-200 flex items-center justify-center p-4 font-inter text-gray-800">
+      {/* Tailwind CSS CDN for styling */}
+      <script src="https://cdn.tailwindcss.com"></script>
+      {/* Google Fonts - Inter for typography */}
+      <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+
+      <div className="bg-white rounded-2xl shadow-xl p-8 max-w-3xl w-full border-4 border-indigo-300">
+        <h1 className="text-4xl font-bold text-center text-indigo-700 mb-6">
+          Шлях Степана: Підкори Київ
+        </h1>
+
+        {/* Display for Stepan's attributes (Intellect, Morality, Influence) */}
+        <div className="grid grid-cols-3 gap-4 mb-8 text-center">
+          <div className="p-4 bg-blue-50 rounded-lg shadow-sm border border-blue-200">
+            <p className="text-lg font-semibold text-blue-700">Інтелект</p>
+            <p className="text-3xl font-bold text-blue-900">{intellect}</p>
+          </div>
+          <div className="p-4 bg-green-50 rounded-lg shadow-sm border border-green-200">
+            <p className="text-lg font-semibold text-green-700">Мораль</p>
+            <p className="text-3xl font-bold text-green-900">{morality}</p>
+          </div>
+          <div className="p-4 bg-red-50 rounded-lg shadow-sm border border-red-200">
+            <p className="text-lg font-semibold text-red-700">Вплив</p>
+            <p className="text-3xl font-bold text-red-900">{influence}</p>
+          </div>
+        </div>
+
+        {/* Overall Progress Bar */}
+        <div className="mb-6">
+          <h2 className="text-xl font-semibold mb-2">Загальний Прогрес:</h2>
+          <div className="w-full bg-gray-200 rounded-full h-4">
+            <div
+              className="bg-purple-500 h-4 rounded-full transition-all duration-500 ease-out"
+              style={{ width: `${stepanProgress}%` }}
+            ></div>
+          </div>
+          <p className="text-sm text-right text-gray-600 mt-1">{stepanProgress}%</p>
+        </div>
+
+
+        {/* Main game area: displays scenario text and options or game over message */}
+        <div className="bg-indigo-50 p-6 rounded-xl border border-indigo-200 mb-6">
+          {!gameOver ? ( // If the game is not over, display current scenario
+            <>
+              <p className="text-lg text-gray-700 leading-relaxed mb-4">
+                {currentScenario.text}
+              </p>
+
+              {/* Display feedback message if available */}
+              {message && (
+                <div className="mt-4 p-3 rounded-lg bg-gray-100 text-gray-700 font-medium text-center text-md">
+                  {message}
+                </div>
+              )}
+
+              {/* Display choice buttons for the current scenario */}
+              <div className="flex flex-col space-y-3 mt-6">
+                {currentScenario.options.map((option, index) => (
+                  <button
+                    key={index}
+                    onClick={() => handleChoice(option)}
+                    className="w-full py-3 px-6 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 transition duration-300 ease-in-out transform hover:scale-105
+                               focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-75"
+                  >
+                    {option.text}
+                  </button>
+                ))}
+              </div>
+            </>
+          ) : ( // If the game is over, display the ending and restart button
+            <div className="text-center">
+              <h2 className="text-3xl font-bold text-gray-800 mb-4">
+                Кінець гри!
+              </h2>
+              <p className="text-xl text-gray-700 leading-relaxed mb-6">
+                {getEnding()} {/* Display the determined ending */}
+              </p>
+              <button
+                onClick={restartGame}
+                className="px-8 py-4 bg-purple-600 text-white font-semibold rounded-full shadow-lg hover:bg-purple-700 transition duration-300 ease-in-out transform hover:scale-105"
+              >
+                Грати знову
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default App;

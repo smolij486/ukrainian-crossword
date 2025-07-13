@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Барокова вікторина</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6; /* Light gray background */
+            color: #374151; /* Dark gray text */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 1rem;
+            box-sizing: border-box;
+        }
+        .quiz-container {
+            background-color: #ffffff;
+            border-radius: 1.5rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+            padding: 2rem;
+            text-align: center;
+            max-width: 90%;
+            width: 700px; /* Max width for desktop */
+        }
+        h1 {
+            font-family: 'Playfair Display', serif;
+            color: #4a0e0e; /* Deep red/maroon for Baroque feel */
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+        .question-area {
+            background-color: #fef2f2; /* Light red background for question */
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            min-height: 100px; /* Ensure consistent height */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #7f1d1d; /* Darker red text */
+            box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+        }
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr; /* Single column for mobile */
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+        @media (min-width: 640px) { /* Small screens and up */
+            .options-grid {
+                grid-template-columns: repeat(2, 1fr); /* Two columns for larger screens */
+            }
+        }
+        .option-button {
+            background-color: #e5e7eb; /* Light gray for options */
+            color: #1f2937;
+            padding: 1rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.06), 0 1px 2px -1px rgba(0, 0, 0, 0.04);
+            border: 2px solid transparent;
+        }
+        .option-button:hover:not(.correct):not(.incorrect):not(.disabled) {
+            background-color: #d1d5db;
+            transform: translateY(-2px);
+        }
+        .option-button.correct {
+            background-color: #dcfce7; /* Light green */
+            border-color: #22c55e; /* Green border */
+            color: #16a34a; /* Green text */
+        }
+        .option-button.incorrect {
+            background-color: #fee2e2; /* Light red */
+            border-color: #ef4444; /* Red border */
+            color: #dc2626; /* Red text */
+        }
+        .option-button.disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        .feedback-message {
+            min-height: 40px; /* Consistent height for feedback */
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #4b5563;
+        }
+        .score-display {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+        }
+        .control-buttons button {
+            background-color: #4a0e0e; /* Deep red/maroon */
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            border: 2px solid #7f1d1d; /* Darker border */
+            margin: 0.5rem;
+        }
+        .control-buttons button:hover {
+            background-color: #7f1d1d; /* Lighter red on hover */
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .control-buttons button:active {
+            transform: translateY(0);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .control-buttons button:disabled {
+            background-color: #ccc;
+            border-color: #bbb;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Modal styling */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 1000; /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgba(0,0,0,0.6); /* Black w/ opacity */
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+            color: #374151;
+        }
+        .modal-content h2 {
+            font-family: 'Playfair Display', serif;
+            color: #4a0e0e;
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+        .modal-content p {
+            font-size: 1.125rem;
+            margin-bottom: 1.5rem;
+        }
+        .modal-content button {
+            background-color: #4a0e0e;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+            margin-top: 0; /* Override default button margin */
+        }
+    </style>
+</head>
+<body>
+    <div class="quiz-container">
+        <h1 class="text-4xl md:text-5xl font-bold mb-6">Барокова вікторина</h1>
+
+        <div id="questionArea" class="question-area">
+            <!-- Question will be displayed here -->
+        </div>
+
+        <div id="optionsGrid" class="options-grid">
+            <!-- Answer options will be displayed here -->
+        </div>
+
+        <div id="feedbackMessage" class="feedback-message">
+            <!-- Feedback (Correct/Incorrect) will be displayed here -->
+        </div>
+
+        <div id="scoreDisplay" class="score-display">
+            Рахунок: 0 / 0
+        </div>
+
+        <div class="control-buttons">
+            <button id="nextButton" disabled>Наступне питання</button>
+            <button id="restartButton">Почати заново</button>
+        </div>
+    </div>
+
+    <!-- Quiz End Modal -->
+    <div id="quizEndModal" class="modal">
+        <div class="modal-content">
+            <h2 id="modalTitle">Вікторина завершена!</h2>
+            <p id="modalMessage"></p>
+            <button id="modalCloseButton">Грати знову</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const questionArea = document.getElementById('questionArea');
+            const optionsGrid = document.getElementById('optionsGrid');
+            const feedbackMessage = document.getElementById('feedbackMessage');
+            const scoreDisplay = document.getElementById('scoreDisplay');
+            const nextButton = document.getElementById('nextButton');
+            const restartButton = document.getElementById('restartButton');
+            const quizEndModal = document.getElementById('quizEndModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalMessage = document.getElementById('modalMessage');
+            const modalCloseButton = document.getElementById('modalCloseButton');
+
+            // Quiz questions
+            const quizQuestions = [
+                {
+                    question: "Який художній стиль панував у Європі з кінця XVI до середини XVIII століття?",
+                    options: ["Ренесанс", "Бароко", "Класицизм", "Рококо"],
+                    correctAnswer: "Бароко"
+                },
+                {
+                    question: "Хто є автором філософської ідеї 'сродної праці'?",
+                    options: ["Педро Кальдерон", "Григорій Сковорода", "Йоганн Себастьян Бах", "Мігель де Сервантес"],
+                    correctAnswer: "Григорій Сковорода"
+                },
+                {
+                    question: "Яка з цих п'єс є найвідомішою філософською драмою Кальдерона?",
+                    options: ["Дон Кіхот", "Ромео і Джульєтта", "Життя є сон", "Гамлет"],
+                    correctAnswer: "Життя є сон"
+                },
+                {
+                    question: "Який з цих композиторів є яскравим представником музики Бароко?",
+                    options: ["Вольфганг Амадей Моцарт", "Людвіг ван Бетховен", "Йоганн Себастьян Бах", "Фредерік Шопен"],
+                    correctAnswer: "Йоганн Себастьян Бах"
+                },
+                {
+                    question: "Яка ідея Сковороди закликає до самопізнання як основи духовного зростання?",
+                    options: ["Світ ловив мене", "Сродна праця", "Пізнай себе", "Дві натури"],
+                    correctAnswer: "Пізнай себе"
+                },
+                {
+                    question: "Де виник стиль Бароко?",
+                    options: ["Франція", "Іспанія", "Італія", "Німеччина"],
+                    correctAnswer: "Італія"
+                },
+                {
+                    question: "Який термін використовував Сковорода для позначення матеріальної та духовної натур світу?",
+                    options: ["Дві сутності", "Дві істини", "Дві натури", "Дві реальності"],
+                    correctAnswer: "Дві натури"
+                },
+                {
+                    question: "Який жанр музики з'явився в епоху Бароко?",
+                    options: ["Симфонія", "Опера", "Соната", "Квартет"],
+                    correctAnswer: "Опера"
+                },
+                {
+                    question: "Кальдерон був представником 'Золотого століття' якої країни?",
+                    options: ["Італія", "Франція", "Іспанія", "Англія"],
+                    correctAnswer: "Іспанія"
+                },
+                {
+                    question: "Яка характеристика не є типовою для стилю Бароко?",
+                    options: ["Пишність", "Динамізм", "Мінімалізм", "Емоційність"],
+                    correctAnswer: "Мінімалізм"
+                }
+            ];
+
+            let currentQuestionIndex = 0;
+            let score = 0;
+            let questionsAnswered = 0;
+
+            /**
+             * Shuffles an array using the Fisher-Yates (Knuth) algorithm.
+             * @param {Array} array - The array to shuffle.
+             * @returns {Array} - The shuffled array.
+             */
+            function shuffleArray(array) {
+                for (let i = array.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [array[i], array[j]] = [array[j], array[i]];
+                }
+                return array;
+            }
+
+            /**
+             * Displays the current question and its options.
+             */
+            function displayQuestion() {
+                // Clear previous state
+                optionsGrid.innerHTML = '';
+                feedbackMessage.textContent = '';
+                nextButton.disabled = true;
+
+                if (currentQuestionIndex < quizQuestions.length) {
+                    const questionData = quizQuestions[currentQuestionIndex];
+                    questionArea.textContent = questionData.question;
+
+                    // Shuffle options for each question
+                    const shuffledOptions = shuffleArray([...questionData.options]);
+
+                    shuffledOptions.forEach(option => {
+                        const button = document.createElement('button');
+                        button.classList.add('option-button');
+                        button.textContent = option;
+                        button.addEventListener('click', () => handleAnswer(option, questionData.correctAnswer, button));
+                        optionsGrid.appendChild(button);
+                    });
+                } else {
+                    // Quiz ended
+                    showQuizEndModal();
+                }
+                updateScoreDisplay();
+            }
+
+            /**
+             * Handles the user's answer selection.
+             * @param {string} selectedOption - The option selected by the user.
+             * @param {string} correctAnswer - The correct answer for the current question.
+             * @param {HTMLElement} clickedButton - The button element that was clicked.
+             */
+            function handleAnswer(selectedOption, correctAnswer, clickedButton) {
+                // Disable all option buttons after an answer is selected
+                Array.from(optionsGrid.children).forEach(button => {
+                    button.classList.add('disabled');
+                    button.disabled = true;
+                });
+
+                questionsAnswered++;
+
+                if (selectedOption === correctAnswer) {
+                    score++;
+                    feedbackMessage.textContent = 'Правильно!';
+                    clickedButton.classList.add('correct');
+                } else {
+                    feedbackMessage.textContent = `Неправильно. Правильна відповідь: "${correctAnswer}"`;
+                    clickedButton.classList.add('incorrect');
+                    // Highlight the correct answer if the user chose incorrectly
+                    Array.from(optionsGrid.children).forEach(button => {
+                        if (button.textContent === correctAnswer) {
+                            button.classList.add('correct');
+                        }
+                    });
+                }
+                updateScoreDisplay();
+                nextButton.disabled = false; // Enable next button
+            }
+
+            /**
+             * Updates the score display.
+             */
+            function updateScoreDisplay() {
+                scoreDisplay.textContent = `Рахунок: ${score} / ${questionsAnswered}`;
+            }
+
+            /**
+             * Moves to the next question.
+             */
+            function nextQuestion() {
+                currentQuestionIndex++;
+                if (currentQuestionIndex < quizQuestions.length) {
+                    displayQuestion();
+                } else {
+                    showQuizEndModal();
+                }
+            }
+
+            /**
+             * Shows the quiz end modal with results.
+             */
+            function showQuizEndModal() {
+                quizEndModal.style.display = 'flex';
+                modalTitle.textContent = 'Вікторина завершена!';
+                modalMessage.innerHTML = `Ви відповіли на ${score} з ${quizQuestions.length} питань правильно.`;
+            }
+
+            /**
+             * Resets the game to its initial state.
+             */
+            function resetGame() {
+                currentQuestionIndex = 0;
+                score = 0;
+                questionsAnswered = 0;
+                shuffleArray(quizQuestions); // Shuffle questions for a new game
+                displayQuestion();
+                quizEndModal.style.display = 'none'; // Hide modal
+            }
+
+            // Event Listeners
+            nextButton.addEventListener('click', nextQuestion);
+            restartButton.addEventListener('click', resetGame);
+            modalCloseButton.addEventListener('click', resetGame);
+
+            // Initial game setup
+            shuffleArray(quizQuestions); // Shuffle questions initially
+            displayQuestion();
+        });
+    </script>
+</body>
+</html>

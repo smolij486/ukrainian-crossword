@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Історичні Флеш-Картки України</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts - Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Користувацькі стилі для перегортання карток та адаптивного дизайну */
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        #root {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(to bottom right, #e0f2fe, #c3dafe); /* Градієнтний фон */
+            padding: 1rem; /* Відступи */
+        }
+        @media (min-width: 640px) { /* Для малих екранів (sm) */
+            #root {
+                padding: 2rem; /* Збільшені відступи */
+            }
+        }
+
+        .card-container {
+            perspective: 1000px; /* Встановлює 3D-контекст для дочірніх елементів */
+            height: 18rem; /* Висота за замовчуванням: 288px */
+            width: 100%; /* Забезпечує повну ширину стовпця сітки */
+        }
+        @media (min-width: 640px) { /* Для малих екранів (sm) */
+            .card-container {
+                height: 22rem; /* Збільшена висота */
+            }
+        }
+        @media (min-width: 768px) { /* Для середніх екранів (md) */
+            .card-container {
+                height: 24rem; /* Ще більша висота */
+            }
+        }
+
+        .card {
+            width: 100%;
+            height: 100%;
+            transition: transform 0.6s; /* Анімація перегортання */
+            transform-style: preserve-3d; /* Забезпечує застосування 3D-трансформацій до дочірніх елементів */
+            position: relative;
+        }
+        .card.is-flipped {
+            transform: rotateY(180deg); /* Поворот картки при перегортанні */
+        }
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden; /* Приховує зворотний бік елемента, коли він відвернутий */
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between; /* Розподіл простору між елементами */
+            align-items: center;
+            padding: 1.5rem; /* Відступи */
+            border-radius: 1.5rem; /* Закруглені кути для сторін картки */
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1); /* М'яка тінь для глибини */
+            cursor: pointer;
+            text-align: center;
+            overflow: hidden; /* Приховати переповнення вмісту */
+        }
+        .card-front {
+            background-color: #ffffff; /* Білий фон для лицьової сторони */
+            color: #333; /* Темний текст */
+        }
+        .card-back {
+            background-color: #6366f1; /* Колір індиго для зворотної сторони */
+            color: #ffffff; /* Білий текст */
+            transform: rotateY(180deg); /* Повертає зворотний бік, щоб він був спочатку прихований */
+        }
+        /* Налаштування розміру шрифту для абзаців, щоб краще вмістити вміст */
+        .card-face p {
+            font-size: 0.875rem; /* Малий розмір тексту */
+            line-height: 1.4; /* Налаштування висоти рядка для кращої читабельності */
+            margin-bottom: auto; /* Відступ знизу */
+            margin-top: auto; /* Відступ зверху */
+            flex-grow: 1; /* Дозволяє абзацу розширюватися та займати доступний простір */
+            display: flex;
+            align-items: center; /* Вертикальне центрування тексту в його гнучкому контейнері */
+            justify-content: center; /* Горизонтальне центрування тексту в його гнучкому контейнері */
+        }
+        @media (min-width: 640px) { /* Для малих екранів (sm) */
+            .card-face p {
+                font-size: 1rem; /* Збільшений розмір тексту */
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <!-- React and ReactDOM CDNs -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+
+    <script type="text/javascript">
+        // Головний компонент додатку
+        const App = () => {
+            // Дані для інтерактивних карток
+            const cardData = [
+                {
+                    id: 1,
+                    title: "«Слово о полку Ігоревім» (XII ст.)",
+                    front: "Коли давні українці писали свій перший епічний хіт!",
+                    back: "Це не просто віршик, а справжній давньоруський блокбастер про невдачу одного князя. Головне – це перший національний маніфест, заклик до єдності 1.0, що почав формувати ідею спільної землі та народу. Від племінних розбірок до усвідомлення: «Ми – одне ціле!»"
+                },
+                {
+                    id: 2,
+                    title: "Житія святих та літописи (Середньовіччя)",
+                    front: "Інфлюенсери минулого та їхні «історії» про життя!",
+                    back: "Замість інстаграмних блогерів були святі, а замість новинних стрічок – літописи. «Житія святих» створювали ідеали, а літописи, як «Повість минулих літ», – це справжні сценарії про те, хто ми, звідки пішли і чому наші князі – це круто! Слово ставало цементом для об'єднання навколо віри та держави."
+                },
+                {
+                    id: 3,
+                    title: "Відродження (XV-XVI ст.)",
+                    front: "Коли людина стала «центром Всесвіту» (і почала писати про це)!",
+                    back: "У Європі це був час, коли всі зрозуміли: «Ого, людина – це щось більше!» В Україні це відгукнулося братськими школами, полемічною літературою – такими собі дискусійними клубами. Слово стало інструментом для самокопання, пошуку нових ідеалів і формування інтелектуальної еліти, яка почала думати про Україну як про щось унікальне."
+                },
+                {
+                    id: 4,
+                    title: "Козацькі літописи (кінець XVII – початок XVIII ст.)",
+                    front: "Коли козаки писали свою «Історію успіху» (і не тільки)!",
+                    back: "Літописи Самовидця, Грабянки, Величка – це не просто сухі записи, а справжні козацькі саги! Козаки не тільки шаблею махали, а й пером, пишучи про свої перемоги, зради, повстання. Це національна пам'ять на папері, що закріплювала ідею козацької України, її боротьби за волю і самобутність. Слово не просто фіксувало історію, а активно її творило, формуючи міцний фундамент для майбутньої нації."
+                }
+            ];
+
+            // Стан для керування перегорнутими картками
+            const [flippedCards, setFlippedCards] = React.useState({});
+
+            // Функція для перемикання стану перегортання картки
+            const toggleFlip = (id) => {
+                console.log(`Перемикання картки з ID: ${id}`);
+                setFlippedCards(prevState => {
+                    const newState = {
+                        ...prevState,
+                        [id]: !prevState[id]
+                    };
+                    console.log('Новий стан перегортання:', newState);
+                    return newState;
+                });
+            };
+
+            // Перетворення JSX на React.createElement виклики
+            return React.createElement(
+                'div',
+                { className: 'w-full max-w-6xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6' },
+                cardData.map(card =>
+                    React.createElement(
+                        'div',
+                        { key: card.id, className: 'card-container' },
+                        React.createElement(
+                            'div',
+                            {
+                                className: `card ${flippedCards[card.id] ? 'is-flipped' : ''}`,
+                                onClick: () => toggleFlip(card.id)
+                            },
+                            // Лицьова сторона картки
+                            React.createElement(
+                                'div',
+                                { className: 'card-face card-front' },
+                                React.createElement(
+                                    'h3',
+                                    { className: 'text-xl sm:text-2xl font-bold mb-3 text-indigo-700' },
+                                    card.title
+                                ),
+                                React.createElement(
+                                    'p',
+                                    { className: 'text-sm sm:text-base text-gray-700' },
+                                    card.front
+                                ),
+                                React.createElement(
+                                    'span',
+                                    { className: 'mt-4 text-sm text-gray-500' },
+                                    '(Клікніть, щоб дізнатись більше)'
+                                )
+                            ),
+                            // Зворотна сторона картки
+                            React.createElement(
+                                'div',
+                                { className: 'card-face card-back' },
+                                React.createElement(
+                                    'h3',
+                                    { className: 'text-xl sm:text-2xl font-bold mb-3 text-white' },
+                                    card.title
+                                ),
+                                React.createElement(
+                                    'p',
+                                    { className: 'text-sm sm:text-base text-white' },
+                                    card.back
+                                ),
+                                React.createElement(
+                                    'span',
+                                    { className: 'mt-4 text-sm text-indigo-200' },
+                                    '(Клікніть, щоб повернутися)'
+                                )
+                            )
+                        )
+                    )
+                )
+            );
+        };
+
+        // Ця частина є критично важливою для рендерингу React-додатку в середовищі браузера.
+        // Вона створює кореневий елемент і рендерить компонент App в HTML-елемент з id 'root'.
+        // Ця конфігурація призначена для автономного HTML-файлу, що використовує CDN для React.
+        document.addEventListener('DOMContentLoaded', () => {
+            const rootElement = document.getElementById('root');
+            if (rootElement) {
+                ReactDOM.createRoot(rootElement).render(React.createElement(App, null));
+                console.log("React-додаток успішно змонтовано.");
+            } else {
+                console.error("Кореневий елемент з ID 'root' не знайдено в документі.");
+            }
+        });
+    </script>
+</body>
+</html>

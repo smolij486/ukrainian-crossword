@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Відлуння Собору</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #2c3e50; /* Dark blue-grey, like stone */
+            color: #ecf0f1; /* Light grey text */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .game-container {
+            background-color: #34495e; /* Slightly lighter dark blue-grey */
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            max-width: 90%;
+            width: 700px; /* Max width for larger screens */
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            color: #f1c40f; /* Golden yellow for title */
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            margin-bottom: 15px;
+        }
+
+        .game-content {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            min-height: 150px; /* Ensure space for text */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .choices-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            width: 100%;
+            max-width: 500px;
+        }
+
+        .choice-button {
+            background-color: #e67e22; /* Orange button */
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .choice-button:hover {
+            background-color: #d35400; /* Darker orange on hover */
+            transform: translateY(-2px);
+        }
+
+        .choice-button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .insight-score {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #bdc3c7;
+            margin-top: 20px;
+        }
+
+        .start-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @media (max-width: 767px) {
+            h1 {
+                font-size: 2rem;
+            }
+            .game-content {
+                font-size: 1rem;
+            }
+            .choice-button {
+                padding: 10px 20px;
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>Відлуння Собору</h1>
+
+        <div id="startScreen" class="start-screen">
+            <p class="game-content">
+                Пориньте у світ Віктора Гюго "Собор Паризької Богоматері". Ця гра запрошує вас дослідити складні теми роману, приймаючи рішення з точки зору його ключових персонажів. Ваші вибори розкриють глибину вашого розуміння людської природи, моралі та долі, що переплітаються у стінах великого собору.
+            </p>
+            <button id="startGameButton" class="choice-button">Почати гру</button>
+        </div>
+
+        <div id="gameScreen" class="hidden">
+            <p id="scenarioText" class="game-content"></p>
+            <div id="choicesContainer" class="choices-container">
+                <!-- Choice buttons will be injected here -->
+            </div>
+            <p id="feedbackText" class="game-content hidden"></p>
+            <button id="nextButton" class="choice-button hidden">Далі</button>
+            <p id="insightScore" class="insight-score hidden">Очки розуміння: 0</p>
+        </div>
+    </div>
+
+    <script>
+        // Game state variables
+        let currentScenarioIndex = 0;
+        let insightPoints = 0;
+
+        // DOM elements
+        const startScreen = document.getElementById('startScreen');
+        const gameScreen = document.getElementById('gameScreen');
+        const startGameButton = document.getElementById('startGameButton');
+        const scenarioText = document.getElementById('scenarioText');
+        const choicesContainer = document.getElementById('choicesContainer');
+        const feedbackText = document.getElementById('feedbackText');
+        const nextButton = document.getElementById('nextButton');
+        const insightScoreDisplay = document.getElementById('insightScore');
+
+        // Game scenarios
+        const scenarios = [
+            {
+                character: "Есмеральда",
+                text: "Ви, Есмеральда, стоїте на Гревській площі. Натовп глузує з Квазімодо, якого щойно бичували. Він спраглий і принижений. Що ви зробите?",
+                choices: [
+                    {
+                        text: "Подати йому води, незважаючи на його потворність та огиду натовпу.",
+                        feedback: "Ваше співчуття, незважаючи на його зовнішність, виявило істинну красу вашої душі, що зворушило навіть найзапекліші серця. (+5 Очок розуміння)",
+                        insight: 5
+                    },
+                    {
+                        text: "Відвернутися, відчуваючи страх і огиду, як і більшість.",
+                        feedback: "Страх і огида завадили вам побачити людину за потворною зовнішністю, відображаючи загальну сліпоту суспільства. (+1 Очко розуміння)",
+                        insight: 1
+                    },
+                    {
+                        text: "Спостерігати з цікавістю, але не втручатися, залишаючись стороннім.",
+                        feedback: "Ви залишилися стороннім спостерігачем, не втручаючись у долю того, хто страждав, подібно до багатьох у натовпі. (+2 Очки розуміння)",
+                        insight: 2
+                    }
+                ]
+            },
+            {
+                character: "Клод Фролло",
+                text: "Ви, архідиякон Клод Фролло, спостерігаєте за Есмеральдою, яка танцює на площі. Її краса викликає у вас нестримне бажання, що суперечить вашій святій клятві. Які ваші дії?",
+                choices: [
+                    {
+                        text: "Відвернутися, намагаючись придушити гріховні думки та молитися про прощення.",
+                        feedback: "Ви намагаєтеся боротися зі своїми внутрішніми демонами, але їхня сила вже починає руйнувати вашу душу, показуючи конфлікт між вірою та пристрастю. (+3 Очки розуміння)",
+                        insight: 3
+                    },
+                    {
+                        text: "Піддатися спокусі, плануючи заволодіти нею будь-якою ціною.",
+                        feedback: "Ваша одержимість Есмеральдою переважає над усіма моральними та релігійними принципами, ведучи вас до загибелі та показуючи небезпеку неконтрольованої пристрасті. (+5 Очок розуміння)",
+                        insight: 5
+                    },
+                    {
+                        text: "Спробувати раціоналізувати свої почуття, вважаючи її випробуванням від Бога.",
+                        feedback: "Ви намагаєтеся інтелектуалізувати свої почуття, але пристрасть, що палає всередині, не піддається логіці, викриваючи самообман. (+2 Очки розуміння)",
+                        insight: 2
+                    }
+                ]
+            },
+            {
+                character: "Квазімодо",
+                text: "Ви, Квазімодо, бачите, як Есмеральду ведуть на страту. Натовп радіє. Що ви відчуваєте і що робите?",
+                choices: [
+                    {
+                        text: "Відчайдушно кинутися, щоб врятувати її, незважаючи на небезпеку для себе.",
+                        feedback: "Ваша безмежна відданість та любов до Есмеральди проявляється у найвідчайдушніший момент, демонструючи істинну чистоту серця. (+5 Очок розуміння)",
+                        insight: 5
+                    },
+                    {
+                        text: "Ховатися у соборі, оплакуючи її долю, але не маючи сил втрутитися.",
+                        feedback: "Ваше горе велике, але страх і безсилля паралізують вас, відображаючи трагічну долю тих, хто не може змінити хід подій. (+2 Очки розуміння)",
+                        insight: 2
+                    },
+                    {
+                        text: "Спостерігати з висоти собору, відчуваючи біль, але розуміючи неминучість долі.",
+                        feedback: "Ви бачите світ з висоти, розуміючи жорстокість долі, але залишаєтеся безсилим свідком трагедії. (+3 Очки розуміння)",
+                        insight: 3
+                    }
+                ]
+            },
+            {
+                character: "Філіп де Шартопер",
+                text: "Ви, капітан Філіп де Шартопер, бачите, як Есмеральду заарештовують за злочин, якого вона не скоювала. Ви знаєте правду, але боїтеся за свою репутацію. Як ви вчините?",
+                choices: [
+                    {
+                        text: "Виступити на її захист, ризикуючи своєю кар'єрою та честю.",
+                        feedback: "Ваш вчинок був би актом справжньої мужності та справедливості, але, на жаль, це не відповідає вашій реальній поведінці у романі. (-2 Очки розуміння)",
+                        insight: -2 // Negative insight for a choice that goes against character's core
+                    },
+                    {
+                        text: "Мовчати і дозволити несправедливості статися, зберігаючи свою репутацію.",
+                        feedback: "Ваше мовчання відображає пріоритет власної репутації над справедливістю, показуючи лицемірство та боягузтво. (+5 Очок розуміння)",
+                        insight: 5
+                    },
+                    {
+                        text: "Спробувати знайти компроміс, який дозволить вам уникнути прямої конфронтації.",
+                        feedback: "Ви шукаєте легкий шлях, уникаючи відповідальності, що типово для тих, хто ставить особистий комфорт вище правди. (+3 Очки розуміння)",
+                        insight: 3
+                    }
+                ]
+            }
+        ];
+
+        // Function to start the game
+        startGameButton.addEventListener('click', () => {
+            startScreen.classList.add('hidden');
+            gameScreen.classList.remove('hidden');
+            insightPoints = 0;
+            updateInsightScore();
+            loadScenario(currentScenarioIndex);
+        });
+
+        // Function to load a scenario
+        function loadScenario(index) {
+            if (index >= scenarios.length) {
+                endGame();
+                return;
+            }
+
+            const scenario = scenarios[index];
+            scenarioText.innerHTML = `<strong>(Перспектива: ${scenario.character})</strong><br><br>${scenario.text}`;
+            choicesContainer.innerHTML = ''; // Clear previous choices
+            feedbackText.classList.add('hidden');
+            nextButton.classList.add('hidden');
+
+            scenario.choices.forEach((choice, choiceIndex) => {
+                const button = document.createElement('button');
+                button.classList.add('choice-button');
+                button.textContent = choice.text;
+                button.addEventListener('click', () => handleChoice(choice, choiceIndex));
+                choicesContainer.appendChild(button);
+            });
+        }
+
+        // Function to handle a choice
+        function handleChoice(chosenOption, choiceIndex) {
+            // Disable all choice buttons
+            Array.from(choicesContainer.children).forEach(button => button.disabled = true);
+
+            insightPoints += chosenOption.insight;
+            updateInsightScore();
+
+            feedbackText.textContent = chosenOption.feedback;
+            feedbackText.classList.remove('hidden');
+            nextButton.classList.remove('hidden');
+            nextButton.textContent = (currentScenarioIndex < scenarios.length - 1) ? "Далі" : "Завершити гру";
+        }
+
+        // Function to update insight score display
+        function updateInsightScore() {
+            insightScoreDisplay.textContent = `Очки розуміння: ${insightPoints}`;
+            insightScoreDisplay.classList.remove('hidden');
+        }
+
+        // Function to proceed to the next scenario or end the game
+        nextButton.addEventListener('click', () => {
+            currentScenarioIndex++;
+            if (currentScenarioIndex < scenarios.length) {
+                loadScenario(currentScenarioIndex);
+            } else {
+                endGame();
+            }
+        });
+
+        // Function to end the game
+        function endGame() {
+            scenarioText.textContent = "Ви завершили гру 'Відлуння Собору'.";
+            choicesContainer.innerHTML = '';
+            feedbackText.textContent = `Ваш загальний рахунок розуміння: ${insightPoints}. Сподіваємося, ця гра допомогла вам глибше зануритися у світ Віктора Гюго та його персонажів.`;
+            feedbackText.classList.remove('hidden');
+            nextButton.classList.add('hidden'); // Hide next button at the end
+            insightScoreDisplay.classList.remove('hidden'); // Ensure score is visible
+            // Optionally add a restart button
+            const restartBtn = document.createElement('button');
+            restartBtn.classList.add('choice-button', 'mt-4');
+            restartBtn.textContent = 'Грати знову';
+            restartBtn.addEventListener('click', () => {
+                currentScenarioIndex = 0;
+                insightPoints = 0;
+                startScreen.classList.remove('hidden');
+                gameScreen.classList.add('hidden');
+                restartBtn.remove(); // Remove itself
+            });
+            choicesContainer.appendChild(restartBtn); // Add to choices container for placement
+        }
+
+        // Initial setup on window load
+        window.onload = function() {
+            // Ensure initial state is correct
+            startScreen.classList.remove('hidden');
+            gameScreen.classList.add('hidden');
+            insightScoreDisplay.classList.add('hidden');
+        };
+    </script>
+</body>
+</html>

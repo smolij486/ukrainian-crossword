@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Сарата: Лінгвістичний Пазл</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5; /* Light gray background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .flip-card {
+            background-color: transparent;
+            width: 100%; /* Full width on small screens */
+            max-width: 300px; /* Max width for larger screens */
+            height: 200px;
+            perspective: 1000px; /* 3D effect */
+            margin: 10px;
+        }
+        .flip-card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.6s; /* Smooth flip animation */
+            transform-style: preserve-3d;
+            border-radius: 12px; /* Rounded corners for the inner card */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+        }
+        .flip-card:hover .flip-card-inner {
+            transform: rotateY(180deg); /* Flip on hover */
+        }
+        .flip-card-front, .flip-card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden; /* Hide back of the card when flipped */
+            backface-visibility: hidden;
+            border-radius: 12px; /* Rounded corners for front and back */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 15px;
+            box-sizing: border-box;
+            color: #333;
+        }
+        .flip-card-front {
+            background-color: #ffffff; /* White background for front */
+            color: #1a202c; /* Dark text */
+            font-weight: 600;
+            font-size: 1.1rem;
+            line-height: 1.4;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+        .flip-card-back {
+            background-color: #4f46e5; /* Indigo background for back */
+            color: #ffffff; /* White text */
+            transform: rotateY(180deg); /* Initial rotation for the back side */
+            font-size: 0.9rem;
+            line-height: 1.5;
+            text-align: left;
+            overflow-y: auto; /* Enable scrolling for long content */
+        }
+        /* Responsive grid for cards */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* Responsive columns */
+            gap: 20px; /* Gap between cards */
+            width: 100%;
+            max-width: 1200px; /* Max width for the grid */
+            justify-content: center;
+            align-items: start;
+        }
+
+        /* Scrollbar styling for flip-card-back */
+        .flip-card-back::-webkit-scrollbar {
+            width: 8px;
+        }
+        .flip-card-back::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+        .flip-card-back::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+        }
+        .flip-card-back::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <div class="card-grid">
+        <!-- Card 1: Етнотопоніми та "сар-" -->
+        <div class="flip-card">
+            <div class="flip-card-inner">
+                <div class="flip-card-front">
+                    <p>Сарата: Більше, ніж назва – лінгвістичний детектив!</p>
+                </div>
+                <div class="flip-card-back">
+                    <p>Наукові дослідження вивчають етнотопоніми – географічні назви, що містять етноніми (назви народів) або етнічно марковані елементи, так звані етнокультуреми. Елемент 'сар-' у назві Сарата може бути саме такою 'етнічною міткою'.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 2: Давній народ Saratae -->
+        <div class="flip-card">
+            <div class="flip-card-inner">
+                <div class="flip-card-front">
+                    <p>Чи жили на цих землях давні 'Saratae'?</p>
+                </div>
+                <div class="flip-card-back">
+                    <p>Александрійський вчений II століття н. е. Птолемей згадує стародавній народ 'Saratae' при описі народів Західної Азії. Існує припущення, що під час міграцій західнотюркських кочівників народ 'Саратан' або 'Сарат-тав' міг тимчасово проживати на території сучасного Буджаку.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 3: Аристов про "сари": Тюркізована народність III ст. до н.е. -->
+        <div class="flip-card">
+            <div class="flip-card-inner">
+                <div class="flip-card-front">
+                    <p>Аристов про "сари": Тюркізована народність III ст. до н.е.</p>
+                </div>
+                <div class="flip-card-back">
+                    <p>У «Нотатках про етнічний склад тюркських племен» Н.А. Аристов зазначає, що згадка племені на ім'я 'сари' відноситься до III століття до н. е. і означає народність, яка була отуреченою.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 4: Зникнення "Саратан" -->
+        <div class="flip-card">
+            <div class="flip-card-inner">
+                <div class="flip-card-front">
+                    <p>Куди зникли 'Саратан'?</p>
+                </div>
+                <div class="flip-card-back">
+                    <p>Родоплемінна група 'Саратан' могла прийти в дозолотоординський період міграції західнотюркських народів (до середини XIII століття). Однак, у списках західнотюркських етнонімів XIV-XVII століть це етнічне ім'я вже відсутнє, що свідчить про їхню асиміляцію або розчинення серед інших племен.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 5: Кипчацькі об'єднання з "сар-" -->
+        <div class="flip-card">
+            <div class="flip-card-inner">
+                <div class="flip-card-front">
+                    <p>Сар-: Спільний корінь багатьох тюркських племен</p>
+                </div>
+                <div class="flip-card-back">
+                    <p>Численні етнічні імена кипчацьких родоплемінних об'єднань включали основу 'сар-' (наприклад, сарики, сариш, сари-уйсун, ак-сари). Це відображає складні процеси об'єднань та асиміляції, що відбувалися під час міграцій (Великого переселення народів) у зонах контактів іранських і тюркських племен.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 6: Іранці, що стали тюрками: Історія 'сар-' елемента -->
+        <div class="flip-card">
+            <div class="flip-card-inner">
+                <div class="flip-card-front">
+                    <p>Іранці, що стали тюрками: Історія 'сар-' елемента</p>
+                </div>
+                <div class="flip-card-back">
+                    <p>Історичні дослідження свідчать, що 'сари / сара' – це тюркізовані, кипчакізовані іранські племена, ймовірно, близькоспоріднені. Процес тюркізації активно йшов у I тисячолітті н. е. Це дозволяє припустити, що 'сари / сара' та 'Сарт' – це різні фонетико-морфологічні варіанти етнічного позначення європеоїдних тюрків, ірано-тюркомовних кочівників.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 7: 'Сарт' та формант '-т' -->
+        <div class="flip-card">
+            <div class="flip-card-inner">
+                <div class="flip-card-front">
+                    <p>Загадка 'Сарт': Що означає '-т'?</p>
+                </div>
+                <div class="flip-card-back">
+                    <p>Етнонім 'Сарт' можна розглядати як 'сари' + формант '-т', який з'являється в монгольський і післямонгольський час і є афіксом множини. Це вказує на колективне значення, пов'язане з групою людей або місцевістю.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 8: Географічний термін "сара" -->
+        <div class="flip-card">
+            <div class="flip-card-inner">
+                <div class="flip-card-front">
+                    <p>Сарата: Чи могла вона бути 'заболоченою річкою'?</p>
+                </div>
+                <div class="flip-card-back">
+                    <p>Народно-географічний термін 'сара' – «велике болото, заболочена річка, заосочене болото» – походить з індоіранських діалектів. Це альтернативна гіпотеза, що вказує на природні особливості місцевості як джерело назви.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 9: Багатогранний 'сар-': Етнічний, географічний, господарський? -->
+        <div class="flip-card">
+            <div class="flip-card-inner">
+                <div class="flip-card-front">
+                    <p>Багатогранний 'сар-': Етнічний, географічний, господарський?</p>
+                </div>
+                <div class="flip-card-back">
+                    <p>Етнооснова 'сар-' є іранотюркським елементом, багатозначним за своїм змістом. Він міг брати участь як топооснова для етнічної або географічної характеристики, а також для адміністративно-господарської характеристики на певній території (наприклад, 'сарай' – господарське приміщення, палац). Це пояснює його багатозначність та поширення.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
